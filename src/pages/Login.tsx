@@ -102,12 +102,13 @@ export const Login: React.FC = () => {
                 <input type="checkbox" className="rounded" />
                 <span className="font-medium text-slate-600">Remember me</span>
               </label>
-              <Link
-                to="/forgot-password"
+              <button
+                type="button"
+                onClick={() => alert('Please contact support to reset your password.')}
                 className="font-bold text-blue-600 hover:text-blue-700"
               >
                 Forgot password?
-              </Link>
+              </button>
             </div>
 
             <button

@@ -124,10 +124,10 @@ const Dashboard: React.FC = () => {
           <p className="text-sm text-slate-500 mt-2">Here's what's happening in Zion today.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/schedule')} className="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2">
+          <button onClick={() => navigate('/my-schedule')} className="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2">
             <Calendar size={14}/> My Schedule
           </button>
-          <button onClick={() => navigate('/tickets')} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
+          <button onClick={() => navigate('/ops/support-inbox')} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
             <Inbox size={14}/> Support Queue
           </button>
         </div>
@@ -149,7 +149,7 @@ const Dashboard: React.FC = () => {
               </p>
             </div>
           </div>
-          <button onClick={() => navigate('/tickets')} className="bg-white text-rose-600 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 transition-all">
+          <button onClick={() => navigate('/ops/support-inbox')} className="bg-white text-rose-600 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 transition-all">
             View Now
           </button>
         </div>
@@ -245,7 +245,7 @@ const Dashboard: React.FC = () => {
         </button>
 
         {/* New Tickets */}
-        <button onClick={() => navigate('/tickets')} className="bg-white border border-slate-200 rounded-xl p-4 text-left hover:shadow-md hover:border-blue-300 transition-all relative">
+        <button onClick={() => navigate('/ops/support-inbox')} className="bg-white border border-slate-200 rounded-xl p-4 text-left hover:shadow-md hover:border-blue-300 transition-all relative">
           {stats.newTickets > 0 && (
             <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center animate-pulse">
               <span className="text-[9px] font-black text-white">{stats.newTickets}</span>
@@ -263,7 +263,7 @@ const Dashboard: React.FC = () => {
         </button>
 
         {/* Pending Invoices */}
-        <button onClick={() => navigate('/billing')} className="bg-white border border-slate-200 rounded-xl p-4 text-left hover:shadow-md hover:border-blue-300 transition-all">
+        <button onClick={() => navigate('/financials/billing')} className="bg-white border border-slate-200 rounded-xl p-4 text-left hover:shadow-md hover:border-blue-300 transition-all">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
               <DollarSign size={18} className="text-emerald-600" />
@@ -276,7 +276,7 @@ const Dashboard: React.FC = () => {
         </button>
 
         {/* AR Total */}
-        <button onClick={() => navigate('/billing')} className="bg-white border border-slate-200 rounded-xl p-4 text-left hover:shadow-md hover:border-blue-300 transition-all">
+        <button onClick={() => navigate('/financials/billing')} className="bg-white border border-slate-200 rounded-xl p-4 text-left hover:shadow-md hover:border-blue-300 transition-all">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-rose-50 rounded-lg flex items-center justify-center">
               <Clock size={18} className="text-rose-600" />
@@ -289,7 +289,7 @@ const Dashboard: React.FC = () => {
         </button>
 
         {/* Communications */}
-        <button onClick={() => navigate('/comms')} className="bg-white border border-slate-200 rounded-xl p-4 text-left hover:shadow-md hover:border-blue-300 transition-all">
+        <button onClick={() => navigate('/ops/comms-hub')} className="bg-white border border-slate-200 rounded-xl p-4 text-left hover:shadow-md hover:border-blue-300 transition-all">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
               <MessageSquare size={18} className="text-purple-600" />
@@ -394,7 +394,7 @@ const Dashboard: React.FC = () => {
                 <p className="text-xs text-slate-400">Latest communications and updates</p>
               </div>
             </div>
-            <button onClick={() => navigate('/comms')} className="text-[10px] font-bold text-blue-600 hover:underline">
+            <button onClick={() => navigate('/ops/comms-hub')} className="text-[10px] font-bold text-blue-600 hover:underline">
               View All
             </button>
           </div>
@@ -456,17 +456,17 @@ const Dashboard: React.FC = () => {
               <span className="text-sm font-bold text-slate-700 group-hover:text-purple-700">Create Deal</span>
               <ArrowRight size={14} className="ml-auto text-slate-300 group-hover:text-purple-500" />
             </button>
-            <button onClick={() => navigate('/tickets')} className="w-full flex items-center gap-3 p-4 bg-slate-50 rounded-xl hover:bg-amber-50 hover:border-amber-200 border border-transparent transition-all text-left group">
+            <button onClick={() => navigate('/ops/support-inbox')} className="w-full flex items-center gap-3 p-4 bg-slate-50 rounded-xl hover:bg-amber-50 hover:border-amber-200 border border-transparent transition-all text-left group">
               <Inbox size={18} className="text-slate-400 group-hover:text-amber-600" />
               <span className="text-sm font-bold text-slate-700 group-hover:text-amber-700">Open Ticket</span>
               <ArrowRight size={14} className="ml-auto text-slate-300 group-hover:text-amber-500" />
             </button>
-            <button onClick={() => navigate('/billing')} className="w-full flex items-center gap-3 p-4 bg-slate-50 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 border border-transparent transition-all text-left group">
+            <button onClick={() => navigate('/financials/billing')} className="w-full flex items-center gap-3 p-4 bg-slate-50 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 border border-transparent transition-all text-left group">
               <DollarSign size={18} className="text-slate-400 group-hover:text-emerald-600" />
               <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-700">New Invoice</span>
               <ArrowRight size={14} className="ml-auto text-slate-300 group-hover:text-emerald-500" />
             </button>
-            <button onClick={() => navigate('/schedule')} className="w-full flex items-center gap-3 p-4 bg-slate-50 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 border border-transparent transition-all text-left group">
+            <button onClick={() => navigate('/my-schedule')} className="w-full flex items-center gap-3 p-4 bg-slate-50 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 border border-transparent transition-all text-left group">
               <Calendar size={18} className="text-slate-400 group-hover:text-indigo-600" />
               <span className="text-sm font-bold text-slate-700 group-hover:text-indigo-700">Schedule Task</span>
               <ArrowRight size={14} className="ml-auto text-slate-300 group-hover:text-indigo-500" />
