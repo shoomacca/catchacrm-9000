@@ -1,341 +1,277 @@
-# CatchaCRM NG v11
+# CatchaCRM 9000
 
-**Enterprise-grade, multi-tenant CRM built with NEW GENESIS v1.1**
+**Enterprise CRM for Trades & Field Service Businesses**
 
-> 🚀 **Status:** In Development - Milestone M01 Complete
->
-> 📅 **Started:** 2026-01-23
-> 🏗️ **Architecture:** B2B SaaS (TYPE 1)
+[![React](https://img.shields.io/badge/React-19-61DAFB)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Connected-3FCF8E)](https://supabase.com/)
+[![Tailwind](https://img.shields.io/badge/Tailwind-3.x-06B6D4)](https://tailwindcss.com/)
+[![Vite](https://img.shields.io/badge/Vite-6.x-646CFF)](https://vitejs.dev/)
 
 ---
 
 ## Overview
 
-CatchaCRM NG v11 is a complete migration of the legacy CatchaCRM application into the NEW GENESIS container, adding automation-ready foundations, multi-tenant hierarchy, and per-seat billing capabilities.
+CatchaCRM 9000 is a **production-ready, multi-tenant CRM platform** built for trades and field service businesses. Features the **Flash UI** design system with **66 pages** across **8 modules** and **37 entity types**.
 
-**Target Users:**
-- B2B sales organizations
-- Agencies and resellers
-- Enterprise CRM operators
-
-**Key Features:**
-- Multi-tenant with strict RLS isolation
-- Per-seat, per-company licensing (Stripe + PayPal)
-- Hierarchical organization structure (parent/child companies)
-- n8n-powered automation workflows
-- Demo account with 24-hour data reset
+**Target Industries:**
+- Solar Installation
+- HVAC Services
+- Electrical Contractors
+- Plumbing Services
+- Property Maintenance
+- Construction
+- Landscaping
+- Cleaning Services
+- Security Systems
+- General Trades
 
 ---
 
-## Quick Start
+## Key Stats
 
-### Prerequisites
+| Metric | Value |
+|--------|-------|
+| Total Pages | 66 |
+| Entity Types | 37 |
+| UI Components | 23 |
+| Industry Blueprints | 10 |
+| Supabase Tables | 30+ |
 
-- Node.js 18+ (LTS)
-- npm or yarn
-- Git
-- Supabase account
-- Vercel account (for deployment)
+---
 
-### Local Development Setup
+## Modules
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/shoomacca/catchacrm-ng-v11.git
-   cd catchacrm-ng-v11
-   ```
+### 1. Sales Module (8 pages)
+- **SalesDashboard** - Pipeline visualization, weighted forecasts, win rates
+- **LeadsPage** - Lead management with scoring and qualification workflow
+- **DealsPage** - Opportunity tracking, stage progression, probability
+- **AccountsPage** - Company records, hierarchy, lifetime value
+- **ContactsPage** - Contact management, communication history
+- **CampaignsPage** - Marketing campaigns, ROI tracking
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+### 2. Financial Module (12 pages)
+- **FinancialHub** - Revenue dashboard, cash flow, AR/AP aging
+- **InvoicesList / InvoiceDetail** - Invoice management with status tracking
+- **QuotesList / QuoteDetail** - CPQ interface, approval workflow
+- **SubscriptionsList** - Recurring billing management
+- **ItemsCatalog** - Products and services catalog
+- **BankFeed** - Bank transaction import and reconciliation
+- **ExpensesList** - Expense tracking with receipt upload
 
-3. **Configure environment variables:**
-   ```bash
-   cp .env.example .env.local
-   # Edit .env.local with your development credentials
-   ```
+### 3. Field Service Module (7 pages)
+- **FieldServicesDashboard** - Job metrics, crew utilization, completion rates
+- **JobsPage** - Job management with 5-step workflow
+- **CrewsPage** - Crew configuration, member assignment
+- **ZonesPage** - Service territory management
+- **EquipmentPage** - Asset tracking, maintenance schedules
+- **DispatchMatrix** - Visual job scheduling grid
+- **JobMarketplacePage** - Available jobs for crew assignment
 
-4. **Start development server:**
-   ```bash
-   npm run dev
-   ```
+### 4. Operations Module (7 pages)
+- **OpsDashboard** - Operational KPIs, ticket queues, SLA tracking
+- **TacticalQueue** - Priority-based task queue for teams
+- **SupportTickets** - Ticket management with SLA timers
+- **SupportHub** - Unified support interface
+- **TaskManagement** - Task assignment, due dates, dependencies
+- **TeamChat** - Internal messaging with channels
+- **CommsHub** - Email, SMS, call logging center
 
-   Open http://localhost:3000 in your browser.
+### 5. Logistics Module (5 pages)
+- **LogisticsDashboard** - Inventory levels, PO status, warehouse metrics
+- **WarehousePage** - Warehouse management, stock levels
+- **InventoryPage** - Inventory items with reorder points
+- **ProcurementPage** - Procurement workflow
+- **PurchaseOrdersPage** - PO management with approval
 
-### Environment Configuration
+### 6. Marketing Module (6 pages)
+- **MarketingDashboard** - Campaign performance, lead sources, ROI
+- **ReputationManager** - Review monitoring across platforms
+- **ReferralEngine** - Referral program management
+- **InboundEngine** - Lead capture forms, chat widgets
+- **AIImageSuite** - AI-powered image generation
+- **AIWritingTools** - AI content generation
 
-See [docs/ENVIRONMENT_SETUP.md](docs/ENVIRONMENT_SETUP.md) for detailed setup instructions including:
-- Obtaining Supabase credentials
-- Configuring Stripe test keys
-- Setting up n8n integration
-- Troubleshooting common issues
+### 7. System Module (8 pages)
+- **SettingsView** - 5-tab settings (General, Modules, Users, Integrations, Data)
+- **CalendarView** - Full calendar with event management
+- **MySchedule** - Personal schedule view
+- **BlueprintListPage** - Industry template browser
+- **BlueprintDetailPage** - Blueprint configuration
+- **Diagnostics** - System health monitoring
+- **Reports** - Standard report library
+- **ComponentShowcase** - UI component documentation
+
+### 8. Auth Module (3 pages)
+- **Login** - Supabase auth login
+- **Signup** - New user registration
+- **DemoMode** - Demo environment with sample data
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| **Frontend** | Next.js 14 (App Router) | React framework with server components |
-| **Backend** | Supabase + n8n | Database, auth, and automation |
-| **Database** | Supabase Postgres | RLS-based multi-tenancy |
-| **Auth** | Supabase Auth | User authentication with optional SSO |
-| **Billing** | Stripe + PayPal | Per-seat licensing |
-| **Styling** | Tailwind CSS | Utility-first CSS |
-| **Hosting** | Vercel | Automatic deployments |
-| **Automation** | n8n | Workflow automation |
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | React 19 + TypeScript |
+| **Build** | Vite 6.x with HMR |
+| **Styling** | Tailwind CSS + Flash UI Design System |
+| **State** | React Context (CRMContext) |
+| **Backend** | Supabase (PostgreSQL + Auth + Storage) |
+| **Icons** | Lucide React |
+| **Charts** | Recharts |
+| **Hosting** | Vercel |
+
+---
+
+## Quick Start
+
+```bash
+# Clone repository
+git clone https://github.com/shoomacca/catchacrm-9000.git
+cd catchacrm-9000
+
+# Install dependencies
+npm install
+
+# Set up environment
+cp .env.example .env
+# Edit .env with your Supabase credentials:
+# VITE_SUPABASE_URL=your-project-url
+# VITE_SUPABASE_ANON_KEY=your-anon-key
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+---
+
+## Entity Types (37)
+
+**Core CRM:**
+`leads` `deals` `accounts` `contacts` `tasks` `tickets` `campaigns` `users`
+
+**Financial:**
+`invoices` `quotes` `products` `services` `subscriptions` `bankTransactions` `expenses`
+
+**Field Service:**
+`jobs` `crews` `zones` `equipment`
+
+**Logistics:**
+`inventoryItems` `purchaseOrders`
+
+**Communication:**
+`calendarEvents` `communications` `conversations` `chatMessages` `documents` `notifications`
+
+**Marketing:**
+`reviews` `referralRewards` `inboundForms` `chatWidgets` `calculators`
+
+**Automation:**
+`automationWorkflows` `webhooks` `industryTemplates`
+
+**Audit:**
+`auditLogs`
 
 ---
 
 ## Project Structure
 
 ```
-catchacrm_ng_v11/
-├── .antigravity/         # NEW GENESIS system files
-│   ├── context/          # Global project context (BRIEF.md, STACK.md)
-│   ├── shards/           # Atomic execution contexts
-│   ├── status/           # Progress tracking
-│   └── [system files]
-├── docs/                 # Project documentation
-│   ├── ENVIRONMENT_SETUP.md
-│   ├── MIGRATION_BRIEF.md
-│   └── REPOSITORY_CONVENTIONS.md
-├── public/               # Static assets
-├── scripts/              # Automation scripts
-│   ├── indiana.js        # Genesis initialization
-│   ├── indiana_milestone.js
-│   └── indiana_merge.js
-├── src/                  # Application source code
-│   ├── app/              # Next.js App Router
-│   ├── components/       # React components
-│   ├── lib/              # Utility libraries
-│   ├── styles/           # Global styles
-│   └── types/            # TypeScript types
-├── .env.example          # Environment variables template
-├── next.config.js        # Next.js configuration
-├── package.json          # Dependencies
-└── tsconfig.json         # TypeScript configuration
+src/
+├── components/          # Reusable UI components
+│   ├── ui/              # Flash UI primitives (Button, Card, Input, etc.)
+│   ├── RecordModal.tsx  # Universal CRUD modal for all 37 entities
+│   ├── EmailComposer.tsx
+│   ├── SMSComposer.tsx
+│   └── ...
+├── context/
+│   ├── AuthContext.tsx  # Supabase authentication
+│   └── CRMContext.tsx   # CRUD operations for all entities
+├── pages/               # 66 page components
+│   ├── Financials/      # Invoice, Quote, Bank Feed, etc.
+│   ├── Logistics/       # Warehouse, Dispatch, etc.
+│   ├── Marketing/       # Reputation, Referral, Inbound
+│   ├── Operations/      # Tactical Queue
+│   └── ...
+├── services/
+│   └── supabaseData.ts  # Supabase data layer
+├── utils/
+│   ├── industryBlueprints.ts  # 10 industry templates
+│   ├── seedData.ts      # Demo data generation
+│   └── ...
+└── types.ts             # 37 entity type definitions
 ```
 
 ---
 
-## Development Workflow
+## Supabase Integration
 
-### Branch Strategy
-
-- **main** - Production-ready code (protected, requires approval)
-- **dev** - Active development (all work happens here)
-
-### Commit Convention
-
-Follow Conventional Commits:
-
-```bash
-feat(M01_02): Add user authentication
-fix(M02_05): Resolve session timeout issue
-docs(M01_03): Update environment setup guide
-```
-
-### Shard-Based Execution
-
-Work is broken into atomic **shards** (execution units):
-
-1. Orchestrator selects next shard
-2. Builder agent executes shard
-3. Creates atomic commit
-4. Marks shard complete
-
-See [docs/REPOSITORY_CONVENTIONS.md](docs/REPOSITORY_CONVENTIONS.md) for full conventions.
+- **Multi-tenant RLS** - Row Level Security on all tables with `org_id` enforcement
+- **30+ Tables** - Complete schema matching all 37 entity types
+- **Demo Organization** - Pre-seeded Australian business data (UUID: `00000000-0000-0000-0000-000000000001`)
+- **Real-time Subscriptions** - Live data updates
+- **Role-based Access** - Admin, Manager, Agent, Technician roles
 
 ---
 
-## Milestones
+## Industry Blueprints
 
-- [x] **M01:** Genesis foundation + repo container ✅
-- [ ] **M02:** Legacy codebase migration 🚧
-- [ ] **M03:** Multi-tenant hierarchy + isolation
-- [ ] **M04:** Core CRM module parity
-- [ ] **M05:** Automation + comms integrations
-- [ ] **M06:** Data intelligence + search
-- [ ] **M07:** Billing + licensing
-- [ ] **M08:** Analytics + governance
-- [ ] **M09:** Launch readiness
+10 pre-configured templates with:
+- Custom entity configurations
+- Pre-defined custom fields
+- Tailored pipelines and stages
+- Industry-specific terminology
 
----
-
-## Scripts
-
-### Development
-
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run type-check   # Check TypeScript types
-```
-
-### NEW GENESIS Automation
-
-```bash
-node scripts/indiana.js                    # Initialize project (one-time)
-node scripts/indiana_milestone.js          # Complete milestone
-node scripts/indiana_merge.js              # Merge dev to main (production)
-node scripts/ng-status.js                  # Check shard progress
-node scripts/ng-export.js                  # Generate project reports
-```
+1. Solar Installation
+2. HVAC Services
+3. Electrical Contractors
+4. Plumbing Services
+5. Property Maintenance
+6. Construction
+7. Landscaping
+8. Cleaning Services
+9. Security Systems
+10. General Trades
 
 ---
 
-## Documentation
+## Component Library (Flash UI)
 
-- **[Environment Setup](docs/ENVIRONMENT_SETUP.md)** - Local development and deployment configuration
-- **[Migration Brief](docs/MIGRATION_BRIEF.md)** - Legacy codebase migration strategy
-- **[Repository Conventions](docs/REPOSITORY_CONVENTIONS.md)** - Coding standards and git workflow
-- **[NEW GENESIS System Docs](.antigravity/docs/)** - Internal system documentation
+**Primitives:**
+- Button (primary, secondary, ghost, danger variants)
+- Card (with header, body, footer slots)
+- Input (with validation states)
+- Select (single and multi-select)
+- Textarea (auto-resize)
+- Checkbox, Radio
+- Panel (collapsible sections)
+- IconButton, ButtonGroup
 
----
-
-## Key Features
-
-### Multi-Tenant Architecture
-
-- **Tenant Isolation:** Strict RLS enforcement at database level
-- **Org Hierarchy:** Parent/child company relationships
-- **Reseller Support:** Wholesale tenant model for agencies
-- **Audit Logging:** Complete audit trail for admin actions
-
-### Billing & Licensing
-
-- **Per-Seat Model:** Charge per user, per company
-- **Dual Payment:** Stripe (primary) + PayPal (secondary)
-- **Demo Account:** Auto-resets every 24 hours with mock data
-- **License Enforcement:** Real-time seat usage tracking
-
-### Automation
-
-- **n8n Integration:** Embedded workflow automation
-- **Email Sync:** Automatic email logging and tracking
-- **VoIP Integration:** Call logging and recording
-- **SMS/WhatsApp:** Multi-channel communication
-- **Lead Enrichment:** Automated data enrichment pipelines
+**Business Components:**
+- RecordModal - Universal CRUD modal for all 37 entities
+- EmailComposer - Rich email composition
+- SMSComposer - SMS with templates
+- PaymentModal - Payment recording
+- SignatureCapture - Digital signature pad
+- PhotoUploader - Multi-photo upload with preview
+- BulkActionsBar - Bulk operations for list views
 
 ---
 
-## Security
+## Links
 
-- ✅ Row Level Security (RLS) on all tenant tables
-- ✅ No cross-tenant data leakage
-- ✅ Environment variables for all secrets
-- ✅ HTTPS enforced everywhere
-- ✅ OAuth 2.0 support (future)
-- ✅ GDPR/CCPA compliance ready
-
-See [docs/ENVIRONMENT_SETUP.md](docs/ENVIRONMENT_SETUP.md) for security best practices.
-
----
-
-## Deployment
-
-### Automatic Deployments (Vercel)
-
-- **Push to `dev`** → Preview deployment
-- **Merge to `main`** → Production deployment
-
-### Manual Deployment
-
-```bash
-# Only after @Overseer approval
-node scripts/indiana_merge.js
-```
-
-This will:
-1. Merge `dev` → `main`
-2. Push to GitHub
-3. Trigger Vercel production deployment
-4. Send completion notification
-
----
-
-## Contributing
-
-### For Agents
-
-Follow the NEW GENESIS v1.1 workflow:
-
-1. Read `.antigravity/context/BRIEF.md` and `STACK.md`
-2. Execute assigned shard
-3. Create atomic commit
-4. Mark shard complete
-
-### For Humans
-
-1. Check `.antigravity/DECISIONS.md` for current status
-2. Review shard definitions in `.antigravity/shards/`
-3. Follow conventions in [docs/REPOSITORY_CONVENTIONS.md](docs/REPOSITORY_CONVENTIONS.md)
-4. Obtain @Overseer approval before merging to main
-
----
-
-## Troubleshooting
-
-### Build Fails
-
-```bash
-# Clear build cache
-rm -rf .next node_modules
-npm install
-npm run build
-```
-
-### Environment Issues
-
-- Verify `.env.local` contains all required variables
-- Check Vercel dashboard for production env vars
-- See [docs/ENVIRONMENT_SETUP.md#troubleshooting](docs/ENVIRONMENT_SETUP.md)
-
-### Database Connection
-
-- Confirm Supabase project is not paused
-- Verify `NEXT_PUBLIC_SUPABASE_URL` is correct
-- Check anon key matches project
+- **Linear Project:** [CatchaCRM 9000](https://linear.app/bsbsbs/project/catchacrm-9000-e1b35d51d22f)
+- **GitHub:** [shoomacca/catchacrm-9000](https://github.com/shoomacca/catchacrm-9000)
 
 ---
 
 ## License
 
-**Proprietary** - CatchaCRM © 2026
+Proprietary - All rights reserved.
 
 ---
 
-## Support
-
-- **GitHub Issues:** Bug reports and feature requests
-- **Linear:** [Project workspace](https://linear.app/bsbsbs/project/catchacrm-ng-v11)
-- **n8n Workflows:** https://ai.bsbsbs.au
-- **Documentation:** [docs/](docs/)
-
----
-
-## Project Status
-
-**Current Milestone:** M01 - Genesis Foundation ✅
-**Next Milestone:** M02 - Legacy Codebase Migration
-
-**Progress:**
-- [x] M01_01: Bootstrap repository container
-- [x] M01_02: Migration staging brief
-- [x] M01_03: Environment + secrets baseline
-- [x] M01_04: Repo hygiene + docs
-
-**Blockers:**
-- MIG-001: Legacy codebase location needed (high priority)
-- MIG-002: Supabase credentials required (high priority)
-- MIG-003: n8n instance access details needed (medium priority)
-
-See `.antigravity/DECISIONS.md` for detailed status.
-
----
-
-**Built with NEW GENESIS v1.1** - Turn ideas into production
+**Built with NEW GENESIS v1.1**
