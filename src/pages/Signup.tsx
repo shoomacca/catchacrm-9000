@@ -199,7 +199,7 @@ export const Signup: React.FC = () => {
 
         {/* Footer */}
         <p className="mt-8 text-center text-xs text-slate-500">
-          © 2026 CatchaCRM. Multi-tenant CRM built with Supabase.
+          © 2026 Catcha<span className="text-blue-600">CRM</span>. Multi-tenant CRM built with Supabase.
         </p>
       </div>
     </div>

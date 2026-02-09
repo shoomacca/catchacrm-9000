@@ -128,7 +128,7 @@ const DebugPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       </div>
 
       <div className="bg-slate-950 p-4 border-t border-slate-800">
-         <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest text-center">CatchaCRM Kernel v3.0.1 • LocalStore Only</p>
+         <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest text-center">Catcha<span className="text-blue-500">CRM</span> Kernel v3.0.1 • LocalStore Only</p>
       </div>
     </div>
   );

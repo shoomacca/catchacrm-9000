@@ -188,7 +188,7 @@ export const runAudit = (
   });
 
   // 5. Reset Sanity Check
-  const isDefaultSettings = state.settings.branding.name === 'CatchaCRM';
+  const isDefaultSettings = state.settings.branding.name === 'Catcha';
   const hasEntities = state.leads.length > 0 || state.accounts.length > 0;
   
   if (isDefaultSettings && !hasEntities && localStorage.getItem('catchacrm_db_v3')) {
