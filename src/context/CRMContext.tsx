@@ -242,7 +242,7 @@ const DEFAULT_SETTINGS: CRMSettings = {
     taxRate: 10,
   },
   branding: {
-    name: 'CatchaCRM',
+    name: 'Catcha',
     slogan: 'Catch. Connect. Close.',
     primaryColor: '#3B82F6',
     sidebarMode: 'light',
