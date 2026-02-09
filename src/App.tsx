@@ -628,7 +628,7 @@ const AppContent: React.FC = () => {
                   settings.branding?.sidebarMode === 'light' ? 'text-slate-900' : 'text-white'
                 }`}>
                   {settings.branding?.name || 'Catcha'}
-                  <span className={settings.branding?.sidebarMode === 'light' ? 'text-blue-600' : 'text-white/80'}>CRM</span>
+                  <span className="text-blue-500">CRM</span>
                 </h1>
                 <p className={`text-[8px] font-bold uppercase tracking-widest mt-0.5 ${
                   settings.branding?.sidebarMode === 'light' ? 'text-slate-400' : 'text-white/60'
