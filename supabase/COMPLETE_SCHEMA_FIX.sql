@@ -1,0 +1,447 @@
+-- ============================================
+-- SCHEMA AUDIT REPORT
+-- Generated: 2026-02-08T12:47:38.390Z
+-- ============================================
+
+-- ============================================
+-- TABLE: accounts
+-- INTERFACE: Account
+-- Fields in TypeScript: 13
+-- ============================================
+
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS industry TEXT NOT NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS website TEXT NOT NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS employee_count DECIMAL(12,2) NOT NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS avatar TEXT NOT NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tier TEXT NOT NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS email TEXT NOT NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS city TEXT NOT NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS state TEXT NOT NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS logo TEXT NOT NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS address TEXT NOT NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS commission_rate DECIMAL(12,2) NOT NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS custom_data JSONB NOT NULL;
+
+-- ============================================
+-- TABLE: contacts
+-- INTERFACE: Contact
+-- Fields in TypeScript: 9
+-- ============================================
+
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS account_id UUID NOT NULL REFERENCES accounts(id);
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS email TEXT NOT NULL;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS phone TEXT NOT NULL;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS title TEXT NOT NULL;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS avatar TEXT NOT NULL;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS company TEXT NOT NULL;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS address TEXT NOT NULL;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS custom_data JSONB NOT NULL;
+
+-- ============================================
+-- TABLE: leads
+-- INTERFACE: Lead
+-- Fields in TypeScript: 18
+-- ============================================
+
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS company TEXT NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS email TEXT NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS phone TEXT NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS status TEXT NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS source TEXT NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS campaign_id UUID NOT NULL REFERENCES campaigns(id);
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS estimated_value DECIMAL(12,2) NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS avatar TEXT NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS score DECIMAL(12,2) NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS address TEXT NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS last_contact_date TEXT NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS notes TEXT NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS commission_rate DECIMAL(12,2) NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS converted_to_deal_id UUID NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS converted_at TEXT NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS converted_by TEXT NOT NULL;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS custom_data JSONB NOT NULL;
+
+-- ============================================
+-- TABLE: deals
+-- INTERFACE: Deal
+-- Fields in TypeScript: 18
+-- ============================================
+
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS account_id UUID NOT NULL REFERENCES accounts(id);
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS contact_id UUID NOT NULL REFERENCES contacts(id);
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2) NOT NULL;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS stage TEXT NOT NULL;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS probability DECIMAL(12,2) NOT NULL;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS expected_close_date TEXT NOT NULL;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS assignee_id UUID NOT NULL;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS avatar TEXT NOT NULL;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS stage_entry_date TEXT NOT NULL;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS campaign_id UUID NOT NULL REFERENCES campaigns(id);
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS commission_rate DECIMAL(12,2) NOT NULL;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS commission_amount DECIMAL(12,2) NOT NULL;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS lead_id UUID NOT NULL REFERENCES leads(id);
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS won_at TEXT NOT NULL;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS created_account_id UUID NOT NULL;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS created_contact_id UUID NOT NULL;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS custom_data JSONB NOT NULL;
+
+-- ============================================
+-- TABLE: tasks
+-- INTERFACE: Task
+-- Fields in TypeScript: 8
+-- ============================================
+
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS title TEXT NOT NULL;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS description TEXT NOT NULL;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assignee_id UUID NOT NULL;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS due_date TEXT NOT NULL;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS status TEXT NOT NULL;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS priority TEXT NOT NULL;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS related_to_id UUID NOT NULL;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS related_to_type TEXT NOT NULL;
+
+-- ============================================
+-- TABLE: calendar_events
+-- INTERFACE: CalendarEvent
+-- Fields in TypeScript: 10
+-- ============================================
+
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS title TEXT NOT NULL;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS description TEXT NOT NULL;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS start_time TEXT NOT NULL;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS end_time TEXT NOT NULL;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS type TEXT NOT NULL;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS location TEXT NOT NULL;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS related_to_type TEXT NOT NULL;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS related_to_id UUID NOT NULL;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS priority TEXT NOT NULL;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS is_all_day BOOLEAN NOT NULL;
+
+-- ============================================
+-- TABLE: campaigns
+-- INTERFACE: Campaign
+-- Fields in TypeScript: 14
+-- ============================================
+
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS type TEXT NOT NULL;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS budget DECIMAL(12,2) NOT NULL;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS spent DECIMAL(12,2) NOT NULL;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS revenue DECIMAL(12,2) NOT NULL;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS revenue_generated DECIMAL(12,2) NOT NULL;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS leads_generated DECIMAL(12,2) NOT NULL;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS status TEXT NOT NULL;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS start_date TEXT NOT NULL;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS end_date TEXT NOT NULL;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS description TEXT NOT NULL;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS expected_c_p_l DECIMAL(12,2) NOT NULL;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS target_audience TEXT NOT NULL;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS template_id UUID NOT NULL;
+
+-- ============================================
+-- TABLE: tickets
+-- INTERFACE: Ticket
+-- Fields in TypeScript: 14
+-- ============================================
+
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ticket_number TEXT NOT NULL;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS subject TEXT NOT NULL;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS description TEXT NOT NULL;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS requester_id UUID NOT NULL;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS account_id UUID NOT NULL REFERENCES accounts(id);
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS assignee_id UUID NOT NULL;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS status TEXT NOT NULL;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS priority TEXT NOT NULL;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS sla_deadline TEXT NOT NULL;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS messages JSONB NOT NULL;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS internal_notes JSONB NOT NULL;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS custom_data JSONB NOT NULL;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS related_to_id UUID NOT NULL;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS related_to_type TEXT NOT NULL;
+
+-- ============================================
+-- TABLE: products
+-- INTERFACE: Product
+-- Fields in TypeScript: 24
+-- ============================================
+
+ALTER TABLE products ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sku TEXT NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS code TEXT NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS category TEXT NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS type TEXT NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS unit_price DECIMAL(12,2) NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS cost_price DECIMAL(12,2) NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS tax_rate DECIMAL(12,2) NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS stock_level DECIMAL(12,2) NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS reorder_point DECIMAL(12,2) NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS reorder_quantity DECIMAL(12,2) NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS specifications TEXT NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS images JSONB NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS dimensions DECIMAL(12,2);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS weight DECIMAL(12,2);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS manufacturer TEXT NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier TEXT NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier_s_k_u TEXT NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS warranty_months DECIMAL(12,2) NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS warranty_details TEXT NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS tags JSONB NOT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS custom_fields JSONB NOT NULL;
+
+-- ============================================
+-- TABLE: services
+-- INTERFACE: Service
+-- Fields in TypeScript: 24
+-- ============================================
+
+ALTER TABLE services ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS code TEXT NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS sku TEXT NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS description TEXT NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS category TEXT NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS type TEXT NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS billing_cycle TEXT NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS unit_price DECIMAL(12,2) NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS cost_price DECIMAL(12,2) NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS tax_rate DECIMAL(12,2) NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS duration_hours DECIMAL(12,2) NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS duration_minutes DECIMAL(12,2) NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS prerequisites TEXT NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS deliverables TEXT NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS skills_required JSONB NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS crew_size DECIMAL(12,2) NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS equipment_needed JSONB NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS sla_response_hours DECIMAL(12,2) NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS sla_completion_days DECIMAL(12,2) NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS quality_checklist JSONB NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS images JSONB NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS tags JSONB NOT NULL;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS custom_fields JSONB NOT NULL;
+
+-- ============================================
+-- TABLE: quotes
+-- INTERFACE: Quote
+-- Fields in TypeScript: 16
+-- ============================================
+
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS quote_number TEXT NOT NULL;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS deal_id UUID NOT NULL REFERENCES deals(id);
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS account_id UUID NOT NULL REFERENCES accounts(id);
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS status TEXT NOT NULL;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS issue_date TEXT NOT NULL;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS expiry_date TEXT NOT NULL;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS line_items JSONB NOT NULL;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS subtotal DECIMAL(12,2) NOT NULL;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS tax_total DECIMAL(12,2) NOT NULL;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS total DECIMAL(12,2) NOT NULL;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS notes TEXT NOT NULL;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS terms TEXT NOT NULL;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS accepted_at TEXT NOT NULL;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS accepted_by TEXT NOT NULL;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS superseded_by TEXT NOT NULL;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS version DECIMAL(12,2) NOT NULL;
+
+-- ============================================
+-- TABLE: invoices
+-- INTERFACE: Invoice
+-- Fields in TypeScript: 18
+-- ============================================
+
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT NOT NULL;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS account_id UUID NOT NULL REFERENCES accounts(id);
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS deal_id UUID NOT NULL REFERENCES deals(id);
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS quote_id UUID NOT NULL REFERENCES quotes(id);
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS status TEXT NOT NULL;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS issue_date TEXT NOT NULL;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_date TEXT NOT NULL;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS due_date TEXT NOT NULL;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS sent_at TEXT NOT NULL;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS paid_at UUID NOT NULL;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS line_items JSONB NOT NULL;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS subtotal DECIMAL(12,2) NOT NULL;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS tax_total DECIMAL(12,2) NOT NULL;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS total DECIMAL(12,2) NOT NULL;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS notes TEXT NOT NULL;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS terms TEXT NOT NULL;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS credits JSONB NOT NULL;
+
+-- ============================================
+-- TABLE: jobs
+-- INTERFACE: Job
+-- Fields in TypeScript: 23
+-- ============================================
+
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS job_number TEXT NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS subject TEXT NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS description TEXT NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS account_id UUID NOT NULL REFERENCES accounts(id);
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS assignee_id UUID NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS crew_id UUID NOT NULL REFERENCES crews(id);
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS job_type TEXT NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS status TEXT NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS priority TEXT NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS zone TEXT NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS estimated_duration DECIMAL(12,2) NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS scheduled_date TEXT NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS scheduled_end_date TEXT NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS completed_at TEXT NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS lat DECIMAL(12,2) NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS lng DECIMAL(12,2) NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS job_fields JSONB NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS swms_signed BOOLEAN NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS completion_signature TEXT NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS evidence_photos JSONB NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS bom JSONB NOT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS invoice_id UUID NOT NULL REFERENCES invoices(id);
+
+-- ============================================
+-- TABLE: crews
+-- INTERFACE: Crew
+-- Fields in TypeScript: 4
+-- ============================================
+
+ALTER TABLE crews ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+ALTER TABLE crews ADD COLUMN IF NOT EXISTS leader_id UUID NOT NULL;
+ALTER TABLE crews ADD COLUMN IF NOT EXISTS member_ids JSONB NOT NULL;
+ALTER TABLE crews ADD COLUMN IF NOT EXISTS color TEXT NOT NULL;
+
+-- ============================================
+-- TABLE: zones
+-- INTERFACE: Zone
+-- Fields in TypeScript: 4
+-- ============================================
+
+ALTER TABLE zones ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+ALTER TABLE zones ADD COLUMN IF NOT EXISTS region TEXT NOT NULL;
+ALTER TABLE zones ADD COLUMN IF NOT EXISTS description TEXT NOT NULL;
+ALTER TABLE zones ADD COLUMN IF NOT EXISTS color TEXT NOT NULL;
+
+-- ============================================
+-- TABLE: equipment
+-- INTERFACE: Equipment
+-- Fields in TypeScript: 10
+-- ============================================
+
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS type TEXT NOT NULL;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS barcode TEXT NOT NULL;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS condition TEXT NOT NULL;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS location TEXT NOT NULL;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS assigned_to TEXT NOT NULL;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS last_service_date TEXT NOT NULL;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS next_service_date TEXT NOT NULL;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS purchase_date TEXT NOT NULL;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS purchase_price DECIMAL(12,2) NOT NULL;
+
+-- ============================================
+-- TABLE: inventory_items
+-- INTERFACE: InventoryItem
+-- Fields in TypeScript: 6
+-- ============================================
+
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS sku TEXT NOT NULL;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS warehouse_qty DECIMAL(12,2) NOT NULL;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS reorder_point DECIMAL(12,2) NOT NULL;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS category TEXT NOT NULL;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS unit_price DECIMAL(12,2) NOT NULL;
+
+-- ============================================
+-- TABLE: purchase_orders
+-- INTERFACE: PurchaseOrder
+-- Fields in TypeScript: 7
+-- ============================================
+
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS po_number TEXT NOT NULL;
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS supplier_id UUID NOT NULL;
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS account_id UUID NOT NULL REFERENCES accounts(id);
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS status TEXT NOT NULL;
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS items JSONB NOT NULL;
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS total DECIMAL(12,2) NOT NULL;
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS linked_job_id UUID NOT NULL;
+
+-- ============================================
+-- TABLE: warehouses
+-- INTERFACE: Warehouse
+-- Fields in TypeScript: 4
+-- ============================================
+
+ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS id UUID NOT NULL;
+ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS address TEXT NOT NULL;
+ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS is_default BOOLEAN NOT NULL;
+
+-- ============================================
+-- TABLE: expenses
+-- INTERFACE: Expense
+-- Fields in TypeScript: 7
+-- ============================================
+
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS vendor TEXT NOT NULL;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2) NOT NULL;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS category TEXT NOT NULL;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS date TIMESTAMPTZ NOT NULL;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS status TEXT NOT NULL;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS receipt_url TEXT NOT NULL;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS approved_by TEXT NOT NULL;
+
+-- ============================================
+-- TABLE: bank_transactions
+-- INTERFACE: BankTransaction
+-- Fields in TypeScript: 13
+-- ============================================
+
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS date TIMESTAMPTZ NOT NULL;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS description TEXT NOT NULL;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2) NOT NULL;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS type TEXT NOT NULL;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS status TEXT NOT NULL;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS match_confidence UUID NOT NULL;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS matched_to_id UUID NOT NULL;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS matched_to_type TEXT NOT NULL;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS reconciled BOOLEAN NOT NULL;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS reconciled_at TEXT NOT NULL;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS reconciled_by TEXT NOT NULL;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS bank_reference TEXT NOT NULL;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS notes TEXT NOT NULL;
+
+-- ============================================
+-- TABLE: reviews
+-- INTERFACE: Review
+-- Fields in TypeScript: 11
+-- ============================================
+
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS author_name TEXT NOT NULL;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS rating DECIMAL(12,2) NOT NULL;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS content TEXT NOT NULL;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS platform TEXT NOT NULL;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS status TEXT NOT NULL;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS replied BOOLEAN NOT NULL;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS reply_content TEXT NOT NULL;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS replied_at TEXT NOT NULL;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS job_id UUID NOT NULL REFERENCES jobs(id);
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS account_id UUID NOT NULL REFERENCES accounts(id);
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS sentiment TEXT NOT NULL;
+
+-- ============================================
+-- TABLE: users
+-- INTERFACE: User
+-- Fields in TypeScript: 6
+-- ============================================
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS name TEXT NOT NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT NOT NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT NOT NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS manager_id UUID NOT NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS team TEXT NOT NULL;
+

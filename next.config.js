@@ -1,0 +1,21 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
+  images: {
+    domains: [],
+  },
+  async redirects() {
+    return [];
+  },
+  async rewrites() {
+    return [];
+  },
+}
+
+module.exports = nextConfig

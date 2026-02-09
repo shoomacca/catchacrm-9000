@@ -1,0 +1,11 @@
+Name,Industry,Type,Email,Phone,Website
+Nebuchadnezzar,Reconnaissance,customer,nebuchadnezzar@zion.io,555-2001,nebuchadnezzar.zion
+Logos,Strike Force,customer,logos@zion.io,555-2002,logos.zion
+Mjolnir (Hammer),Heavy Assault,customer,hammer@zion.io,555-2003,hammer.zion
+Vigilant,Surveillance,customer,vigilant@zion.io,555-2004,vigilant.zion
+Zion Command,Government,customer,command@zion.io,555-2000,zion.io
+Machine City,AI Systems,competitor,contact@machinecity.matrix,555-9000,machinecity.matrix
+Agent Program,Matrix Operations,competitor,agents@matrix.io,555-9100,agents.matrix
+Oracle Services,Consulting,partner,contact@oracle.io,555-8000,oracle.io
+Keymaker Industries,Access Solutions,partner,contact@keymaker.io,555-8001,keymaker.io
+Merovingian Exchange,Information Trading,partner,contact@exchange.io,555-8002,exchange.io

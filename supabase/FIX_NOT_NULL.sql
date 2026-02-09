@@ -1,0 +1,226 @@
+-- ============================================
+-- FIX NOT NULL CONSTRAINTS
+-- Make optional fields nullable
+-- ============================================
+
+-- ACCOUNTS - Make optional fields nullable
+ALTER TABLE accounts ALTER COLUMN industry DROP NOT NULL;
+ALTER TABLE accounts ALTER COLUMN website DROP NOT NULL;
+ALTER TABLE accounts ALTER COLUMN employee_count DROP NOT NULL;
+ALTER TABLE accounts ALTER COLUMN avatar DROP NOT NULL;
+ALTER TABLE accounts ALTER COLUMN tier DROP NOT NULL;
+ALTER TABLE accounts ALTER COLUMN email DROP NOT NULL;
+ALTER TABLE accounts ALTER COLUMN city DROP NOT NULL;
+ALTER TABLE accounts ALTER COLUMN state DROP NOT NULL;
+ALTER TABLE accounts ALTER COLUMN logo DROP NOT NULL;
+ALTER TABLE accounts ALTER COLUMN address DROP NOT NULL;
+ALTER TABLE accounts ALTER COLUMN commission_rate DROP NOT NULL;
+ALTER TABLE accounts ALTER COLUMN custom_data DROP NOT NULL;
+
+-- CONTACTS - Make optional fields nullable
+ALTER TABLE contacts ALTER COLUMN account_id DROP NOT NULL;
+ALTER TABLE contacts ALTER COLUMN email DROP NOT NULL;
+ALTER TABLE contacts ALTER COLUMN phone DROP NOT NULL;
+ALTER TABLE contacts ALTER COLUMN title DROP NOT NULL;
+ALTER TABLE contacts ALTER COLUMN avatar DROP NOT NULL;
+ALTER TABLE contacts ALTER COLUMN company DROP NOT NULL;
+ALTER TABLE contacts ALTER COLUMN address DROP NOT NULL;
+ALTER TABLE contacts ALTER COLUMN custom_data DROP NOT NULL;
+
+-- LEADS - Make optional fields nullable
+ALTER TABLE leads ALTER COLUMN company DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN email DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN phone DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN status DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN source DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN campaign_id DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN estimated_value DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN avatar DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN score DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN address DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN last_contact_date DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN notes DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN commission_rate DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN converted_to_deal_id DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN converted_at DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN converted_by DROP NOT NULL;
+ALTER TABLE leads ALTER COLUMN custom_data DROP NOT NULL;
+
+-- DEALS - Make optional fields nullable
+ALTER TABLE deals ALTER COLUMN account_id DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN contact_id DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN amount DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN stage DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN probability DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN expected_close_date DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN assignee_id DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN avatar DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN stage_entry_date DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN campaign_id DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN commission_rate DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN commission_amount DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN lead_id DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN won_at DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN created_account_id DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN created_contact_id DROP NOT NULL;
+ALTER TABLE deals ALTER COLUMN custom_data DROP NOT NULL;
+
+-- TASKS - Make optional fields nullable
+ALTER TABLE tasks ALTER COLUMN description DROP NOT NULL;
+ALTER TABLE tasks ALTER COLUMN assignee_id DROP NOT NULL;
+ALTER TABLE tasks ALTER COLUMN due_date DROP NOT NULL;
+ALTER TABLE tasks ALTER COLUMN status DROP NOT NULL;
+ALTER TABLE tasks ALTER COLUMN priority DROP NOT NULL;
+ALTER TABLE tasks ALTER COLUMN related_to_id DROP NOT NULL;
+ALTER TABLE tasks ALTER COLUMN related_to_type DROP NOT NULL;
+
+-- CALENDAR_EVENTS - Make optional fields nullable
+ALTER TABLE calendar_events ALTER COLUMN description DROP NOT NULL;
+ALTER TABLE calendar_events ALTER COLUMN end_time DROP NOT NULL;
+ALTER TABLE calendar_events ALTER COLUMN type DROP NOT NULL;
+ALTER TABLE calendar_events ALTER COLUMN location DROP NOT NULL;
+ALTER TABLE calendar_events ALTER COLUMN related_to_type DROP NOT NULL;
+ALTER TABLE calendar_events ALTER COLUMN related_to_id DROP NOT NULL;
+ALTER TABLE calendar_events ALTER COLUMN priority DROP NOT NULL;
+ALTER TABLE calendar_events ALTER COLUMN is_all_day DROP NOT NULL;
+
+-- CAMPAIGNS - Make optional fields nullable
+ALTER TABLE campaigns ALTER COLUMN type DROP NOT NULL;
+ALTER TABLE campaigns ALTER COLUMN budget DROP NOT NULL;
+ALTER TABLE campaigns ALTER COLUMN spent DROP NOT NULL;
+ALTER TABLE campaigns ALTER COLUMN revenue DROP NOT NULL;
+ALTER TABLE campaigns ALTER COLUMN revenue_generated DROP NOT NULL;
+ALTER TABLE campaigns ALTER COLUMN leads_generated DROP NOT NULL;
+ALTER TABLE campaigns ALTER COLUMN leads_converted DROP NOT NULL;
+ALTER TABLE campaigns ALTER COLUMN deals_won DROP NOT NULL;
+ALTER TABLE campaigns ALTER COLUMN status DROP NOT NULL;
+ALTER TABLE campaigns ALTER COLUMN start_date DROP NOT NULL;
+ALTER TABLE campaigns ALTER COLUMN end_date DROP NOT NULL;
+ALTER TABLE campaigns ALTER COLUMN expected_c_p_l DROP NOT NULL;
+ALTER TABLE campaigns ALTER COLUMN expected_r_o_i DROP NOT NULL;
+
+-- TICKETS - Make optional fields nullable
+ALTER TABLE tickets ALTER COLUMN ticket_number DROP NOT NULL;
+ALTER TABLE tickets ALTER COLUMN subject DROP NOT NULL;
+ALTER TABLE tickets ALTER COLUMN description DROP NOT NULL;
+ALTER TABLE tickets ALTER COLUMN requester_id DROP NOT NULL;
+ALTER TABLE tickets ALTER COLUMN account_id DROP NOT NULL;
+ALTER TABLE tickets ALTER COLUMN assignee_id DROP NOT NULL;
+ALTER TABLE tickets ALTER COLUMN status DROP NOT NULL;
+ALTER TABLE tickets ALTER COLUMN priority DROP NOT NULL;
+ALTER TABLE tickets ALTER COLUMN sla_deadline DROP NOT NULL;
+ALTER TABLE tickets ALTER COLUMN messages DROP NOT NULL;
+ALTER TABLE tickets ALTER COLUMN internal_notes DROP NOT NULL;
+ALTER TABLE tickets ALTER COLUMN custom_data DROP NOT NULL;
+ALTER TABLE tickets ALTER COLUMN related_to_id DROP NOT NULL;
+ALTER TABLE tickets ALTER COLUMN related_to_type DROP NOT NULL;
+
+-- PRODUCTS - Make optional fields nullable
+ALTER TABLE products ALTER COLUMN sku DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN code DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN description DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN category DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN type DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN unit_price DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN cost_price DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN tax_rate DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN is_active DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN stock_level DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN reorder_point DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN reorder_quantity DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN specifications DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN images DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN dimensions DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN weight DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN manufacturer DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN supplier DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN supplier_s_k_u DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN warranty_months DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN warranty_details DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN tags DROP NOT NULL;
+ALTER TABLE products ALTER COLUMN custom_fields DROP NOT NULL;
+
+-- SERVICES - Make optional fields nullable
+ALTER TABLE services ALTER COLUMN code DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN sku DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN description DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN category DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN type DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN billing_cycle DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN unit_price DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN cost_price DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN tax_rate DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN is_active DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN duration_hours DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN duration_minutes DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN prerequisites DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN deliverables DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN skills_required DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN crew_size DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN equipment_needed DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN sla_hours DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN requires_equipment DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN equipment_list DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN certification_required DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN images DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN tags DROP NOT NULL;
+ALTER TABLE services ALTER COLUMN custom_fields DROP NOT NULL;
+
+-- QUOTES - Make optional fields nullable (if columns exist)
+DO $$ BEGIN
+  ALTER TABLE quotes ALTER COLUMN quote_number DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE quotes ALTER COLUMN status DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE quotes ALTER COLUMN account_id DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE quotes ALTER COLUMN contact_id DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE quotes ALTER COLUMN deal_id DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+
+-- INVOICES - Make optional fields nullable (if columns exist)
+DO $$ BEGIN
+  ALTER TABLE invoices ALTER COLUMN invoice_number DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE invoices ALTER COLUMN status DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE invoices ALTER COLUMN account_id DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE invoices ALTER COLUMN contact_id DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+
+-- JOBS - Make optional fields nullable
+DO $$ BEGIN
+  ALTER TABLE jobs ALTER COLUMN job_type DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE jobs ALTER COLUMN status DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE jobs ALTER COLUMN account_id DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE jobs ALTER COLUMN contact_id DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE jobs ALTER COLUMN scheduled_start DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE jobs ALTER COLUMN scheduled_end DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER TABLE jobs ALTER COLUMN assigned_crew_id DROP NOT NULL;
+EXCEPTION WHEN undefined_column THEN NULL; END $$;
+
+-- ALL OTHER TABLES - Make all new columns nullable by default
+-- This is safer for data insertion
+
+SELECT 'NOT NULL constraints removed - fields are now nullable' AS status;

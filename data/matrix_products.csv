@@ -1,0 +1,11 @@
+Name,SKU,Description,Price,Category,Stock Level
+Red Pill,PILL-RED,Wake up to reality. No going back.,999999,Awakening,100
+Blue Pill,PILL-BLUE,Stay in Wonderland. Story ends.,0,Comfort,999
+Construct Program,PROG-CON,Loading program for combat training.,50000,Training,50
+Hardline Phone,HARD-PHONE,Exit point connection device.,15000,Equipment,25
+EMP Device,WEAP-EMP,Electromagnetic pulse weapon for Sentinel defense.,250000,Defense,10
+Neural Interface,PLUG-NEUR,Direct brain-computer connection port.,75000,Hardware,30
+Hoverpod,POD-001,Single-person transport vehicle.,85000,Transport,15
+Combat Simulation,SIM-COMBAT,Virtual reality combat training environment.,35000,Training,40
+Sentinel Tracker,TRACK-SEN,Real-time Sentinel detection system.,45000,Equipment,20
+Matrix Code Scanner,SCAN-CODE,Decode and analyze Matrix code streams.,60000,Equipment,25

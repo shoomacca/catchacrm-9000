@@ -1,0 +1,71 @@
+{
+  "projectName": "catchacrm-9000",
+  "archetype": "TYPE 1 - B2B SaaS (Trades & Field Service)",
+  "createdAt": "2026-02-09T15:45:00.000Z",
+  "updatedAt": "2026-02-09T15:45:00.000Z",
+  "github": {
+    "id": null,
+    "nodeId": null,
+    "url": null
+  },
+  "linear": {
+    "projectId": "e19d24ca-bc85-4db7-b6a3-ece16ec29b14",
+    "teamId": "bsbsbs",
+    "projectUrl": "https://linear.app/bsbsbs/project/catchacrm-9000-e1b35d51d22f"
+  },
+  "vercel": {
+    "projectId": null,
+    "url": null
+  },
+  "tasks": {
+    "TASK-001": {"linearId": "fedb654a-d60d-499d-8d75-686c9eaa141f", "linearIdentifier": "ANT-1434", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1434", "title": "M01: Repository init with Vite + React + TypeScript"},
+    "TASK-002": {"linearId": "ce628004-13c3-4bc7-b4e9-50f7a09cf3e4", "linearIdentifier": "ANT-1431", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1431", "title": "M01: Tailwind CSS and Flash UI design system"},
+    "TASK-003": {"linearId": "bd140f9d-a011-4cb4-8b9e-3025be1b3ce1", "linearIdentifier": "ANT-1432", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1432", "title": "M01: Supabase client configuration"},
+    "TASK-004": {"linearId": "5a196cb4-d7b0-4103-b95f-dca1f252b922", "linearIdentifier": "ANT-1433", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1433", "title": "M01: Environment and secrets management"},
+    "TASK-005": {"linearId": "72902d56-8afd-4b5b-8350-ea90a2a3da08", "linearIdentifier": "ANT-1435", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1435", "title": "M02: 37 entity type definitions"},
+    "TASK-006": {"linearId": "3ce58d5e-33ed-410b-8cde-eb0334a3811d", "linearIdentifier": "ANT-1447", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1447", "title": "M02: CRMContext with CRUD"},
+    "TASK-007": {"linearId": "d13f81b7-31a9-438b-8e84-d3182ea46f1d", "linearIdentifier": "ANT-1436", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1436", "title": "M02: RecordModal universal editor"},
+    "TASK-008": {"linearId": "a034da42-547e-4196-a6ba-2b9ffb4e34f8", "linearIdentifier": "ANT-1437", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1437", "title": "M02: UI component library"},
+    "TASK-009": {"linearId": "6b50e017-1e69-4542-9dd9-e8973f7a7e48", "linearIdentifier": "ANT-1439", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1439", "title": "M02: AuthContext with Supabase"},
+    "TASK-010": {"linearId": "dc73ed8f-c11b-43fc-b3fa-e8356cadfdbe", "linearIdentifier": "ANT-1438", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1438", "title": "M03: SalesDashboard"},
+    "TASK-011": {"linearId": "d3794c34-f8c4-4d71-bdd5-f41cf6dc07b4", "linearIdentifier": "ANT-1442", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1442", "title": "M03: LeadsPage"},
+    "TASK-012": {"linearId": "38f608dc-d5db-409c-96be-2277b23462eb", "linearIdentifier": "ANT-1443", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1443", "title": "M03: DealsPage"},
+    "TASK-013": {"linearId": "5212ff84-05ee-40d4-b0ad-d1052b51ba6b", "linearIdentifier": "ANT-1440", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1440", "title": "M03: AccountsPage"},
+    "TASK-014": {"linearId": "c1ae0bda-be12-4169-8697-e975a92178c5", "linearIdentifier": "ANT-1441", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1441", "title": "M03: ContactsPage"},
+    "TASK-015": {"linearId": "310e9df5-a088-41d7-91a4-10d5416052d0", "linearIdentifier": "ANT-1474", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1474", "title": "M04: FinancialHub"},
+    "TASK-016": {"linearId": "ddd3174f-f69f-4eba-821b-2a4d57a0bf45", "linearIdentifier": "ANT-1444", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1444", "title": "M04: Invoice management"},
+    "TASK-017": {"linearId": "6e415d9e-6762-4bd6-93c5-7981079c2216", "linearIdentifier": "ANT-1445", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1445", "title": "M04: Quote management"},
+    "TASK-018": {"linearId": "3a9b6fa7-5bbd-488a-bec8-9edb3df50c5d", "linearIdentifier": "ANT-1463", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1463", "title": "M04: Bank feed"},
+    "TASK-019": {"linearId": "d259f69e-4854-4e1e-a38f-205d0e28ab99", "linearIdentifier": "ANT-1446", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1446", "title": "M04: Expense tracking"},
+    "TASK-020": {"linearId": "c019cae8-1976-4811-8518-dd7f670b2cc7", "linearIdentifier": "ANT-1461", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1461", "title": "M05: FieldServicesDashboard"},
+    "TASK-021": {"linearId": "a17d7e51-8585-42fa-91f3-d878f7094021", "linearIdentifier": "ANT-1450", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1450", "title": "M05: Jobs workflow"},
+    "TASK-022": {"linearId": "d447d36c-1f1c-4d1d-8a98-0b8c2f3ad028", "linearIdentifier": "ANT-1449", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1449", "title": "M05: Crews, Zones, Equipment"},
+    "TASK-023": {"linearId": "fb91eb0d-4c4a-4fb1-a89b-13c3ea444fa0", "linearIdentifier": "ANT-1466", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1466", "title": "M05: DispatchMatrix"},
+    "TASK-024": {"linearId": "92626750-96fb-430a-be2e-faa124e48257", "linearIdentifier": "ANT-1451", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1451", "title": "M06: OpsDashboard"},
+    "TASK-025": {"linearId": "b9ed19ea-62fe-4a0d-b4b7-eac0e8dca753", "linearIdentifier": "ANT-1448", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1448", "title": "M06: Support tickets"},
+    "TASK-026": {"linearId": "b8bc7c7f-3313-4d12-9909-16edec972a25", "linearIdentifier": "ANT-1454", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1454", "title": "M06: LogisticsDashboard"},
+    "TASK-027": {"linearId": "3fb03cf7-0f98-4835-bb70-7a06bc0bef12", "linearIdentifier": "ANT-1455", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1455", "title": "M06: Warehouse & inventory"},
+    "TASK-028": {"linearId": "db697710-7b3a-4c2d-bc48-a479538f956f", "linearIdentifier": "ANT-1453", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1453", "title": "M06: Purchase orders"},
+    "TASK-029": {"linearId": "f3601498-6dce-454c-9736-ae7fba1b42a5", "linearIdentifier": "ANT-1452", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1452", "title": "M07: MarketingDashboard"},
+    "TASK-030": {"linearId": "f66f4424-dd2a-4ead-9c4d-3093bdcd7a9a", "linearIdentifier": "ANT-1456", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1456", "title": "M07: ReputationManager"},
+    "TASK-031": {"linearId": "64b94cf9-fd5b-49e4-997d-5666bdb07d39", "linearIdentifier": "ANT-1460", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1460", "title": "M07: ReferralEngine"},
+    "TASK-032": {"linearId": "794fcad7-ba66-4898-b0e0-585fda691e71", "linearIdentifier": "ANT-1457", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1457", "title": "M07: InboundEngine"},
+    "TASK-033": {"linearId": "0af340c0-952b-4327-8c50-720ba5dd9a7e", "linearIdentifier": "ANT-1458", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1458", "title": "M07: AI tools"},
+    "TASK-034": {"linearId": "f3811583-59fe-479f-94b6-3e57cc8a0862", "linearIdentifier": "ANT-1462", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1462", "title": "M08: SettingsView"},
+    "TASK-035": {"linearId": "7be4cc47-bc62-49f9-ae81-bd52313293f5", "linearIdentifier": "ANT-1459", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1459", "title": "M08: Calendar"},
+    "TASK-036": {"linearId": "b5ab5cef-01ae-4088-973a-9d1214b6e42e", "linearIdentifier": "ANT-1464", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1464", "title": "M08: Industry blueprints"},
+    "TASK-037": {"linearId": "b78a9b76-90c3-4be9-b61d-d095c0fde5ed", "linearIdentifier": "ANT-1465", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1465", "title": "M08: Diagnostics"},
+    "TASK-038": {"linearId": "9a7fd611-ab71-47d7-871a-906980984d33", "linearIdentifier": "ANT-1467", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1467", "title": "M09: Database schema"},
+    "TASK-039": {"linearId": "9066e315-163e-4e65-8835-8e0d05dfaf4b", "linearIdentifier": "ANT-1468", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1468", "title": "M09: RLS policies"},
+    "TASK-040": {"linearId": "5fe346ca-44ca-49bc-b3ed-c04324104f3c", "linearIdentifier": "ANT-1469", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1469", "title": "M09: supabaseData service"},
+    "TASK-041": {"linearId": "985ca2bf-c516-4d0b-bae5-33131ecd6d83", "linearIdentifier": "ANT-1470", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1470", "title": "M09: Demo organization"},
+    "TASK-042": {"linearId": "c2733fa0-4e9b-485a-8169-87e45e7bd602", "linearIdentifier": "ANT-1472", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1472", "title": "M09: Real-time subscriptions"},
+    "TASK-043": {"linearId": "9c0d1ad9-47d5-4343-8f83-4d6a4ce9524e", "linearIdentifier": "ANT-1471", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1471", "title": "M10: Flash UI consistency"},
+    "TASK-044": {"linearId": "09d982fd-0cba-494c-a3e8-52b65095114e", "linearIdentifier": "ANT-1473", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1473", "title": "M10: TypeScript compliance"},
+    "TASK-045": {"linearId": "55c6bd70-7143-4642-a9a6-a1d43a11df75", "linearIdentifier": "ANT-1475", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1475", "title": "M10: Build optimization"},
+    "TASK-046": {"linearId": "c70efa5c-d4ca-4250-8f05-49fe7ecebcd3", "linearIdentifier": "ANT-1476", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1476", "title": "M10: Production deployment"}
+  },
+  "webhooks": {
+    "research": "https://ai.bsbsbs.au/webhook/research_role"
+  }
+}
