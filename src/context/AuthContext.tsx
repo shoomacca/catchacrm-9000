@@ -85,8 +85,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    // Always clear demo mode on sign out
+    localStorage.removeItem('catchacrm_demo_mode');
+    localStorage.removeItem('catchacrm_demo_start');
+
     if (!supabase) {
-      console.log('ℹ️ Mock mode: Sign out skipped');
+      console.log('ℹ️ Mock mode: Sign out completed (demo mode cleared)');
       return;
     }
     await supabase.auth.signOut();

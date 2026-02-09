@@ -334,6 +334,9 @@ const Header = ({ showDebug, setShowDebug }: { showDebug: boolean, setShowDebug:
   }, []);
 
   const handleLogout = async () => {
+    // Clear demo mode
+    localStorage.removeItem('catchacrm_demo_mode');
+    localStorage.removeItem('catchacrm_demo_start');
     await signOut();
     navigate('/login');
   };
