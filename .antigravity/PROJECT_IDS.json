@@ -14,8 +14,8 @@
     "projectUrl": "https://linear.app/bsbsbs/project/catchacrm-9000-e1b35d51d22f"
   },
   "vercel": {
-    "projectId": null,
-    "url": null
+    "projectId": "prj_tXsXrqhKI5DVtrNHhKaWrVoTFTzr",
+    "url": "https://catchacrmflashintegrated.vercel.app"
   },
   "tasks": {
     "TASK-001": {"linearId": "fedb654a-d60d-499d-8d75-686c9eaa141f", "linearIdentifier": "ANT-1434", "linearUrl": "https://linear.app/bsbsbs/issue/ANT-1434", "title": "M01: Repository init with Vite + React + TypeScript"},

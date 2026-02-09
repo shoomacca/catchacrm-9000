@@ -47,7 +47,11 @@
       "Bash(git push:*)",
       "Bash(gh repo create:*)",
       "Bash(git init:*)",
-      "Bash(gh repo view:*)"
+      "Bash(gh repo view:*)",
+      "Bash(vercel --version:*)",
+      "Bash(vercel link:*)",
+      "Bash(vercel deploy:*)",
+      "Bash(vercel inspect:*)"
     ]
   }
 }
