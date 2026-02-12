@@ -13,7 +13,7 @@ const BlueprintDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { settings, updateSettings } = useCRM();
 
-  const blueprint = INDUSTRY_BLUEPRINTS.find(b => b.id === blueprintId);
+  const blueprint = Object.values(INDUSTRY_BLUEPRINTS).find(b => b.id === blueprintId);
   const isActive = settings.activeIndustry === blueprintId;
 
   const [isSaved, setIsSaved] = useState(false);
@@ -251,20 +251,22 @@ const BlueprintDetailPage: React.FC = () => {
       {activeTab === 'fields' && (
         <div className="space-y-8">
           {Object.entries(blueprint.customFields || {}).length > 0 ? (
-            Object.entries(blueprint.customFields || {}).map(([entityType, fields]) => (
+            Object.entries(blueprint.customFields || {}).map(([entityType, fields]) => {
+              const fieldList = (fields || []) as import('../types').CustomFieldDefinition[];
+              return (
               <div key={entityType} className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-2xl font-black text-slate-900 capitalize">
                     {entityType} Custom Fields
                   </h3>
                   <span className="text-sm text-slate-500 font-semibold">
-                    {fields.length} fields
+                    {fieldList.length} fields
                   </span>
                 </div>
 
                 <div className="bg-white rounded-[30px] border-2 border-slate-100 p-8">
                   <div className="space-y-3">
-                    {fields.map((field, index) => (
+                    {fieldList.map((field: import('../types').CustomFieldDefinition, index: number) => (
                       <div
                         key={field.id}
                         className="flex items-center justify-between py-4 px-6 bg-slate-50 rounded-2xl hover:bg-blue-50 transition-all"
@@ -308,7 +310,7 @@ const BlueprintDetailPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-            ))
+            ); })
           ) : (
             <div className="text-center py-20">
               <SettingsIcon size={48} className="text-slate-300 mx-auto mb-4" />

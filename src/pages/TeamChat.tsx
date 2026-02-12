@@ -63,7 +63,7 @@ const TeamChat: React.FC = () => {
 
   // Handle message input change with @ detection
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.amount;
+    const value = e.target.value;
     setMsgInput(value);
 
     // Detect @ mentions
@@ -276,7 +276,7 @@ const TeamChat: React.FC = () => {
               type="text"
               placeholder="Search conversations..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.amount)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-6 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-bold focus:outline-none focus:border-blue-500 transition-all"
             />
           </div>
@@ -289,7 +289,7 @@ const TeamChat: React.FC = () => {
               <div className="px-6 py-3 flex items-center gap-2">
                 <Globe size={14} className="text-blue-500" />
                 <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Organization</span>
-                <Lock size={10} className="text-blue-400 ml-auto" title="Mandatory channel - all team members" />
+                <span title="Mandatory channel - all team members"><Lock size={10} className="text-blue-400 ml-auto" /></span>
               </div>
               {systemChats.map(conv => (
                 <ConversationItem
@@ -384,7 +384,7 @@ const TeamChat: React.FC = () => {
             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white z-10 shadow-sm">
               <div className="flex items-center gap-4">
                  <div className="flex -space-x-3">
-                   {getParticipantAvatars(activeConv).slice(0, 3).map((url, i) => (
+                   {getParticipantAvatars(activeConv).slice(0, 3).map((url: string, i: number) => (
                       <img key={i} src={url} className="w-11 h-11 rounded-2xl border-4 border-white shadow-lg" alt="p" />
                    ))}
                    {getParticipantAvatars(activeConv).length > 3 && (
@@ -721,7 +721,7 @@ const TeamChat: React.FC = () => {
                   <input
                     type="text"
                     value={groupName}
-                    onChange={(e) => setGroupName(e.target.amount)}
+                    onChange={(e) => setGroupName(e.target.value)}
                     placeholder="e.g. Sales Team, Project Alpha"
                     className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:outline-none focus:border-blue-500"
                   />

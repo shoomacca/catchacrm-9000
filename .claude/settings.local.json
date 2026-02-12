@@ -51,7 +51,11 @@
       "Bash(vercel --version:*)",
       "Bash(vercel link:*)",
       "Bash(vercel deploy:*)",
-      "Bash(vercel inspect:*)"
+      "Bash(vercel inspect:*)",
+      "Bash(claude mcp list)",
+      "Bash(npx tsx:*)",
+      "Bash(set)",
+      "Bash(npx n8n-mcp:*)"
     ]
   }
 }

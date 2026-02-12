@@ -99,10 +99,16 @@ const InventoryPage: React.FC = () => {
     );
   };
 
+  const stockStatusStyles: Record<string, { bg: string; text: string; border: string }> = {
+    'Out of Stock': { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
+    'Low Stock': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+    'In Stock': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  };
+
   const getStockStatus = (item: any) => {
-    if (item.warehouseQty === 0) return { label: 'Out of Stock', color: 'rose' };
-    if (item.warehouseQty <= item.reorderPoint) return { label: 'Low Stock', color: 'amber' };
-    return { label: 'In Stock', color: 'emerald' };
+    if (item.warehouseQty === 0) return 'Out of Stock';
+    if (item.warehouseQty <= item.reorderPoint) return 'Low Stock';
+    return 'In Stock';
   };
 
   const toggleSelection = (id: string) => {
@@ -230,10 +236,13 @@ const InventoryPage: React.FC = () => {
               {selectedItems.size} item{selectedItems.size !== 1 ? 's' : ''} selected
             </span>
             <div className="flex gap-2">
-              <button className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-white/20 hover:bg-white/30 transition-all">
+              <button
+                onClick={() => openModal('purchaseOrders')}
+                className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-white/20 hover:bg-white/30 transition-all"
+              >
                 Create PO
               </button>
-              <button className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-white/20 hover:bg-white/30 transition-all">
+              <button disabled title="Coming soon" className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-white/20 transition-all opacity-50 cursor-not-allowed">
                 Adjust Stock
               </button>
               <button
@@ -294,7 +303,8 @@ const InventoryPage: React.FC = () => {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {filteredItems.map((item) => {
-              const stockStatus = getStockStatus(item);
+              const stockLabel = getStockStatus(item);
+              const stockStyle = stockStatusStyles[stockLabel];
               const totalValue = item.unitPrice * item.warehouseQty;
               const isExpanded = expandedId === item.id;
 
@@ -331,8 +341,8 @@ const InventoryPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="p-4">
-                      <span className={`px-3 py-1 bg-${stockStatus.color}-50 text-${stockStatus.color}-700 text-[9px] font-black uppercase tracking-wider rounded-full border border-${stockStatus.color}-200`}>
-                        {stockStatus.label}
+                      <span className={`px-3 py-1 ${stockStyle.bg} ${stockStyle.text} text-[9px] font-black uppercase tracking-wider rounded-full border ${stockStyle.border}`}>
+                        {stockLabel}
                       </span>
                     </td>
                     <td className="p-4">
@@ -378,10 +388,16 @@ const InventoryPage: React.FC = () => {
                               >
                                 View Details
                               </button>
-                              <button className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all">
+                              <button disabled title="Coming soon" className="bg-white text-slate-400 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 opacity-50 cursor-not-allowed">
                                 Adjust Stock
                               </button>
-                              <button className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openModal('purchaseOrders');
+                                }}
+                                className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all"
+                              >
                                 Create PO
                               </button>
                             </div>
@@ -424,7 +440,10 @@ const InventoryPage: React.FC = () => {
                 <p className="text-sm text-slate-600">{stats.lowStock} item{stats.lowStock !== 1 ? 's' : ''} need{stats.lowStock === 1 ? 's' : ''} reordering</p>
               </div>
             </div>
-            <button className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all">
+            <button
+              onClick={() => openModal('purchaseOrders')}
+              className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
+            >
               Create Purchase Order
             </button>
           </div>

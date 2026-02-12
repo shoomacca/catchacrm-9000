@@ -282,10 +282,22 @@ const ZonesPage: React.FC = () => {
                               >
                                 View Details
                               </button>
-                              <button className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openModal('zones', zone);
+                                }}
+                                className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all"
+                              >
                                 Edit
                               </button>
-                              <button className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/field-services?zone=${zone.id}`);
+                                }}
+                                className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all"
+                              >
                                 View Jobs
                               </button>
                             </div>

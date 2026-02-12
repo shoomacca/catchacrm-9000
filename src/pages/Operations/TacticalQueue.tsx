@@ -1,33 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { AlertCircle, Clock, Zap, Target, TrendingUp, Flame, ArrowUp, ArrowDown, Users, CheckCircle, ChevronDown, MessageSquare, FileText, X, Plus, Building2, User, Briefcase, Ticket, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-interface QueueNote {
-  text: string;
-  addedBy: string;
-  addedAt: Date;
-}
-
-interface RelatedTo {
-  type: 'accounts' | 'contacts' | 'leads' | 'deals' | 'tickets';
-  id: string;
-  name: string;
-}
-
-interface QueueItem {
-  id: number;
-  title: string;
-  description: string;
-  priority: 'critical' | 'high' | 'medium' | 'low';
-  priorityScore: number;
-  assignee: string;
-  slaDeadline: Date;
-  createdAt: Date;
-  status: 'open' | 'in_progress' | 'escalated';
-  escalationLevel: number;
-  notes: QueueNote[];
-  relatedTo?: RelatedTo;
-}
+import { useCRM } from '../../context/CRMContext';
+import { TacticalQueueItem, TacticalQueueNote } from '../../types';
 
 const StatCard = ({ label, value, icon: Icon, color, trend }: any) => (
   <div className="bg-white border border-slate-200 p-8 rounded-[35px] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 animate-slide-up">
@@ -51,28 +26,29 @@ const StatCard = ({ label, value, icon: Icon, color, trend }: any) => (
 
 const TacticalQueue: React.FC = () => {
   const navigate = useNavigate();
+  const { tacticalQueue, users, upsertRecord, deleteRecord } = useCRM();
+
   const [currentTime, setCurrentTime] = useState(new Date());
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'priority' | 'sla' | 'created'>('priority');
-  const [expandedItemId, setExpandedItemId] = useState<number | null>(null);
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newItemForm, setNewItemForm] = useState({
     title: '',
     description: '',
     priority: 'medium' as 'critical' | 'high' | 'medium' | 'low',
-    relatedType: '' as '' | 'accounts' | 'contacts' | 'leads' | 'deals' | 'tickets',
+    relatedType: '' as '' | 'accounts' | 'contacts' | 'leads' | 'deals' | 'tickets' | 'jobs',
     relatedName: '',
     slaHours: 4
   });
   const expandedRef = useRef<HTMLDivElement>(null);
   const addModalRef = useRef<HTMLDivElement>(null);
 
-  // Close expanded item on outside click (but not when clicking on another queue item)
+  // Close expanded item on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      // Check if clicking on another queue item (has data-queue-item attribute or is inside one)
       const isClickOnQueueItem = target.closest('[data-queue-item]');
 
       if (expandedRef.current && !expandedRef.current.contains(target) && !isClickOnQueueItem) {
@@ -92,97 +68,20 @@ const TacticalQueue: React.FC = () => {
     }
   }, [expandedItemId]);
 
-  // Mock queue items with realistic SLA deadlines
-  const [queueItems, setQueueItems] = useState<QueueItem[]>([
-    {
-      id: 1,
-      title: 'Critical System Outage - Production Database',
-      description: 'Multiple users reporting connection failures to primary database',
-      priority: 'critical',
-      priorityScore: 98,
-      assignee: 'Thomas Anderson',
-      slaDeadline: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
-      createdAt: new Date(Date.now() - 45 * 60 * 1000),
-      status: 'escalated',
-      escalationLevel: 2,
-      notes: [
-        { text: 'Investigating root cause - appears to be connection pool exhaustion', addedBy: 'Thomas Anderson', addedAt: new Date(Date.now() - 30 * 60 * 1000) },
-        { text: 'Escalated to L2 - DBA team notified', addedBy: 'Trinity Moss', addedAt: new Date(Date.now() - 15 * 60 * 1000) }
-      ],
-      relatedTo: { type: 'accounts', id: 'acc-1', name: 'TechCorp Industries' }
-    },
-    {
-      id: 2,
-      title: 'High Priority - Customer VIP Account Issue',
-      description: 'Enterprise client unable to access billing portal',
-      priority: 'high',
-      priorityScore: 85,
-      assignee: 'Trinity Moss',
-      slaDeadline: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours
-      createdAt: new Date(Date.now() - 30 * 60 * 1000),
-      status: 'in_progress',
-      escalationLevel: 0,
-      notes: [
-        { text: 'Customer called - very frustrated, requires immediate attention', addedBy: 'Trinity Moss', addedAt: new Date(Date.now() - 20 * 60 * 1000) }
-      ],
-      relatedTo: { type: 'contacts', id: 'con-1', name: 'Sarah Mitchell' }
-    },
-    {
-      id: 3,
-      title: 'SLA Breach Warning - Payment Gateway Timeout',
-      description: 'Intermittent timeouts on payment processing endpoint',
-      priority: 'high',
-      priorityScore: 82,
-      assignee: 'Neo Smith',
-      slaDeadline: new Date(Date.now() + 45 * 60 * 1000), // 45 minutes
-      createdAt: new Date(Date.now() - 1.5 * 60 * 60 * 1000),
-      status: 'open',
-      escalationLevel: 1,
-      notes: [],
-      relatedTo: { type: 'deals', id: 'deal-1', name: 'Enterprise Platform Deal' }
-    },
-    {
-      id: 4,
-      title: 'Medium Priority - API Rate Limit Adjustment',
-      description: 'Client requesting increased API rate limits for campaign',
-      priority: 'medium',
-      priorityScore: 65,
-      assignee: 'Morpheus Jones',
-      slaDeadline: new Date(Date.now() + 4 * 60 * 60 * 1000), // 4 hours
-      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      status: 'open',
-      escalationLevel: 0,
-      notes: [],
-      relatedTo: { type: 'leads', id: 'lead-1', name: 'Marcus Chen' }
-    },
-    {
-      id: 5,
-      title: 'Low Priority - Documentation Update Request',
-      description: 'Update API docs with new authentication flow',
-      priority: 'low',
-      priorityScore: 35,
-      assignee: 'Unassigned',
-      slaDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-      createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-      status: 'open',
-      escalationLevel: 0,
-      notes: [],
-      relatedTo: { type: 'tickets', id: 'tick-1', name: 'Support Ticket #1234' }
-    },
-  ]);
-
-  // Real-time updates
+  // Real-time clock updates
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000); // Update every second for SLA countdown
-
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
 
   // Calculate time remaining for SLA
-  const getTimeRemaining = (deadline: Date) => {
-    const diff = deadline.getTime() - currentTime.getTime();
+  const getTimeRemaining = (deadline?: string) => {
+    if (!deadline) return { text: 'No SLA', isBreached: false, isUrgent: false };
+
+    const deadlineDate = new Date(deadline);
+    const diff = deadlineDate.getTime() - currentTime.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
@@ -214,80 +113,99 @@ const TacticalQueue: React.FC = () => {
     }
   };
 
-  // Filter and sort
-  const filteredItems = queueItems
-    .filter(item => filterPriority === 'all' || item.priority === filterPriority)
-    .sort((a, b) => {
-      if (sortBy === 'priority') return b.priorityScore - a.priorityScore;
-      if (sortBy === 'sla') return a.slaDeadline.getTime() - b.slaDeadline.getTime();
-      return b.createdAt.getTime() - a.createdAt.getTime();
-    });
+  // Get user name by ID
+  const getUserName = (userId?: string) => {
+    if (!userId) return 'Unassigned';
+    const user = users.find(u => u.id === userId);
+    return user?.name || 'Unknown';
+  };
+
+  // Filter and sort queue items
+  const filteredItems = useMemo(() => {
+    return tacticalQueue
+      .filter(item => item.status !== 'resolved' && item.status !== 'closed')
+      .filter(item => filterPriority === 'all' || item.priority === filterPriority)
+      .sort((a, b) => {
+        if (sortBy === 'priority') return (b.priorityScore || 50) - (a.priorityScore || 50);
+        if (sortBy === 'sla') {
+          const aTime = a.slaDeadline ? new Date(a.slaDeadline).getTime() : Infinity;
+          const bTime = b.slaDeadline ? new Date(b.slaDeadline).getTime() : Infinity;
+          return aTime - bTime;
+        }
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+  }, [tacticalQueue, filterPriority, sortBy]);
 
   // Stats
-  const criticalCount = queueItems.filter(i => i.priority === 'critical').length;
-  const highCount = queueItems.filter(i => i.priority === 'high').length;
-  const breachCount = queueItems.filter(i => getTimeRemaining(i.slaDeadline).isBreached).length;
-  const escalatedCount = queueItems.filter(i => i.escalationLevel > 0).length;
+  const criticalCount = tacticalQueue.filter(i => i.priority === 'critical' && i.status !== 'resolved').length;
+  const highCount = tacticalQueue.filter(i => i.priority === 'high' && i.status !== 'resolved').length;
+  const breachCount = tacticalQueue.filter(i => getTimeRemaining(i.slaDeadline).isBreached && i.status !== 'resolved').length;
+  const escalatedCount = tacticalQueue.filter(i => i.escalationLevel > 0 && i.status !== 'resolved').length;
 
   // Next SLA breach
-  const nextBreach = queueItems
-    .filter(i => !getTimeRemaining(i.slaDeadline).isBreached)
-    .sort((a, b) => a.slaDeadline.getTime() - b.slaDeadline.getTime())[0];
+  const nextBreach = tacticalQueue
+    .filter(i => !getTimeRemaining(i.slaDeadline).isBreached && i.status !== 'resolved' && i.slaDeadline)
+    .sort((a, b) => new Date(a.slaDeadline!).getTime() - new Date(b.slaDeadline!).getTime())[0];
 
   // Action handlers
-  const handleEscalate = (item: QueueItem, e: React.MouseEvent) => {
+  const handleEscalate = (item: TacticalQueueItem, e: React.MouseEvent) => {
     e.stopPropagation();
-    setQueueItems(prev => prev.map(i =>
-      i.id === item.id
-        ? {
-            ...i,
-            escalationLevel: i.escalationLevel + 1,
-            status: 'escalated' as const,
-            notes: [
-              ...i.notes,
-              { text: `Escalated to L${i.escalationLevel + 1}`, addedBy: 'You', addedAt: new Date() }
-            ]
-          }
-        : i
-    ));
+    const newNote: TacticalQueueNote = {
+      text: `Escalated to L${item.escalationLevel + 1}`,
+      addedBy: 'You',
+      addedAt: new Date().toISOString()
+    };
+    upsertRecord('tacticalQueue', {
+      ...item,
+      escalationLevel: item.escalationLevel + 1,
+      status: 'escalated',
+      notes: [...(item.notes || []), newNote]
+    });
   };
 
-  const handleAssign = (item: QueueItem, e: React.MouseEvent) => {
+  const handleAssign = (item: TacticalQueueItem, e: React.MouseEvent) => {
     e.stopPropagation();
-    const assignees = ['Thomas Anderson', 'Trinity Moss', 'Neo Smith', 'Morpheus Jones'];
-    const randomAssignee = assignees[Math.floor(Math.random() * assignees.length)];
-    setQueueItems(prev => prev.map(i =>
-      i.id === item.id
-        ? {
-            ...i,
-            assignee: randomAssignee,
-            status: 'in_progress' as const,
-            notes: [
-              ...i.notes,
-              { text: `Assigned to ${randomAssignee}`, addedBy: 'You', addedAt: new Date() }
-            ]
-          }
-        : i
-    ));
+    const availableUsers = users.filter(u => u.role !== 'admin');
+    if (availableUsers.length === 0) return;
+
+    const randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
+    const newNote: TacticalQueueNote = {
+      text: `Assigned to ${randomUser.name}`,
+      addedBy: 'You',
+      addedAt: new Date().toISOString()
+    };
+    upsertRecord('tacticalQueue', {
+      ...item,
+      assigneeId: randomUser.id,
+      status: 'in_progress',
+      notes: [...(item.notes || []), newNote]
+    });
   };
 
-  const handleAddNote = (itemId: number) => {
+  const handleAddNote = (item: TacticalQueueItem) => {
     if (!noteText.trim()) return;
-    setQueueItems(prev => prev.map(i =>
-      i.id === itemId
-        ? {
-            ...i,
-            notes: [
-              ...i.notes,
-              { text: noteText.trim(), addedBy: 'You', addedAt: new Date() }
-            ]
-          }
-        : i
-    ));
+    const newNote: TacticalQueueNote = {
+      text: noteText.trim(),
+      addedBy: 'You',
+      addedAt: new Date().toISOString()
+    };
+    upsertRecord('tacticalQueue', {
+      ...item,
+      notes: [...(item.notes || []), newNote]
+    });
     setNoteText('');
   };
 
-  const toggleExpand = (itemId: number, e: React.MouseEvent) => {
+  const handleResolve = (item: TacticalQueueItem) => {
+    upsertRecord('tacticalQueue', {
+      ...item,
+      status: 'resolved',
+      resolvedAt: new Date().toISOString()
+    });
+    setExpandedItemId(null);
+  };
+
+  const toggleExpand = (itemId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setExpandedItemId(expandedItemId === itemId ? null : itemId);
     setNoteText('');
@@ -310,26 +228,20 @@ const TacticalQueue: React.FC = () => {
     if (!newItemForm.title.trim()) return;
 
     const priorityScores = { critical: 95, high: 80, medium: 60, low: 30 };
-    const newItem: QueueItem = {
-      id: Date.now(),
+    const newItem: Partial<TacticalQueueItem> = {
       title: newItemForm.title,
       description: newItemForm.description,
       priority: newItemForm.priority,
       priorityScore: priorityScores[newItemForm.priority] + Math.floor(Math.random() * 10),
-      assignee: 'Unassigned',
-      slaDeadline: new Date(Date.now() + newItemForm.slaHours * 60 * 60 * 1000),
-      createdAt: new Date(),
       status: 'open',
       escalationLevel: 0,
+      slaDeadline: new Date(Date.now() + newItemForm.slaHours * 60 * 60 * 1000).toISOString(),
       notes: [],
-      relatedTo: newItemForm.relatedType && newItemForm.relatedName ? {
-        type: newItemForm.relatedType,
-        id: `${newItemForm.relatedType}-new-${Date.now()}`,
-        name: newItemForm.relatedName
-      } : undefined
+      relatedToType: newItemForm.relatedType || undefined,
+      relatedToName: newItemForm.relatedName || undefined,
     };
 
-    setQueueItems(prev => [newItem, ...prev]);
+    upsertRecord('tacticalQueue', newItem);
     setShowAddModal(false);
     setNewItemForm({
       title: '',
@@ -341,7 +253,7 @@ const TacticalQueue: React.FC = () => {
     });
   };
 
-  const getRelatedIcon = (type: string) => {
+  const getRelatedIcon = (type?: string) => {
     switch (type) {
       case 'accounts': return Building2;
       case 'contacts': return User;
@@ -352,7 +264,7 @@ const TacticalQueue: React.FC = () => {
     }
   };
 
-  const getRelatedColor = (type: string) => {
+  const getRelatedColor = (type?: string) => {
     switch (type) {
       case 'accounts': return 'bg-emerald-100 text-emerald-600';
       case 'contacts': return 'bg-blue-100 text-blue-600';
@@ -373,7 +285,7 @@ const TacticalQueue: React.FC = () => {
         <div className="flex gap-3">
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.amount as any)}
+            onChange={(e) => setSortBy(e.target.value as any)}
             className="bg-slate-100 text-slate-700 px-4 py-3 rounded-xl font-bold text-sm border-2 border-slate-200 focus:border-blue-500 focus:outline-none"
           >
             <option value="priority">Sort by Priority</option>
@@ -382,7 +294,7 @@ const TacticalQueue: React.FC = () => {
           </select>
           <select
             value={filterPriority}
-            onChange={(e) => setFilterPriority(e.target.amount)}
+            onChange={(e) => setFilterPriority(e.target.value)}
             className="bg-slate-100 text-slate-700 px-4 py-3 rounded-xl font-bold text-sm border-2 border-slate-200 focus:border-blue-500 focus:outline-none"
           >
             <option value="all">All Priorities</option>
@@ -433,7 +345,7 @@ const TacticalQueue: React.FC = () => {
           </div>
           <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl">
             <p className="text-rose-200 text-xs font-bold uppercase mb-1">Team Load</p>
-            <p className="text-2xl font-black">{queueItems.filter(i => i.assignee !== 'Unassigned').length}/{queueItems.length}</p>
+            <p className="text-2xl font-black">{tacticalQueue.filter(i => i.assigneeId && i.status !== 'resolved').length}/{filteredItems.length}</p>
           </div>
         </div>
       </div>
@@ -445,233 +357,240 @@ const TacticalQueue: React.FC = () => {
           <p className="text-xs text-slate-500 font-semibold">Live • Updated {currentTime.toLocaleTimeString()}</p>
         </div>
 
-        {filteredItems.map((item, index) => {
-          const timeInfo = getTimeRemaining(item.slaDeadline);
-          const priorityColor = getPriorityColor(item.priority);
-          const priorityTextColor = getPriorityTextColor(item.priority);
-          const isExpanded = expandedItemId === item.id;
+        {filteredItems.length === 0 ? (
+          <div className="bg-white border border-slate-200 rounded-[25px] p-12 text-center">
+            <CheckCircle size={48} className="mx-auto text-emerald-500 mb-4" />
+            <h3 className="text-xl font-black text-slate-900 mb-2">Queue is Clear!</h3>
+            <p className="text-slate-500">No active items in the tactical queue. Great work!</p>
+          </div>
+        ) : (
+          filteredItems.map((item, index) => {
+            const timeInfo = getTimeRemaining(item.slaDeadline);
+            const priorityColor = getPriorityColor(item.priority);
+            const priorityTextColor = getPriorityTextColor(item.priority);
+            const isExpanded = expandedItemId === item.id;
 
-          return (
-            <div
-              key={item.id}
-              ref={isExpanded ? expandedRef : null}
-              data-queue-item={item.id}
-              className={`bg-white border-2 ${
-                timeInfo.isBreached ? 'border-rose-500 bg-rose-50' :
-                timeInfo.isUrgent ? 'border-orange-500 bg-orange-50' :
-                isExpanded ? 'border-blue-400 ring-2 ring-blue-100' :
-                'border-slate-200'
-              } rounded-[25px] shadow-sm hover:shadow-xl transition-all duration-300 animate-slide-up overflow-hidden`}
-              style={{ animationDelay: `${index * 0.05}s` }}
-            >
-              {/* Main Content - Clickable Header */}
+            return (
               <div
-                className="p-6 cursor-pointer"
-                onClick={(e) => toggleExpand(item.id, e)}
+                key={item.id}
+                ref={isExpanded ? expandedRef : null}
+                data-queue-item={item.id}
+                className={`bg-white border-2 ${
+                  timeInfo.isBreached ? 'border-rose-500 bg-rose-50' :
+                  timeInfo.isUrgent ? 'border-orange-500 bg-orange-50' :
+                  isExpanded ? 'border-blue-400 ring-2 ring-blue-100' :
+                  'border-slate-200'
+                } rounded-[25px] shadow-sm hover:shadow-xl transition-all duration-300 animate-slide-up overflow-hidden`}
+                style={{ animationDelay: `${index * 0.05}s` }}
               >
-                <div className="flex items-start gap-4">
-                  {/* Priority Badge */}
-                  <div className={`w-16 h-16 ${priorityColor} rounded-2xl flex flex-col items-center justify-center text-white shadow-lg`}>
-                    <div className="text-2xl font-black">{item.priorityScore}</div>
-                    <div className="text-[8px] font-bold uppercase tracking-wider">Score</div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4 mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="text-lg font-black text-slate-900">{item.title}</h4>
-                          {item.escalationLevel > 0 && (
-                            <div className="flex items-center gap-1 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
-                              <TrendingUp size={12} />
-                              <span className="text-[10px] font-black uppercase">L{item.escalationLevel}</span>
-                            </div>
-                          )}
-                          {item.notes.length > 0 && (
-                            <div className="flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                              <MessageSquare size={12} />
-                              <span className="text-[10px] font-black">{item.notes.length}</span>
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-sm text-slate-600 leading-relaxed">{item.description}</p>
-                      </div>
+                {/* Main Content - Clickable Header */}
+                <div
+                  className="p-6 cursor-pointer"
+                  onClick={(e) => toggleExpand(item.id, e)}
+                >
+                  <div className="flex items-start gap-4">
+                    {/* Priority Badge */}
+                    <div className={`w-16 h-16 ${priorityColor} rounded-2xl flex flex-col items-center justify-center text-white shadow-lg`}>
+                      <div className="text-2xl font-black">{item.priorityScore || 50}</div>
+                      <div className="text-[8px] font-bold uppercase tracking-wider">Score</div>
                     </div>
 
-                    {/* Meta Info */}
-                    <div className="flex items-center gap-6 mt-4">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${priorityColor}`}></div>
-                        <span className={`text-xs font-bold uppercase ${priorityTextColor}`}>{item.priority}</span>
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-4 mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-lg font-black text-slate-900">{item.title}</h4>
+                            {item.escalationLevel > 0 && (
+                              <div className="flex items-center gap-1 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                                <TrendingUp size={12} />
+                                <span className="text-[10px] font-black uppercase">L{item.escalationLevel}</span>
+                              </div>
+                            )}
+                            {(item.notes?.length || 0) > 0 && (
+                              <div className="flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                <MessageSquare size={12} />
+                                <span className="text-[10px] font-black">{item.notes?.length || 0}</span>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-sm text-slate-600 leading-relaxed">{item.description}</p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Users size={14} className="text-slate-400" />
-                        <span className="text-xs font-semibold text-slate-600">{item.assignee}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock size={14} className={timeInfo.isBreached ? 'text-rose-600' : timeInfo.isUrgent ? 'text-orange-600' : 'text-slate-400'} />
-                        <span className={`text-xs font-bold uppercase ${
-                          timeInfo.isBreached ? 'text-rose-600' :
-                          timeInfo.isUrgent ? 'text-orange-600 animate-pulse' :
-                          'text-slate-600'
-                        }`}>
-                          SLA: {timeInfo.text}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${
-                          item.status === 'escalated' ? 'bg-purple-500 animate-pulse' :
-                          item.status === 'in_progress' ? 'bg-blue-500' :
-                          'bg-slate-400'
-                        }`}></div>
-                        <span className="text-xs font-semibold text-slate-600 capitalize">{item.status.replace('_', ' ')}</span>
-                      </div>
-                      {item.relatedTo && (
+
+                      {/* Meta Info */}
+                      <div className="flex items-center gap-6 mt-4">
                         <div className="flex items-center gap-2">
-                          {(() => {
-                            const RelIcon = getRelatedIcon(item.relatedTo.type);
-                            return <RelIcon size={14} className="text-slate-400" />;
-                          })()}
-                          <span className="text-xs font-semibold text-slate-600">{item.relatedTo.name}</span>
+                          <div className={`w-2 h-2 rounded-full ${priorityColor}`}></div>
+                          <span className={`text-xs font-bold uppercase ${priorityTextColor}`}>{item.priority}</span>
                         </div>
-                      )}
+                        <div className="flex items-center gap-2">
+                          <Users size={14} className="text-slate-400" />
+                          <span className="text-xs font-semibold text-slate-600">{getUserName(item.assigneeId)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock size={14} className={timeInfo.isBreached ? 'text-rose-600' : timeInfo.isUrgent ? 'text-orange-600' : 'text-slate-400'} />
+                          <span className={`text-xs font-bold uppercase ${
+                            timeInfo.isBreached ? 'text-rose-600' :
+                            timeInfo.isUrgent ? 'text-orange-600 animate-pulse' :
+                            'text-slate-600'
+                          }`}>
+                            SLA: {timeInfo.text}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${
+                            item.status === 'escalated' ? 'bg-purple-500 animate-pulse' :
+                            item.status === 'in_progress' ? 'bg-blue-500' :
+                            'bg-slate-400'
+                          }`}></div>
+                          <span className="text-xs font-semibold text-slate-600 capitalize">{item.status.replace('_', ' ')}</span>
+                        </div>
+                        {item.relatedToName && (
+                          <div className="flex items-center gap-2">
+                            {(() => {
+                              const RelIcon = getRelatedIcon(item.relatedToType);
+                              return <RelIcon size={14} className="text-slate-400" />;
+                            })()}
+                            <span className="text-xs font-semibold text-slate-600">{item.relatedToName}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Actions & Expand Button */}
-                  <div className="flex flex-col gap-2 items-end">
-                    <ChevronDown
-                      size={20}
-                      className={`text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                    />
-                    <div className="flex gap-2">
-                      {item.escalationLevel < 3 && (
-                        <button
-                          onClick={(e) => handleEscalate(item, e)}
-                          className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase active:scale-95 transition-all"
-                        >
-                          Escalate
-                        </button>
-                      )}
-                      {item.status === 'open' && (
-                        <button
-                          onClick={(e) => handleAssign(item, e)}
-                          className="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase active:scale-95 transition-all"
-                        >
-                          Assign
-                        </button>
-                      )}
+                    {/* Actions & Expand Button */}
+                    <div className="flex flex-col gap-2 items-end">
+                      <ChevronDown
+                        size={20}
+                        className={`text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                      />
+                      <div className="flex gap-2">
+                        {item.escalationLevel < 3 && (
+                          <button
+                            onClick={(e) => handleEscalate(item, e)}
+                            className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase active:scale-95 transition-all"
+                          >
+                            Escalate
+                          </button>
+                        )}
+                        {item.status === 'open' && (
+                          <button
+                            onClick={(e) => handleAssign(item, e)}
+                            className="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase active:scale-95 transition-all"
+                          >
+                            Assign
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Expanded Section - Notes & Actions */}
-              {isExpanded && (
-                <div className="px-6 pb-6 border-t border-slate-100 bg-slate-50/50">
-                  <div className="pt-6">
-                    {/* Notes Section */}
-                    <div className="mb-6">
-                      <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <FileText size={12} /> Rolling Notes
-                      </h5>
-                      {item.notes.length > 0 ? (
-                        <div className="space-y-3 max-h-48 overflow-y-auto custom-scrollbar">
-                          {item.notes.map((note, idx) => (
-                            <div key={idx} className="bg-white border border-slate-200 rounded-xl p-4">
-                              <p className="text-sm text-slate-700 mb-2">{note.text}</p>
-                              <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                                <span className="font-bold">{note.addedBy}</span>
-                                <span>•</span>
-                                <span>{note.addedAt.toLocaleString()}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-slate-400 italic">No notes yet. Add the first note below.</p>
-                      )}
-                    </div>
-
-                    {/* Add Note Input */}
-                    <div className="flex gap-3">
-                      <input
-                        type="text"
-                        value={noteText}
-                        onChange={(e) => setNoteText(e.target.amount)}
-                        placeholder="Add a rolling note..."
-                        className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && noteText.trim()) {
-                            handleAddNote(item.id);
-                          }
-                        }}
-                      />
-                      <button
-                        onClick={() => handleAddNote(item.id)}
-                        disabled={!noteText.trim()}
-                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2"
-                      >
-                        <Plus size={14} /> Add Note
-                      </button>
-                    </div>
-
-                    {/* Related Entity */}
-                    {item.relatedTo && (
+                {/* Expanded Section - Notes & Actions */}
+                {isExpanded && (
+                  <div className="px-6 pb-6 border-t border-slate-100 bg-slate-50/50">
+                    <div className="pt-6">
+                      {/* Notes Section */}
                       <div className="mb-6">
                         <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                          <ExternalLink size={12} /> Related To
+                          <FileText size={12} /> Rolling Notes
                         </h5>
-                        <div className={`flex items-center justify-between p-4 rounded-xl ${getRelatedColor(item.relatedTo.type)} bg-opacity-50`}>
-                          <div className="flex items-center gap-3">
-                            {(() => {
-                              const RelIcon = getRelatedIcon(item.relatedTo.type);
-                              return (
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getRelatedColor(item.relatedTo.type)}`}>
-                                  <RelIcon size={18} />
+                        {(item.notes?.length || 0) > 0 ? (
+                          <div className="space-y-3 max-h-48 overflow-y-auto custom-scrollbar">
+                            {item.notes?.map((note, idx) => (
+                              <div key={idx} className="bg-white border border-slate-200 rounded-xl p-4">
+                                <p className="text-sm text-slate-700 mb-2">{note.text}</p>
+                                <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                                  <span className="font-bold">{note.addedBy}</span>
+                                  <span>•</span>
+                                  <span>{new Date(note.addedAt).toLocaleString()}</span>
                                 </div>
-                              );
-                            })()}
-                            <div>
-                              <p className="text-sm font-black text-slate-900">{item.relatedTo.name}</p>
-                              <p className="text-[10px] font-bold text-slate-500 uppercase">{item.relatedTo.type}</p>
-                            </div>
+                              </div>
+                            ))}
                           </div>
-                          <button
-                            onClick={() => navigate(`/${item.relatedTo!.type}/${item.relatedTo!.id}`)}
-                            className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-lg text-[10px] font-bold hover:bg-slate-50 transition-all border border-slate-200"
-                          >
-                            <ExternalLink size={12} /> View
-                          </button>
-                        </div>
+                        ) : (
+                          <p className="text-sm text-slate-400 italic">No notes yet. Add the first note below.</p>
+                        )}
                       </div>
-                    )}
 
-                    {/* Quick Actions */}
-                    <div className="flex gap-3 mt-6 pt-6 border-t border-slate-200">
-                      <button
-                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
-                        onClick={() => {
-                          setQueueItems(prev => prev.filter(i => i.id !== item.id));
-                          setExpandedItemId(null);
-                        }}
-                      >
-                        Mark Resolved
-                      </button>
-                      <button
-                        className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl text-xs font-black uppercase tracking-widest active:scale-95 transition-all"
-                        onClick={() => setExpandedItemId(null)}
-                      >
-                        Close
-                      </button>
+                      {/* Add Note Input */}
+                      <div className="flex gap-3">
+                        <input
+                          type="text"
+                          value={noteText}
+                          onChange={(e) => setNoteText(e.target.value)}
+                          placeholder="Add a rolling note..."
+                          className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && noteText.trim()) {
+                              handleAddNote(item);
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => handleAddNote(item)}
+                          disabled={!noteText.trim()}
+                          className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2"
+                        >
+                          <Plus size={14} /> Add Note
+                        </button>
+                      </div>
+
+                      {/* Related Entity */}
+                      {item.relatedToName && item.relatedToType && (
+                        <div className="mt-6">
+                          <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <ExternalLink size={12} /> Related To
+                          </h5>
+                          <div className={`flex items-center justify-between p-4 rounded-xl ${getRelatedColor(item.relatedToType)} bg-opacity-50`}>
+                            <div className="flex items-center gap-3">
+                              {(() => {
+                                const RelIcon = getRelatedIcon(item.relatedToType);
+                                return (
+                                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getRelatedColor(item.relatedToType)}`}>
+                                    <RelIcon size={18} />
+                                  </div>
+                                );
+                              })()}
+                              <div>
+                                <p className="text-sm font-black text-slate-900">{item.relatedToName}</p>
+                                <p className="text-[10px] font-bold text-slate-500 uppercase">{item.relatedToType}</p>
+                              </div>
+                            </div>
+                            {item.relatedToId && (
+                              <button
+                                onClick={() => navigate(`/${item.relatedToType}/${item.relatedToId}`)}
+                                className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-lg text-[10px] font-bold hover:bg-slate-50 transition-all border border-slate-200"
+                              >
+                                <ExternalLink size={12} /> View
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Quick Actions */}
+                      <div className="flex gap-3 mt-6 pt-6 border-t border-slate-200">
+                        <button
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+                          onClick={() => handleResolve(item)}
+                        >
+                          Mark Resolved
+                        </button>
+                        <button
+                          className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl text-xs font-black uppercase tracking-widest active:scale-95 transition-all"
+                          onClick={() => setExpandedItemId(null)}
+                        >
+                          Close
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
 
       {/* Coming Soon Features */}
@@ -724,7 +643,7 @@ const TacticalQueue: React.FC = () => {
                 <input
                   type="text"
                   value={newItemForm.title}
-                  onChange={(e) => setNewItemForm(prev => ({ ...prev, title: e.target.amount }))}
+                  onChange={(e) => setNewItemForm(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="Brief description of the issue..."
                   className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
@@ -735,7 +654,7 @@ const TacticalQueue: React.FC = () => {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Description</label>
                 <textarea
                   value={newItemForm.description}
-                  onChange={(e) => setNewItemForm(prev => ({ ...prev, description: e.target.amount }))}
+                  onChange={(e) => setNewItemForm(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Detailed information..."
                   rows={3}
                   className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 resize-none"
@@ -748,7 +667,7 @@ const TacticalQueue: React.FC = () => {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Priority</label>
                   <select
                     value={newItemForm.priority}
-                    onChange={(e) => setNewItemForm(prev => ({ ...prev, priority: e.target.amount as any }))}
+                    onChange={(e) => setNewItemForm(prev => ({ ...prev, priority: e.target.value as any }))}
                     className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-blue-500"
                   >
                     <option value="critical">Critical</option>
@@ -761,7 +680,7 @@ const TacticalQueue: React.FC = () => {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">SLA (Hours)</label>
                   <select
                     value={newItemForm.slaHours}
-                    onChange={(e) => setNewItemForm(prev => ({ ...prev, slaHours: parseInt(e.target.amount) }))}
+                    onChange={(e) => setNewItemForm(prev => ({ ...prev, slaHours: parseInt(e.target.value) }))}
                     className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-blue-500"
                   >
                     <option value={1}>1 Hour</option>
@@ -780,7 +699,7 @@ const TacticalQueue: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <select
                     value={newItemForm.relatedType}
-                    onChange={(e) => setNewItemForm(prev => ({ ...prev, relatedType: e.target.amount as any }))}
+                    onChange={(e) => setNewItemForm(prev => ({ ...prev, relatedType: e.target.value as any }))}
                     className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-blue-500"
                   >
                     <option value="">None</option>
@@ -789,12 +708,13 @@ const TacticalQueue: React.FC = () => {
                     <option value="leads">Lead</option>
                     <option value="deals">Deal</option>
                     <option value="tickets">Ticket</option>
+                    <option value="jobs">Job</option>
                   </select>
                   {newItemForm.relatedType && (
                     <input
                       type="text"
                       value={newItemForm.relatedName}
-                      onChange={(e) => setNewItemForm(prev => ({ ...prev, relatedName: e.target.amount }))}
+                      onChange={(e) => setNewItemForm(prev => ({ ...prev, relatedName: e.target.value }))}
                       placeholder={`${newItemForm.relatedType.slice(0, -1)} name...`}
                       className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-blue-500"
                     />

@@ -58,16 +58,17 @@ const SalesDashboard: React.FC = () => {
     const acceptedQuotes = quotes.filter(q => q.status === 'Accepted').length;
     const totalQuotesValue = quotes
       .filter(q => q.status === 'Sent' || q.status === 'Accepted')
-      .reduce((sum, q) => sum + q.totalAmount, 0);
+      .reduce((sum, q) => sum + q.total, 0);
 
     // Subscriptions stats
     const activeSubscriptions = subscriptions.filter(s => s.status === 'Active');
     const monthlyRecurring = activeSubscriptions
       .filter(s => s.billingCycle === 'Monthly')
-      .reduce((sum, s) => sum + s.amount, 0);
+      .reduce((sum, s) => sum + s.items.reduce((acc, item) => acc + item.qty * item.unitPrice, 0), 0);
     const totalMRR = activeSubscriptions.reduce((sum, s) => {
-      if (s.billingCycle === 'Monthly') return sum + s.amount;
-      if (s.billingCycle === 'Yearly') return sum + (s.amount / 12);
+      const subTotal = s.items.reduce((acc, item) => acc + item.qty * item.unitPrice, 0);
+      if (s.billingCycle === 'Monthly') return sum + subTotal;
+      if (s.billingCycle === 'Yearly') return sum + (subTotal / 12);
       return sum;
     }, 0);
 

@@ -26,7 +26,7 @@ type SortField = 'poNumber' | 'total' | 'status' | 'createdAt';
 type SortDirection = 'asc' | 'desc';
 
 const PurchaseOrdersPage: React.FC = () => {
-  const { purchaseOrders, accounts } = useCRM();
+  const { purchaseOrders, accounts, openModal } = useCRM();
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -189,7 +189,10 @@ const PurchaseOrdersPage: React.FC = () => {
             <Download size={16} />
             Export
           </button>
-          <button className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all">
+          <button
+            onClick={() => openModal('purchaseOrders')}
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
+          >
             <Plus size={16} />
             New PO
           </button>
@@ -460,7 +463,10 @@ const PurchaseOrdersPage: React.FC = () => {
             </div>
             <h3 className="text-2xl font-black text-slate-900 mb-2">No Purchase Orders Found</h3>
             <p className="text-slate-500 mb-6">Create your first purchase order to get started.</p>
-            <button className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-orange-500/20 active:scale-95 transition-all">
+            <button
+              onClick={() => openModal('purchaseOrders')}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-orange-500/20 active:scale-95 transition-all"
+            >
               Create Purchase Order
             </button>
           </div>
@@ -471,10 +477,10 @@ const PurchaseOrdersPage: React.FC = () => {
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-6 animate-slide-up">
           <span className="font-bold">{selectedIds.size} selected</span>
           <div className="flex gap-3">
-            <button className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold transition-all">
+            <button disabled title="Coming soon" className="bg-white/20 px-4 py-2 rounded-lg font-bold transition-all opacity-50 cursor-not-allowed">
               Update Status
             </button>
-            <button className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold transition-all">
+            <button disabled title="Coming soon" className="bg-white/20 px-4 py-2 rounded-lg font-bold transition-all opacity-50 cursor-not-allowed">
               Export Selected
             </button>
             <button

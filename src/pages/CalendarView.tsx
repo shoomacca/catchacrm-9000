@@ -404,13 +404,13 @@ const CalendarView: React.FC = () => {
 
     const updatedEvent = {
       ...selectedEvent,
-      location: popupEdits.location,
-      description: popupEdits.description,
-      notes: popupEdits.description,
-      attendees: popupEdits.attendees,
-      status: popupEdits.status || selectedEvent.status,
-      priority: popupEdits.priority || selectedEvent.priority,
-      assigneeId: popupEdits.assigneeId || selectedEvent.assigneeId
+      location: popupEdits.location || '',
+      description: popupEdits.description || '',
+      notes: popupEdits.description || '',
+      attendees: popupEdits.attendees || [],
+      status: popupEdits.status || selectedEvent.status || '',
+      priority: popupEdits.priority || selectedEvent.priority || '',
+      assigneeId: popupEdits.assigneeId || selectedEvent.assigneeId || ''
     };
 
     // Remove the computed properties before saving
@@ -433,19 +433,19 @@ const CalendarView: React.FC = () => {
 
         if (relatedType === 'deals') {
           relatedEntity = deals.find(d => d.id === evt.relatedToId);
-          entityName = relatedEntity?.name;
+          entityName = relatedEntity?.name || '';
         } else if (relatedType === 'leads') {
           relatedEntity = leads.find(l => l.id === evt.relatedToId);
-          entityName = relatedEntity?.name;
+          entityName = relatedEntity?.name || '';
         } else if (relatedType === 'accounts') {
           relatedEntity = accounts.find(a => a.id === evt.relatedToId);
-          entityName = relatedEntity?.name;
+          entityName = relatedEntity?.name || '';
         } else if (relatedType === 'contacts') {
           relatedEntity = contacts.find(c => c.id === evt.relatedToId);
-          entityName = relatedEntity?.name;
+          entityName = relatedEntity?.name || '';
         } else if (relatedType === 'tickets') {
           relatedEntity = tickets.find(t => t.id === evt.relatedToId);
-          entityName = relatedEntity?.subject;
+          entityName = relatedEntity?.subject || '';
         }
 
         if (relatedEntity) {
@@ -483,16 +483,16 @@ const CalendarView: React.FC = () => {
 
         if (relatedType === 'deals') {
           relatedEntity = deals.find(d => d.id === evt.relatedToId);
-          entityName = relatedEntity?.name;
+          entityName = relatedEntity?.name || '';
         } else if (relatedType === 'leads') {
           relatedEntity = leads.find(l => l.id === evt.relatedToId);
-          entityName = relatedEntity?.name;
+          entityName = relatedEntity?.name || '';
         } else if (relatedType === 'accounts') {
           relatedEntity = accounts.find(a => a.id === evt.relatedToId);
-          entityName = relatedEntity?.name;
+          entityName = relatedEntity?.name || '';
         } else if (relatedType === 'contacts') {
           relatedEntity = contacts.find(c => c.id === evt.relatedToId);
-          entityName = relatedEntity?.name;
+          entityName = relatedEntity?.name || '';
         }
 
         if (relatedEntity) {
@@ -795,7 +795,7 @@ const CalendarView: React.FC = () => {
                       <input
                         type="text"
                         value={popupEdits.location || ''}
-                        onChange={(e) => setPopupEdits((prev: any) => ({ ...prev, location: e.target.amount }))}
+                        onChange={(e) => setPopupEdits((prev: any) => ({ ...prev, location: e.target.value }))}
                         placeholder="Enter location..."
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
@@ -827,7 +827,7 @@ const CalendarView: React.FC = () => {
                     {isEditingPopup && selectedEvent.type === 'tasks' ? (
                       <select
                         value={popupEdits.status || selectedEvent.status || 'Pending'}
-                        onChange={(e) => setPopupEdits((prev: any) => ({ ...prev, status: e.target.amount }))}
+                        onChange={(e) => setPopupEdits((prev: any) => ({ ...prev, status: e.target.value }))}
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="Pending">Pending</option>
@@ -869,7 +869,7 @@ const CalendarView: React.FC = () => {
                       {isEditingPopup && selectedEvent.type === 'tasks' ? (
                         <select
                           value={popupEdits.priority || selectedEvent.priority || 'Medium'}
-                          onChange={(e) => setPopupEdits((prev: any) => ({ ...prev, priority: e.target.amount }))}
+                          onChange={(e) => setPopupEdits((prev: any) => ({ ...prev, priority: e.target.value }))}
                           className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="Low">Low</option>
@@ -911,7 +911,7 @@ const CalendarView: React.FC = () => {
                   {isEditingPopup ? (
                     <textarea
                       value={popupEdits.description || ''}
-                      onChange={(e) => setPopupEdits((prev: any) => ({ ...prev, description: e.target.amount }))}
+                      onChange={(e) => setPopupEdits((prev: any) => ({ ...prev, description: e.target.value }))}
                       placeholder="Enter description..."
                       className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-24"
                     />
@@ -954,7 +954,7 @@ const CalendarView: React.FC = () => {
                         <label className="text-[9px] font-bold text-slate-400 uppercase mb-1 block">Assign To User</label>
                         <select
                           value={popupEdits.assigneeId || selectedEvent.assigneeId || ''}
-                          onChange={(e) => setPopupEdits((prev: any) => ({ ...prev, assigneeId: e.target.amount }))}
+                          onChange={(e) => setPopupEdits((prev: any) => ({ ...prev, assigneeId: e.target.value }))}
                           className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="">Select User...</option>
@@ -970,7 +970,7 @@ const CalendarView: React.FC = () => {
                           <input
                             type="text"
                             value={Array.isArray(popupEdits.attendees) ? popupEdits.attendees.map((a: any) => a.name || a).join(', ') : popupEdits.attendees || ''}
-                            onChange={(e) => setPopupEdits((prev: any) => ({ ...prev, attendees: e.target.amount.split(',').map((s: string) => s.trim()).filter(Boolean) }))}
+                            onChange={(e) => setPopupEdits((prev: any) => ({ ...prev, attendees: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))}
                             placeholder="Names separated by commas..."
                             className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />

@@ -186,10 +186,11 @@ const QuotesList: React.FC = () => {
         accountId: quote.accountId,
         status: 'Draft' as const,
         issueDate: new Date().toISOString(),
+        invoiceDate: new Date().toISOString(),
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
         lineItems: quote.lineItems,
         subtotal: quote.subtotal,
-        tax: quote.tax || 0,
+        taxTotal: quote.taxTotal || 0,
         total: quote.total,
         notes: `Converted from quote ${quote.quoteNumber}`,
         paymentStatus: 'unpaid' as const

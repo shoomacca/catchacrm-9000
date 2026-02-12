@@ -7,8 +7,8 @@ interface ImportMetaEnv {
   readonly SUPABASE_SERVICE_ROLE_KEY: string;
 
   // n8n
-  readonly N8N_API_URL: string;
-  readonly N8N_API_KEY: string;
+  readonly VITE_N8N_API_URL: string;
+  readonly VITE_N8N_API_KEY: string;
 
   // Stripe
   readonly VITE_STRIPE_PUBLISHABLE_KEY: string;
@@ -16,9 +16,9 @@ interface ImportMetaEnv {
   readonly STRIPE_WEBHOOK_SECRET: string;
 
   // PayPal
-  readonly PAYPAL_CLIENT_ID: string;
-  readonly PAYPAL_CLIENT_SECRET: string;
-  readonly PAYPAL_MODE: string;
+  readonly VITE_PAYPAL_CLIENT_ID: string;
+  readonly VITE_PAYPAL_CLIENT_SECRET: string;
+  readonly VITE_PAYPAL_MODE: string;
 
   // AI Services
   readonly VITE_GEMINI_API_KEY: string;

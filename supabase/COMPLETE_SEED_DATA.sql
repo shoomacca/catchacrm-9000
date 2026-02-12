@@ -127,16 +127,16 @@ BEGIN
 
   subscription1 := gen_random_uuid();
 
-  INSERT INTO subscriptions (id, org_id, account_id, name, status, billing_cycle, next_bill_date, start_date, items, auto_generate_invoice, mrr) VALUES
+  INSERT INTO subscriptions (id, org_id, account_id, name, status, billing_cycle, next_bill_date, start_date, items, auto_generate_invoice) VALUES
     (subscription1, demo_org_id, account_neb, 'Nebuchadnezzar Operations Package', 'Active', 'monthly', CURRENT_DATE + INTERVAL '15 days', CURRENT_DATE - INTERVAL '45 days',
      '[{"itemType":"service","description":"Operator Support","qty":1,"unitPrice":8000,"taxRate":10},{"itemType":"service","description":"Sentinel Watch","qty":1,"unitPrice":10000,"taxRate":0}]'::jsonb,
-     true, 18000),
+     true),
     (gen_random_uuid(), demo_org_id, account_logos, 'Logos Premium Support', 'Active', 'monthly', CURRENT_DATE + INTERVAL '22 days', CURRENT_DATE - INTERVAL '60 days',
      '[{"itemType":"service","description":"Operator Support","qty":1,"unitPrice":8000,"taxRate":10}]'::jsonb,
-     true, 8000),
+     true),
     (gen_random_uuid(), demo_org_id, account_hammer, 'Hammer Defense Package', 'Paused', 'yearly', CURRENT_DATE + INTERVAL '120 days', CURRENT_DATE - INTERVAL '245 days',
      '[{"itemType":"service","description":"Sentinel Watch Annual","qty":1,"unitPrice":120000,"taxRate":0}]'::jsonb,
-     true, 10000);
+     true);
 
   -- ============================================
   -- PAYMENTS (for payment tracking)
@@ -144,10 +144,10 @@ BEGIN
 
   DELETE FROM payments WHERE org_id = demo_org_id;
 
-  INSERT INTO payments (id, org_id, invoice_id, amount, method, status, reference, paid_at, notes) VALUES
-    (gen_random_uuid(), demo_org_id, invoice1, 495000, 'bank_transfer', 'completed', 'ZION-TXN-001', CURRENT_DATE - INTERVAL '25 days', 'Payment received from Nebuchadnezzar'),
-    (gen_random_uuid(), demo_org_id, NULL, 8800, 'card', 'completed', 'STRIPE-PI-002', CURRENT_DATE - INTERVAL '15 days', 'Monthly subscription - Logos'),
-    (gen_random_uuid(), demo_org_id, NULL, 5000, 'cash', 'completed', NULL, CURRENT_DATE - INTERVAL '5 days', 'Partial payment - Vigilant');
+  INSERT INTO payments (id, org_id, invoice_id, amount, method, reference, paid_at, note) VALUES
+    (gen_random_uuid(), demo_org_id, invoice1, 495000, 'bank_transfer', 'ZION-TXN-001', CURRENT_DATE - INTERVAL '25 days', 'Payment received from Nebuchadnezzar'),
+    (gen_random_uuid(), demo_org_id, NULL, 8800, 'card', 'STRIPE-PI-002', CURRENT_DATE - INTERVAL '15 days', 'Monthly subscription - Logos'),
+    (gen_random_uuid(), demo_org_id, NULL, 5000, 'cash', NULL, CURRENT_DATE - INTERVAL '5 days', 'Partial payment - Vigilant');
 
   -- ============================================
   -- CONVERSATIONS (for Team Chat)
@@ -159,22 +159,22 @@ BEGIN
   conv_general := gen_random_uuid();
   conv_sales := gen_random_uuid();
 
-  INSERT INTO conversations (id, org_id, participant_ids, name, is_system, last_message_at) VALUES
-    (conv_general, demo_org_id, ARRAY[user_neo, user_trinity, user_morpheus, user_niobe, user_link], 'General', true, NOW() - INTERVAL '5 minutes'),
-    (conv_sales, demo_org_id, ARRAY[user_neo, user_trinity, user_morpheus], 'Sales Team', true, NOW() - INTERVAL '2 hours'),
-    (gen_random_uuid(), demo_org_id, ARRAY[user_neo, user_trinity], NULL, false, NOW() - INTERVAL '1 day');
+  INSERT INTO conversations (id, org_id, participant_ids, name, is_system) VALUES
+    (conv_general, demo_org_id, ARRAY[user_neo, user_trinity, user_morpheus, user_niobe, user_link], 'General', true),
+    (conv_sales, demo_org_id, ARRAY[user_neo, user_trinity, user_morpheus], 'Sales Team', true),
+    (gen_random_uuid(), demo_org_id, ARRAY[user_neo, user_trinity], NULL, false);
 
   -- ============================================
   -- CHAT MESSAGES (for Team Chat)
   -- ============================================
 
-  INSERT INTO chat_messages (id, org_id, conversation_id, sender_id, content, read_by) VALUES
-    (gen_random_uuid(), demo_org_id, conv_general, user_morpheus, 'The Oracle has requested a meeting. Who is available?', ARRAY[user_neo, user_trinity, user_link]),
-    (gen_random_uuid(), demo_org_id, conv_general, user_neo, 'I can go. When does she want to meet?', ARRAY[user_morpheus, user_trinity, user_link]),
-    (gen_random_uuid(), demo_org_id, conv_general, user_trinity, 'I will come with you. Link, prepare the loading program.', ARRAY[user_morpheus, user_neo, user_link]),
-    (gen_random_uuid(), demo_org_id, conv_general, user_link, 'Loading program ready. Hardline confirmed at 42nd and Main.', ARRAY[user_morpheus, user_neo, user_trinity]),
-    (gen_random_uuid(), demo_org_id, conv_sales, user_morpheus, 'The Hammer deal is progressing. Roland wants to upgrade their EMP array.', ARRAY[user_neo]),
-    (gen_random_uuid(), demo_org_id, conv_sales, user_neo, 'I can prepare a proposal. What is their budget?', ARRAY[user_morpheus]);
+  INSERT INTO chat_messages (id, org_id, conversation_id, sender_id, content) VALUES
+    (gen_random_uuid(), demo_org_id, conv_general, user_morpheus, 'The Oracle has requested a meeting. Who is available?'),
+    (gen_random_uuid(), demo_org_id, conv_general, user_neo, 'I can go. When does she want to meet?'),
+    (gen_random_uuid(), demo_org_id, conv_general, user_trinity, 'I will come with you. Link, prepare the loading program.'),
+    (gen_random_uuid(), demo_org_id, conv_general, user_link, 'Loading program ready. Hardline confirmed at 42nd and Main.'),
+    (gen_random_uuid(), demo_org_id, conv_sales, user_morpheus, 'The Hammer deal is progressing. Roland wants to upgrade their EMP array.'),
+    (gen_random_uuid(), demo_org_id, conv_sales, user_neo, 'I can prepare a proposal. What is their budget?');
 
   -- ============================================
   -- QUOTES (seed data)

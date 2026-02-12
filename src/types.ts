@@ -34,18 +34,27 @@ export type EntityType =
   | 'calculators'
   | 'automationWorkflows'
   | 'webhooks'
-  | 'industryTemplates';
+  | 'industryTemplates'
+  | 'currencies'
+  | 'payments'
+  | 'warehouses'
+  | 'roles'
+  | 'tacticalQueue'
+  | 'warehouseLocations'
+  | 'dispatchAlerts'
+  | 'rfqs'
+  | 'supplierQuotes';
 
 export type CommunicationOutcome = 'answered' | 'no-answer' | 'voicemail' | 'meeting-booked' | 'converted';
 
 export type JobType = 'Install' | 'Service' | 'Emergency' | 'Inspection' | 'Audit';
-export type JobStatus = 'Scheduled' | 'InProgress' | 'Completed' | 'Cancelled' | 'OnHold';
+export type JobStatus = 'Scheduled' | 'InProgress' | 'In Progress' | 'Completed' | 'Cancelled' | 'OnHold' | 'On Hold';
 export type POStatus = 'Draft' | 'Ordered' | 'Dispatched' | 'Delivered';
 export type ReviewPlatform = 'Google' | 'Facebook' | 'Yelp' | 'Trustpilot' | 'Internal';
 export type CalculatorType = 'ROI' | 'Repayment' | 'SolarYield';
 export type WorkflowTriggerType = 'RecordCreated' | 'FieldUpdated' | 'ThresholdReached' | 'FormSubmitted' | 'DateArrived';
 export type WorkflowNodeType = 'Action' | 'Filter' | 'Delay';
-export type WorkflowActionType = 'SendEmail' | 'SendSMS' | 'CreateTask' | 'UpdateField' | 'Webhook';
+export type WorkflowActionType = 'SendEmail' | 'SendSMS' | 'CreateTask' | 'UpdateField' | 'Webhook' | 'AssignOwner';
 
 export type CustomFieldType =
   | 'text'
@@ -70,14 +79,17 @@ export interface Address {
 export interface CustomFieldDefinition {
   id: string;
   label: string;
-  type: 'text' | 'number' | 'select' | 'date' | 'checkbox';
+  type: 'text' | 'number' | 'select' | 'date' | 'checkbox' | 'email' | 'tel' | 'textarea';
   options?: string[]; // for select
   required: boolean;
+  placeholder?: string;
+  defaultValue?: string | number | boolean;
 }
 
 export interface User extends CRMBase {
   name: string;
   email: string;
+  phone?: string;
   role: OperationalDomain;
   avatar: string;
   managerId?: string;
@@ -95,9 +107,16 @@ export interface CRMBase {
 export interface Notification extends CRMBase {
   title: string;
   message: string;
+  content?: string; // Alternative to message
   type: 'info' | 'warning' | 'success' | 'urgent';
   read: boolean;
+  isRead?: boolean; // Alternative to read
+  readAt?: string;
   link?: string;
+  actionUrl?: string; // Alternative to link
+  userId?: string; // Target user
+  relatedToType?: EntityType;
+  relatedToId?: string;
 }
 
 export interface AuditLog extends CRMBase {
@@ -118,13 +137,17 @@ export interface Lead extends CRMBase {
   status: string;
   source: string;
   campaignId?: string;
+  accountId?: string; // Optional link to an Account
   estimatedValue: number;
+  amount?: number; // Alias for estimatedValue — used by LeadsPage and Reports
   avatar: string;
   score: number;
   address?: Address;
   lastContactDate?: string;
   notes?: string;
   commissionRate?: number; // Commission % for lead conversion
+  temperature?: 'Cold' | 'Warm' | 'Hot'; // Lead temperature/engagement level
+  assignedTo?: string; // Assigned user ID
   // Conversion tracking
   convertedToDealId?: string; // ID of the Deal this lead was converted to
   convertedAt?: string; // Timestamp of conversion
@@ -140,10 +163,15 @@ export interface Account extends CRMBase {
   avatar: string;
   tier: string;
   email?: string;
+  phone?: string;
   city?: string;
   state?: string;
   logo?: string;
   address?: Address;
+  revenue?: number; // Annual revenue
+  status?: 'Active' | 'Inactive' | 'Prospect';
+  type?: 'Customer' | 'Vendor' | 'Partner' | 'Reseller';
+  billingAddress?: Address;
   commissionRate?: number; // Default commission % for deals with this account
   customData?: Record<string, any>;
 }
@@ -153,9 +181,16 @@ export interface Contact extends CRMBase {
   accountId: string;
   email: string;
   phone: string;
+  mobile?: string;
   title: string;
   avatar: string;
   company?: string; // Denormalized company name for quick access
+  department?: string;
+  isPrimary?: boolean; // Primary contact for the account
+  role?: string;
+  lastActivityDate?: string;
+  interactionCount?: number;
+  status?: 'Active' | 'Inactive';
   address?: Address;
   customData?: Record<string, any>;
 }
@@ -174,6 +209,8 @@ export interface Deal extends CRMBase {
   campaignId?: string;
   commissionRate?: number; // Commission % for this deal
   commissionAmount?: number; // Calculated commission amount
+  description?: string; // Used by some pages as alias for notes
+  notes?: string; // Deal notes
   // Origin tracking
   leadId?: string; // ID of the Lead this deal was converted from
   // Won conversion tracking
@@ -209,7 +246,7 @@ export interface CalendarEvent extends CRMBase {
 
 export interface Campaign extends CRMBase {
   name: string;
-  type: 'Email' | 'Social' | 'Search' | 'Event' | 'Referral';
+  type: 'Email' | 'email' | 'Social' | 'social' | 'Search' | 'search' | 'Event' | 'event' | 'Referral' | 'referral';
   budget: number;
   spent?: number; // Amount spent so far
   revenue?: number; // Revenue generated (alias for revenueGenerated)
@@ -225,15 +262,21 @@ export interface Campaign extends CRMBase {
 }
 
 export interface Communication extends CRMBase {
-  type: 'Email' | 'Call' | 'SMS' | 'Note';
+  type: 'Email' | 'Call' | 'SMS' | 'Note' | 'Meeting';
   subject: string;
   content: string;
   direction: 'Inbound' | 'Outbound';
   relatedToType: EntityType;
   relatedToId: string;
   outcome: CommunicationOutcome;
+  status?: string;
+  notes?: string;
+  date?: string;
+  contactId?: string;
+  summary?: string;
   nextStep?: string;
   nextFollowUpDate?: string;
+  duration?: number; // Duration in seconds (for calls)
   metadata?: Record<string, any>;
 }
 
@@ -253,8 +296,10 @@ export interface Ticket extends CRMBase {
   requesterId: string;
   accountId?: string;
   assigneeId: string;
+  assignedTo?: string; // Alias for assigneeId — used by some pages
   status: string;
   priority: string;
+  category?: string;
   slaDeadline: string;
   messages: TicketMessage[];
   internalNotes?: TicketMessage[];
@@ -267,12 +312,20 @@ export interface ChatMessage extends CRMBase {
   conversationId: string;
   senderId: string;
   content: string;
+  mentions?: string[]; // Array of user IDs mentioned
+  attachments?: string[]; // Array of attachment URLs
+  isEdited?: boolean;
+  editedAt?: string;
 }
 
 export interface Conversation extends CRMBase {
   participantIds: string[];
   name?: string; // For named group channels (e.g., "General", "Sales Team")
   isSystem?: boolean; // For mandatory system channels that cannot be left
+  type?: 'direct' | 'group' | 'channel';
+  participants?: string[]; // Alternative to participantIds
+  isActive?: boolean;
+  lastMessageAt?: string;
 }
 
 export interface Crew extends CRMBase {
@@ -280,6 +333,8 @@ export interface Crew extends CRMBase {
   leaderId: string;
   memberIds: string[];
   color: string;
+  specialty?: string;
+  status?: 'Active' | 'Inactive';
 }
 
 export interface Zone extends CRMBase {
@@ -287,6 +342,9 @@ export interface Zone extends CRMBase {
   region: string;
   description?: string;
   color?: string;
+  type?: string;
+  status?: 'Active' | 'Inactive';
+  coordinates?: { lat: number; lng: number }[];
 }
 
 export interface JobField {
@@ -325,9 +383,11 @@ export interface Job extends CRMBase {
   lng?: number;
   jobFields?: JobField[];
   swmsSigned?: boolean;
+  swmsSignedAt?: string;
   completionSignature?: string;
   evidencePhotos?: string[];
   bom?: BOMItem[];
+  notes?: string;
   invoiceId?: string;
 }
 
@@ -342,6 +402,9 @@ export interface Equipment extends CRMBase {
   nextServiceDate?: string;
   purchaseDate?: string;
   purchasePrice?: number;
+  model?: string;
+  status?: 'Available' | 'In Use' | 'Maintenance' | 'Retired';
+  value?: number; // Current value
 }
 
 export interface InventoryItem extends CRMBase {
@@ -349,11 +412,15 @@ export interface InventoryItem extends CRMBase {
   sku: string;
   warehouseQty: number;
   reorderPoint: number;
-  category: 'Asset' | 'Material';
+  category: 'Asset' | 'Material' | 'Medical' | 'Weapons' | 'Communications' | 'Technology' | string;
   unitPrice: number;
+  supplier?: string;
+  lastRestocked?: string;
+  location?: string;
 }
 
 export interface PurchaseOrder extends CRMBase {
+  name?: string;
   poNumber: string;
   supplierId: string;
   accountId: string;
@@ -361,6 +428,7 @@ export interface PurchaseOrder extends CRMBase {
   items: { sku: string; name: string; qty: number; price: number }[];
   total: number;
   linkedJobId?: string;
+  expectedDelivery?: string;
 }
 
 export interface BankTransaction extends CRMBase {
@@ -387,6 +455,7 @@ export interface Expense extends CRMBase {
   status: 'Paid' | 'Pending';
   receiptUrl?: string;
   approvedBy?: string;
+  notes?: string;
 }
 
 export interface Review extends CRMBase {
@@ -633,6 +702,9 @@ export interface Invoice extends CRMBase {
   subtotal: number;
   taxTotal: number;
   total: number;
+  amountPaid?: number; // Total amount paid
+  balanceDue?: number; // Remaining balance
+  lateFeeRate?: number; // Late fee percentage
   notes?: string; // Additional invoice notes
   terms?: string; // Payment terms
   credits?: InvoiceCredit[];
@@ -642,7 +714,7 @@ export interface Subscription extends CRMBase {
   accountId: string;
   name: string;
   status: 'Active' | 'Paused' | 'Cancelled';
-  billingCycle: 'one-off' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
+  billingCycle: 'one-off' | 'weekly' | 'monthly' | 'Monthly' | 'quarterly' | 'Quarterly' | 'yearly' | 'Yearly' | 'custom';
   nextBillDate: string;
   startDate: string;
   endDate?: string;
@@ -653,11 +725,22 @@ export interface Subscription extends CRMBase {
 
 export interface Document extends CRMBase {
   title: string;
+  name?: string; // Alternative to title
   fileType: string;
   fileSize: string;
   url: string;
+  fileUrl?: string; // Alternative to url
   relatedToType: EntityType;
   relatedToId: string;
+  contentText?: string; // Extracted text content
+  embedding?: number[]; // Vector embedding for search
+  processingStatus?: 'pending' | 'processing' | 'completed' | 'failed';
+  processedAt?: string;
+  uploadedBy?: string;
+  version?: number;
+  parentDocumentId?: string;
+  description?: string;
+  tags?: string[];
 }
 
 // === Role & Permission Types ===
@@ -665,9 +748,18 @@ export interface Document extends CRMBase {
 export interface Role {
   id: string;
   name: string;
+  label?: string;
   description: string;
   isSystem: boolean; // admin, manager, user are system roles
   color: string;
+  parentRoleId?: string;
+  hierarchyLevel?: number;
+  canViewAllData?: boolean;
+  canModifyAllData?: boolean;
+  portalType?: 'internal' | 'customer' | 'partner';
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
 }
 
 export interface PermissionMatrix {
@@ -725,6 +817,31 @@ export interface LeadScoringRule {
 }
 
 // === Financial Types ===
+
+export interface Currency extends CRMBase {
+  isoCode: string; // e.g., 'USD', 'AUD', 'EUR'
+  name: string;
+  symbol: string; // e.g., '$', '€', '£'
+  conversionRate: number; // Conversion rate to base currency
+  decimalPlaces: number;
+  isActive: boolean;
+  isCorporate: boolean; // Is this the organization's base currency
+}
+
+export interface Payment extends CRMBase {
+  invoiceId: string;
+  amount: number;
+  paymentDate: string;
+  paymentMethod: 'Credit Card' | 'Bank Transfer' | 'Cash' | 'Check' | 'PayPal' | 'Stripe' | 'Other';
+  method?: string; // Alternative to paymentMethod
+  status: 'Pending' | 'Completed' | 'Failed' | 'Refunded';
+  transactionId?: string;
+  referenceNumber?: string;
+  reference?: string; // Alternative to referenceNumber
+  notes?: string;
+  processedBy?: string;
+  paidAt?: string;
+}
 
 export interface TaxRate {
   id: string;
@@ -998,7 +1115,7 @@ export interface CRMSettings {
   // === EXISTING (backward compatibility) ===
   leadStatuses: string[];
   leadSources: string[];
-  dealStages: { label: string; probability: number }[];
+  dealStages: { label: string; probability: number; color?: string }[];
   ticketStatuses: string[];
   ticketPriorities: string[];
   ticketCategories: string[];
@@ -1071,6 +1188,95 @@ export interface CustomEntityDefinition {
   hasTimeline?: boolean;
   hasDocuments?: boolean;
   hasWorkflow?: boolean;
+}
+
+// === Operations & Logistics Types ===
+
+export interface TacticalQueueNote {
+  text: string;
+  addedBy: string;
+  addedAt: string;
+}
+
+export interface TacticalQueueItem extends CRMBase {
+  title: string;
+  description?: string;
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  priorityScore: number;
+  status: 'open' | 'in_progress' | 'escalated' | 'resolved' | 'closed';
+  assigneeId?: string;
+  slaDeadline?: string;
+  escalationLevel: number;
+  relatedToType?: 'accounts' | 'contacts' | 'leads' | 'deals' | 'tickets' | 'jobs';
+  relatedToId?: string;
+  relatedToName?: string;
+  notes: TacticalQueueNote[];
+  resolvedAt?: string;
+}
+
+export interface WarehouseLocation extends CRMBase {
+  warehouseId?: string;
+  name: string;
+  code?: string; // e.g., "A-01-03"
+  type: 'zone' | 'aisle' | 'rack' | 'bin' | 'floor';
+  description?: string;
+  capacity?: number;
+  currentCount?: number;
+  isActive: boolean;
+  isPickable: boolean;
+  isReceivable: boolean;
+  parentLocationId?: string;
+}
+
+export interface DispatchAlert extends CRMBase {
+  title: string;
+  message?: string;
+  type: 'info' | 'warning' | 'urgent' | 'critical';
+  relatedToType?: 'jobs' | 'crews' | 'equipment' | 'zones';
+  relatedToId?: string;
+  isAcknowledged: boolean;
+  acknowledgedBy?: string;
+  acknowledgedAt?: string;
+  expiresAt?: string;
+  isDismissed: boolean;
+}
+
+export type RFQStatus = 'draft' | 'sent' | 'received' | 'evaluating' | 'awarded' | 'closed' | 'cancelled';
+
+export interface RFQ extends CRMBase {
+  rfqNumber: string;
+  title: string;
+  description?: string;
+  status: RFQStatus;
+  supplierIds?: string[]; // Array of account IDs
+  lineItems: { name: string; qty: number; specs?: string; unitPrice?: number }[];
+  issueDate?: string;
+  dueDate?: string;
+  validUntil?: string;
+  purchaseOrderId?: string;
+  jobId?: string;
+  winningSupplierId?: string;
+  awardedAt?: string;
+  totalValue?: number;
+  notes?: string;
+  terms?: string;
+}
+
+export type SupplierQuoteStatus = 'received' | 'under_review' | 'accepted' | 'rejected' | 'expired';
+
+export interface SupplierQuote extends CRMBase {
+  quoteNumber?: string;
+  rfqId?: string;
+  supplierId: string;
+  status: SupplierQuoteStatus;
+  lineItems: { name: string; qty: number; unitPrice: number; total: number }[];
+  subtotal?: number;
+  taxTotal?: number;
+  total?: number;
+  receivedDate?: string;
+  validUntil?: string;
+  evaluationScore?: number;
+  evaluationNotes?: string;
 }
 
 // --- Audit Engine Types ---

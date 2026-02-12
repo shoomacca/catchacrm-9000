@@ -14,7 +14,7 @@ type QueueView = 'all' | 'new' | 'mine' | 'unassigned';
 
 const SupportTickets: React.FC = () => {
   const navigate = useNavigate();
-  const { tickets, contacts, users, upsertRecord, openModal } = useCRM();
+  const { tickets, contacts, users, upsertRecord, openModal, currentUserId: crmUserId } = useCRM();
 
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,16 +26,16 @@ const SupportTickets: React.FC = () => {
   const [noteText, setNoteText] = useState('');
   const [showNoteInput, setShowNoteInput] = useState(false);
 
-  const currentUserId = 'user-1'; // In real app, get from auth context
+  const currentUserId = crmUserId;
 
   const selectedTicket = tickets.find(t => t.id === selectedTicketId);
 
   // Queue stats
   const queueStats = useMemo(() => ({
     all: tickets.length,
-    new: tickets.filter(t => t.status === 'Open' && !t.assignedTo).length,
-    mine: tickets.filter(t => t.assignedTo === currentUserId && t.status !== 'Resolved').length,
-    unassigned: tickets.filter(t => !t.assignedTo && t.status !== 'Resolved').length
+    new: tickets.filter(t => t.status === 'Open' && !t.assigneeId).length,
+    mine: tickets.filter(t => t.assigneeId === currentUserId && t.status !== 'Resolved').length,
+    unassigned: tickets.filter(t => !t.assigneeId && t.status !== 'Resolved').length
   }), [tickets, currentUserId]);
 
   // Filter tickets
@@ -44,11 +44,11 @@ const SupportTickets: React.FC = () => {
 
     // Queue filter
     if (queueView === 'new') {
-      filtered = filtered.filter(t => t.status === 'Open' && !t.assignedTo);
+      filtered = filtered.filter(t => t.status === 'Open' && !t.assigneeId);
     } else if (queueView === 'mine') {
-      filtered = filtered.filter(t => t.assignedTo === currentUserId && t.status !== 'Resolved');
+      filtered = filtered.filter(t => t.assigneeId === currentUserId && t.status !== 'Resolved');
     } else if (queueView === 'unassigned') {
-      filtered = filtered.filter(t => !t.assignedTo && t.status !== 'Resolved');
+      filtered = filtered.filter(t => !t.assigneeId && t.status !== 'Resolved');
     }
 
     if (typeFilter !== 'all') {
@@ -111,7 +111,7 @@ const SupportTickets: React.FC = () => {
 
   // Check if ticket is new (created within last 24 hours and unassigned)
   const isNewTicket = (ticket: any) => {
-    if (ticket.assignedTo) return false;
+    if (ticket.assigneeId) return false;
     const hoursSinceCreated = (Date.now() - new Date(ticket.createdAt).getTime()) / (1000 * 60 * 60);
     return hoursSinceCreated < 24 && ticket.status === 'Open';
   };
@@ -242,7 +242,7 @@ const SupportTickets: React.FC = () => {
               placeholder="Search tickets..."
               className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-lg text-xs font-medium focus:outline-none focus:border-blue-500"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.amount)}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
@@ -250,7 +250,7 @@ const SupportTickets: React.FC = () => {
           <div className="flex gap-2">
             <select
               value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.amount as TicketType)}
+              onChange={(e) => setTypeFilter(e.target.value as TicketType)}
               className="flex-1 px-2 py-1.5 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-bold focus:outline-none"
             >
               <option value="all">All Types</option>
@@ -262,7 +262,7 @@ const SupportTickets: React.FC = () => {
             </select>
             <select
               value={teamFilter}
-              onChange={(e) => setTeamFilter(e.target.amount as TeamFilter)}
+              onChange={(e) => setTeamFilter(e.target.value as TeamFilter)}
               className="flex-1 px-2 py-1.5 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-bold focus:outline-none"
             >
               <option value="all">All Teams</option>
@@ -273,7 +273,7 @@ const SupportTickets: React.FC = () => {
             </select>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.amount)}
+              onChange={(e) => setStatusFilter(e.target.value)}
               className="flex-1 px-2 py-1.5 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-bold focus:outline-none"
             >
               <option value="all">All Status</option>
@@ -409,7 +409,7 @@ const SupportTickets: React.FC = () => {
                 <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Status</p>
                 <select
                   value={selectedTicket.status}
-                  onChange={(e) => upsertRecord('tickets', { ...selectedTicket, status: e.target.amount })}
+                  onChange={(e) => upsertRecord('tickets', { ...selectedTicket, status: e.target.value })}
                   className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none"
                 >
                   <option value="Open">Open</option>
@@ -422,7 +422,7 @@ const SupportTickets: React.FC = () => {
                 <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Assigned To</p>
                 <select
                   value={selectedTicket.assigneeId || ''}
-                  onChange={(e) => upsertRecord('tickets', { ...selectedTicket, assigneeId: e.target.amount })}
+                  onChange={(e) => upsertRecord('tickets', { ...selectedTicket, assigneeId: e.target.value })}
                   className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none"
                 >
                   <option value="">Unassigned</option>
@@ -433,7 +433,7 @@ const SupportTickets: React.FC = () => {
                 <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Type</p>
                 <select
                   value={(selectedTicket as any).type || 'General'}
-                  onChange={(e) => upsertRecord('tickets', { ...selectedTicket, type: e.target.amount })}
+                  onChange={(e) => upsertRecord('tickets', { ...selectedTicket, type: e.target.value })}
                   className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none"
                 >
                   <option value="General">General</option>
@@ -525,7 +525,7 @@ const SupportTickets: React.FC = () => {
                 </div>
                 <textarea
                   value={noteText}
-                  onChange={(e) => setNoteText(e.target.amount)}
+                  onChange={(e) => setNoteText(e.target.value)}
                   placeholder="Add an internal note..."
                   className="w-full px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm resize-none focus:outline-none focus:border-amber-400"
                   rows={3}
@@ -551,7 +551,7 @@ const SupportTickets: React.FC = () => {
               <div className="space-y-3">
                 <textarea
                   value={replyText}
-                  onChange={(e) => setReplyText(e.target.amount)}
+                  onChange={(e) => setReplyText(e.target.value)}
                   placeholder="Type your reply to the customer..."
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none focus:outline-none focus:border-blue-400"
                   rows={3}

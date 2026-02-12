@@ -347,7 +347,7 @@ const CommsHub: React.FC = () => {
               placeholder="Search communications..."
               className="pl-12 pr-6 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold w-80 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.amount)}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
@@ -432,11 +432,11 @@ const CommsHub: React.FC = () => {
                           </p>
                         )}
                         {/* Notes indicator */}
-                        {(comm.notes?.length || 0) > 0 && (
+                        {(((comm as any).notes as any[])?.length || 0) > 0 && (
                           <div className="flex items-center gap-1 mt-1">
                             <StickyNote size={10} className="text-amber-500" />
                             <span className="text-[10px] font-bold text-amber-600">
-                              {comm.notes.length} note{comm.notes.length > 1 ? 's' : ''}
+                              {((comm as any).notes as any[]).length} note{((comm as any).notes as any[]).length > 1 ? 's' : ''}
                             </span>
                           </div>
                         )}
@@ -498,12 +498,12 @@ const CommsHub: React.FC = () => {
                           </div>
 
                           {/* Notes Section */}
-                          {(comm.notes?.length || 0) > 0 && (
+                          {(((comm as any).notes as any[])?.length || 0) > 0 && (
                             <div className="space-y-2">
                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                Notes ({comm.notes.length})
+                                Notes ({((comm as any).notes as any[]).length})
                               </p>
-                              {comm.notes.map((note: any, idx: number) => (
+                              {((comm as any).notes as any[]).map((note: any, idx: number) => (
                                 <div key={idx} className="bg-amber-50 border border-amber-100 rounded-xl p-4">
                                   <p className="text-sm text-amber-900">{note.text}</p>
                                   <p className="text-[10px] font-bold text-amber-600 mt-2">
@@ -522,7 +522,7 @@ const CommsHub: React.FC = () => {
                                 rows={3}
                                 placeholder="Add a note..."
                                 value={noteText}
-                                onChange={(e) => setNoteText(e.target.amount)}
+                                onChange={(e) => setNoteText(e.target.value)}
                                 autoFocus
                               />
                               <div className="flex justify-end gap-2 mt-3">

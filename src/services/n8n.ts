@@ -6,8 +6,8 @@
 
 import { ApiClient, ApiError } from '../lib/api-client';
 
-const N8N_API_URL = import.meta.env.N8N_API_URL || '';
-const N8N_API_KEY = import.meta.env.N8N_API_KEY || '';
+const N8N_API_URL = import.meta.env.VITE_N8N_API_URL || '';
+const N8N_API_KEY = import.meta.env.VITE_N8N_API_KEY || '';
 
 class N8nService {
   private client: ApiClient;
@@ -21,7 +21,7 @@ class N8nService {
         'X-N8N-API-KEY': N8N_API_KEY,
       });
     } else {
-      console.warn('[n8n] Service not configured. Set N8N_API_URL and N8N_API_KEY.');
+      console.warn('[n8n] Service not configured. Set VITE_N8N_API_URL and VITE_N8N_API_KEY.');
       // Create a stub client
       this.client = new ApiClient('http://localhost');
     }

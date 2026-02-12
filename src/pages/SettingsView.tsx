@@ -25,7 +25,7 @@ interface SettingsViewProps {
 }
 
 const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) => {
-  const { settings, updateSettings, restoreDefaultSettings, resetDemoData, hardReset, users, currentUserId, setCurrentUserId, currentUser, auditLogs, createUser, updateUser, deleteUser } = useCRM();
+  const { settings, updateSettings, restoreDefaultSettings, resetDemoData, hardReset, users, currentUserId, setCurrentUserId, currentUser, auditLogs, createUser, updateUser, deleteUser, accounts, contacts, leads, deals, tasks, campaigns, tickets, products, services, invoices, jobs } = useCRM();
   const [localSettings, setLocalSettings] = useState<CRMSettings>(settings);
   const [activeTab, setActiveTab] = useState<SettingTab>(initialTab);
   const [domainSubTab, setDomainSubTab] = useState<DomainSubTab>('SALES');
@@ -34,6 +34,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
   const [showUserModal, setShowUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [selectedRequiredFieldsEntity, setSelectedRequiredFieldsEntity] = useState<EntityType>('leads');
+  const [selectedExportEntity, setSelectedExportEntity] = useState<string>('accounts');
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -178,18 +179,18 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
               {/* Organization Profile */}
               <SettingsCard title="Organization Profile" icon={Building2}>
                 <div className="space-y-6">
-                  <ConfigInput label="Legal Name" value={localSettings.organization?.legalName || ''} onChange={(v) => updateNested('organization.legalName', v)} />
-                  <ConfigInput label="Trading Name (DBA)" value={localSettings.organization?.tradingName || ''} onChange={(v) => updateNested('organization.tradingName', v)} />
-                  <ConfigInput label="Tax ID (ABN/EIN)" value={localSettings.organization?.taxId || ''} onChange={(v) => updateNested('organization.taxId', v)} />
+                  <ConfigInput label="Legal Name" value={localSettings.organization?.legalName || ''} onChange={(v: string) => updateNested('organization.legalName', v)} />
+                  <ConfigInput label="Trading Name (DBA)" value={localSettings.organization?.tradingName || ''} onChange={(v: string) => updateNested('organization.tradingName', v)} />
+                  <ConfigInput label="Tax ID (ABN/EIN)" value={localSettings.organization?.taxId || ''} onChange={(v: string) => updateNested('organization.taxId', v)} />
                 </div>
               </SettingsCard>
 
               {/* Contact Information */}
               <SettingsCard title="Contact Information" icon={Mail}>
                 <div className="space-y-6">
-                  <ConfigInput label="Support Email" value={localSettings.organization?.supportEmail || ''} onChange={(v) => updateNested('organization.supportEmail', v)} />
-                  <ConfigInput label="Billing Email" value={localSettings.organization?.billingEmail || ''} onChange={(v) => updateNested('organization.billingEmail', v)} />
-                  <ConfigInput label="Emergency Phone" value={localSettings.organization?.emergencyPhone || ''} onChange={(v) => updateNested('organization.emergencyPhone', v)} />
+                  <ConfigInput label="Support Email" value={localSettings.organization?.supportEmail || ''} onChange={(v: string) => updateNested('organization.supportEmail', v)} />
+                  <ConfigInput label="Billing Email" value={localSettings.organization?.billingEmail || ''} onChange={(v: string) => updateNested('organization.billingEmail', v)} />
+                  <ConfigInput label="Emergency Phone" value={localSettings.organization?.emergencyPhone || ''} onChange={(v: string) => updateNested('organization.emergencyPhone', v)} />
                 </div>
               </SettingsCard>
 
@@ -239,16 +240,16 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                       <option value="YYYY-MM-DD">YYYY-MM-DD</option>
                     </select>
                   </div>
-                  <ConfigInput label="Global Tax Rate (%)" type="number" value={localSettings.localization?.taxRate || 10} onChange={(v) => updateNested('localization.taxRate', parseFloat(v))} />
+                  <ConfigInput label="Global Tax Rate (%)" type="number" value={localSettings.localization?.taxRate || 10} onChange={(v: string) => updateNested('localization.taxRate', parseFloat(v))} />
                 </div>
               </SettingsCard>
 
               {/* Branding */}
               <SettingsCard title="Branding Identity" icon={Palette}>
                 <div className="space-y-6">
-                  <ConfigInput label="Organization Name" value={localSettings.branding?.name || ''} onChange={(v) => updateNested('branding.name', v)} />
-                  <ConfigInput label="Brand Slogan" value={localSettings.branding?.slogan || ''} onChange={(v) => updateNested('branding.slogan', v)} />
-                  <ColorPicker label="Primary Color" value={localSettings.branding?.primaryColor || '#3B82F6'} onChange={(v) => updateNested('branding.primaryColor', v)} />
+                  <ConfigInput label="Organization Name" value={localSettings.branding?.name || ''} onChange={(v: string) => updateNested('branding.name', v)} />
+                  <ConfigInput label="Brand Slogan" value={localSettings.branding?.slogan || ''} onChange={(v: string) => updateNested('branding.slogan', v)} />
+                  <ColorPicker label="Primary Color" value={localSettings.branding?.primaryColor || '#3B82F6'} onChange={(v: string) => updateNested('branding.primaryColor', v)} />
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">App Theme</label>
                     <div className="flex gap-3">
@@ -297,7 +298,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
             {/* Domain Mapping */}
             <SettingsCard title="Custom Domain" icon={ExternalLink}>
               <div className="space-y-6">
-                <ConfigInput label="Custom Domain" value={localSettings.branding?.customDomain || ''} onChange={(v) => updateNested('branding.customDomain', v)} placeholder="app.yourcompany.com" />
+                <ConfigInput label="Custom Domain" value={localSettings.branding?.customDomain || ''} onChange={(v: string) => updateNested('branding.customDomain', v)} placeholder="app.yourcompany.com" />
                 <div className="bg-slate-50 p-6 rounded-2xl">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">DNS Configuration</p>
                   <div className="space-y-2">
@@ -332,24 +333,24 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <SettingsCard title="Core Modules" icon={Layers}>
                 <div className="space-y-4">
-                  <ToggleSwitch label="Sales Engine" description="Leads, Deals, Quotes, Pipeline" value={localSettings.modules?.salesEngine ?? true} onChange={(v) => updateNested('modules.salesEngine', v)} />
-                  <ToggleSwitch label="Financials" description="Invoices, Payments, Bank Feeds" value={localSettings.modules?.financials ?? true} onChange={(v) => updateNested('modules.financials', v)} />
-                  <ToggleSwitch label="Field & Logistics" description="Jobs, Crews, Dispatch, Inventory" value={localSettings.modules?.fieldLogistics ?? true} onChange={(v) => updateNested('modules.fieldLogistics', v)} />
-                  <ToggleSwitch label="Marketing" description="Campaigns, Reviews, Referrals" value={localSettings.modules?.marketing ?? true} onChange={(v) => updateNested('modules.marketing', v)} />
+                  <ToggleSwitch label="Sales Engine" description="Leads, Deals, Quotes, Pipeline" value={localSettings.modules?.salesEngine ?? true} onChange={(v: boolean) => updateNested('modules.salesEngine', v)} />
+                  <ToggleSwitch label="Financials" description="Invoices, Payments, Bank Feeds" value={localSettings.modules?.financials ?? true} onChange={(v: boolean) => updateNested('modules.financials', v)} />
+                  <ToggleSwitch label="Field & Logistics" description="Jobs, Crews, Dispatch, Inventory" value={localSettings.modules?.fieldLogistics ?? true} onChange={(v: boolean) => updateNested('modules.fieldLogistics', v)} />
+                  <ToggleSwitch label="Marketing" description="Campaigns, Reviews, Referrals" value={localSettings.modules?.marketing ?? true} onChange={(v: boolean) => updateNested('modules.marketing', v)} />
                 </div>
               </SettingsCard>
 
               <SettingsCard title="Sub-Modules" icon={Settings2}>
                 <div className="space-y-4">
-                  <ToggleSwitch label="Bank Feeds" description="Transaction matching & reconciliation" value={localSettings.modules?.bankFeeds ?? true} onChange={(v) => updateNested('modules.bankFeeds', v)} disabled={!localSettings.modules?.financials} />
-                  <ToggleSwitch label="Inventory" description="Stock tracking & warehouse management" value={localSettings.modules?.inventory ?? true} onChange={(v) => updateNested('modules.inventory', v)} disabled={!localSettings.modules?.fieldLogistics} />
-                  <ToggleSwitch label="Dispatch Board" description="Visual job scheduling & crew assignment" value={localSettings.modules?.dispatch ?? true} onChange={(v) => updateNested('modules.dispatch', v)} disabled={!localSettings.modules?.fieldLogistics} />
-                  <ToggleSwitch label="Reputation" description="Review monitoring & response" value={localSettings.modules?.reputation ?? true} onChange={(v) => updateNested('modules.reputation', v)} disabled={!localSettings.modules?.marketing} />
-                  <ToggleSwitch label="Referrals" description="Referral rewards program" value={localSettings.modules?.referrals ?? true} onChange={(v) => updateNested('modules.referrals', v)} disabled={!localSettings.modules?.marketing} />
-                  <ToggleSwitch label="Inbound Forms" description="Lead capture forms" value={localSettings.modules?.inboundForms ?? true} onChange={(v) => updateNested('modules.inboundForms', v)} disabled={!localSettings.modules?.marketing} />
-                  <ToggleSwitch label="Chat Widgets" description="Website chat integration" value={localSettings.modules?.chatWidgets ?? true} onChange={(v) => updateNested('modules.chatWidgets', v)} />
-                  <ToggleSwitch label="Subscriptions" description="Recurring billing management" value={localSettings.modules?.subscriptions ?? true} onChange={(v) => updateNested('modules.subscriptions', v)} disabled={!localSettings.modules?.financials} />
-                  <ToggleSwitch label="Purchase Orders" description="Vendor ordering & procurement" value={localSettings.modules?.purchaseOrders ?? true} onChange={(v) => updateNested('modules.purchaseOrders', v)} disabled={!localSettings.modules?.fieldLogistics} />
+                  <ToggleSwitch label="Bank Feeds" description="Transaction matching & reconciliation" value={localSettings.modules?.bankFeeds ?? true} onChange={(v: boolean) => updateNested('modules.bankFeeds', v)} disabled={!localSettings.modules?.financials} />
+                  <ToggleSwitch label="Inventory" description="Stock tracking & warehouse management" value={localSettings.modules?.inventory ?? true} onChange={(v: boolean) => updateNested('modules.inventory', v)} disabled={!localSettings.modules?.fieldLogistics} />
+                  <ToggleSwitch label="Dispatch Board" description="Visual job scheduling & crew assignment" value={localSettings.modules?.dispatch ?? true} onChange={(v: boolean) => updateNested('modules.dispatch', v)} disabled={!localSettings.modules?.fieldLogistics} />
+                  <ToggleSwitch label="Reputation" description="Review monitoring & response" value={localSettings.modules?.reputation ?? true} onChange={(v: boolean) => updateNested('modules.reputation', v)} disabled={!localSettings.modules?.marketing} />
+                  <ToggleSwitch label="Referrals" description="Referral rewards program" value={localSettings.modules?.referrals ?? true} onChange={(v: boolean) => updateNested('modules.referrals', v)} disabled={!localSettings.modules?.marketing} />
+                  <ToggleSwitch label="Inbound Forms" description="Lead capture forms" value={localSettings.modules?.inboundForms ?? true} onChange={(v: boolean) => updateNested('modules.inboundForms', v)} disabled={!localSettings.modules?.marketing} />
+                  <ToggleSwitch label="Chat Widgets" description="Website chat integration" value={localSettings.modules?.chatWidgets ?? true} onChange={(v: boolean) => updateNested('modules.chatWidgets', v)} />
+                  <ToggleSwitch label="Subscriptions" description="Recurring billing management" value={localSettings.modules?.subscriptions ?? true} onChange={(v: boolean) => updateNested('modules.subscriptions', v)} disabled={!localSettings.modules?.financials} />
+                  <ToggleSwitch label="Purchase Orders" description="Vendor ordering & procurement" value={localSettings.modules?.purchaseOrders ?? true} onChange={(v: boolean) => updateNested('modules.purchaseOrders', v)} disabled={!localSettings.modules?.fieldLogistics} />
                 </div>
               </SettingsCard>
             </div>
@@ -690,14 +691,14 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 icon={<CreditCard size={24} />}
                 description="Accept credit card payments"
                 enabled={localSettings.integrations?.stripe?.enabled || false}
-                onToggle={(v) => updateNested('integrations.stripe.enabled', v)}
+                onToggle={(v: boolean) => updateNested('integrations.stripe.enabled', v)}
                 fields={[
-                  { label: 'Mode', value: localSettings.integrations?.stripe?.mode || 'test', onChange: (v) => updateNested('integrations.stripe.mode', v), type: 'select', options: [{ value: 'test', label: 'Test Mode' }, { value: 'live', label: 'Live Mode' }] },
-                  { label: 'Publishable Key', value: localSettings.integrations?.stripe?.publicKey || '', onChange: (v) => updateNested('integrations.stripe.publicKey', v), type: 'text', placeholder: 'pk_test_... or pk_live_...' },
-                  { label: 'Secret Key', value: localSettings.integrations?.stripe?.secretKey || '', onChange: (v) => updateNested('integrations.stripe.secretKey', v), type: 'password', placeholder: 'sk_test_... or sk_live_...' },
-                  { label: 'Webhook Secret', value: localSettings.integrations?.stripe?.webhookSecret || '', onChange: (v) => updateNested('integrations.stripe.webhookSecret', v), type: 'password', placeholder: 'whsec_...' },
-                  { label: 'Webhook Endpoint', value: localSettings.integrations?.stripe?.webhookEndpoint || '', onChange: (v) => updateNested('integrations.stripe.webhookEndpoint', v), type: 'text', placeholder: 'https://your-domain.com/webhooks/stripe' },
-                  { label: 'Pass Surcharge to Customer', value: localSettings.integrations?.stripe?.passSurcharge || false, onChange: (v) => updateNested('integrations.stripe.passSurcharge', v), type: 'checkbox' },
+                  { label: 'Mode', value: localSettings.integrations?.stripe?.mode || 'test', onChange: (v: string) => updateNested('integrations.stripe.mode', v), type: 'select', options: [{ value: 'test', label: 'Test Mode' }, { value: 'live', label: 'Live Mode' }] },
+                  { label: 'Publishable Key', value: localSettings.integrations?.stripe?.publicKey || '', onChange: (v: string) => updateNested('integrations.stripe.publicKey', v), type: 'text', placeholder: 'pk_test_... or pk_live_...' },
+                  { label: 'Secret Key', value: localSettings.integrations?.stripe?.secretKey || '', onChange: (v: string) => updateNested('integrations.stripe.secretKey', v), type: 'password', placeholder: 'sk_test_... or sk_live_...' },
+                  { label: 'Webhook Secret', value: localSettings.integrations?.stripe?.webhookSecret || '', onChange: (v: string) => updateNested('integrations.stripe.webhookSecret', v), type: 'password', placeholder: 'whsec_...' },
+                  { label: 'Webhook Endpoint', value: localSettings.integrations?.stripe?.webhookEndpoint || '', onChange: (v: string) => updateNested('integrations.stripe.webhookEndpoint', v), type: 'text', placeholder: 'https://your-domain.com/webhooks/stripe' },
+                  { label: 'Pass Surcharge to Customer', value: localSettings.integrations?.stripe?.passSurcharge || false, onChange: (v: string) => updateNested('integrations.stripe.passSurcharge', v), type: 'checkbox' },
                 ]}
               />
               <IntegrationCard
@@ -705,12 +706,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 icon={<DollarSign size={24} />}
                 description="PayPal payment processing"
                 enabled={localSettings.integrations?.paypal?.enabled || false}
-                onToggle={(v) => updateNested('integrations.paypal.enabled', v)}
+                onToggle={(v: boolean) => updateNested('integrations.paypal.enabled', v)}
                 fields={[
-                  { label: 'Mode', value: localSettings.integrations?.paypal?.mode || 'sandbox', onChange: (v) => updateNested('integrations.paypal.mode', v), type: 'select', options: [{ value: 'sandbox', label: 'Sandbox' }, { value: 'live', label: 'Live' }] },
-                  { label: 'Client ID', value: localSettings.integrations?.paypal?.clientId || '', onChange: (v) => updateNested('integrations.paypal.clientId', v), type: 'text' },
-                  { label: 'Client Secret', value: localSettings.integrations?.paypal?.clientSecret || '', onChange: (v) => updateNested('integrations.paypal.clientSecret', v), type: 'password' },
-                  { label: 'Webhook ID', value: localSettings.integrations?.paypal?.webhookId || '', onChange: (v) => updateNested('integrations.paypal.webhookId', v), type: 'text', placeholder: 'Optional - for webhook verification' },
+                  { label: 'Mode', value: localSettings.integrations?.paypal?.mode || 'sandbox', onChange: (v: string) => updateNested('integrations.paypal.mode', v), type: 'select', options: [{ value: 'sandbox', label: 'Sandbox' }, { value: 'live', label: 'Live' }] },
+                  { label: 'Client ID', value: localSettings.integrations?.paypal?.clientId || '', onChange: (v: string) => updateNested('integrations.paypal.clientId', v), type: 'text' },
+                  { label: 'Client Secret', value: localSettings.integrations?.paypal?.clientSecret || '', onChange: (v: string) => updateNested('integrations.paypal.clientSecret', v), type: 'password' },
+                  { label: 'Webhook ID', value: localSettings.integrations?.paypal?.webhookId || '', onChange: (v: string) => updateNested('integrations.paypal.webhookId', v), type: 'text', placeholder: 'Optional - for webhook verification' },
                 ]}
               />
             </div>
@@ -723,13 +724,13 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 icon={<Phone size={24} />}
                 description="SMS & voice calling"
                 enabled={localSettings.integrations?.twilio?.enabled || false}
-                onToggle={(v) => updateNested('integrations.twilio.enabled', v)}
+                onToggle={(v: boolean) => updateNested('integrations.twilio.enabled', v)}
                 fields={[
-                  { label: 'Account SID', value: localSettings.integrations?.twilio?.accountSid || '', onChange: (v) => updateNested('integrations.twilio.accountSid', v), type: 'text', placeholder: 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' },
-                  { label: 'Auth Token', value: localSettings.integrations?.twilio?.authToken || '', onChange: (v) => updateNested('integrations.twilio.authToken', v), type: 'password' },
-                  { label: 'Phone Number', value: localSettings.integrations?.twilio?.phoneNumber || '', onChange: (v) => updateNested('integrations.twilio.phoneNumber', v), type: 'text', placeholder: '+61412345678' },
-                  { label: 'Caller ID Name', value: localSettings.integrations?.twilio?.callerId || '', onChange: (v) => updateNested('integrations.twilio.callerId', v), type: 'text', placeholder: 'Your Company Name' },
-                  { label: 'Status Callback URL', value: localSettings.integrations?.twilio?.statusCallbackUrl || '', onChange: (v) => updateNested('integrations.twilio.statusCallbackUrl', v), type: 'text', placeholder: 'https://your-domain.com/webhooks/twilio' },
+                  { label: 'Account SID', value: localSettings.integrations?.twilio?.accountSid || '', onChange: (v: string) => updateNested('integrations.twilio.accountSid', v), type: 'text', placeholder: 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' },
+                  { label: 'Auth Token', value: localSettings.integrations?.twilio?.authToken || '', onChange: (v: string) => updateNested('integrations.twilio.authToken', v), type: 'password' },
+                  { label: 'Phone Number', value: localSettings.integrations?.twilio?.phoneNumber || '', onChange: (v: string) => updateNested('integrations.twilio.phoneNumber', v), type: 'text', placeholder: '+61412345678' },
+                  { label: 'Caller ID Name', value: localSettings.integrations?.twilio?.callerId || '', onChange: (v: string) => updateNested('integrations.twilio.callerId', v), type: 'text', placeholder: 'Your Company Name' },
+                  { label: 'Status Callback URL', value: localSettings.integrations?.twilio?.statusCallbackUrl || '', onChange: (v: string) => updateNested('integrations.twilio.statusCallbackUrl', v), type: 'text', placeholder: 'https://your-domain.com/webhooks/twilio' },
                 ]}
               />
               <IntegrationCard
@@ -737,13 +738,13 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 icon={<Mail size={24} />}
                 description="Transactional email delivery"
                 enabled={localSettings.integrations?.sendgrid?.enabled || false}
-                onToggle={(v) => updateNested('integrations.sendgrid.enabled', v)}
+                onToggle={(v: boolean) => updateNested('integrations.sendgrid.enabled', v)}
                 fields={[
-                  { label: 'API Key', value: localSettings.integrations?.sendgrid?.apiKey || '', onChange: (v) => updateNested('integrations.sendgrid.apiKey', v), type: 'password', placeholder: 'SG.xxxxxxxxxxxxxxxxxxxx' },
-                  { label: 'Verified Domain', value: localSettings.integrations?.sendgrid?.domain || '', onChange: (v) => updateNested('integrations.sendgrid.domain', v), type: 'text', placeholder: 'your-domain.com' },
-                  { label: 'From Email', value: localSettings.integrations?.sendgrid?.fromEmail || '', onChange: (v) => updateNested('integrations.sendgrid.fromEmail', v), type: 'text', placeholder: 'noreply@your-domain.com' },
-                  { label: 'From Name', value: localSettings.integrations?.sendgrid?.fromName || '', onChange: (v) => updateNested('integrations.sendgrid.fromName', v), type: 'text', placeholder: 'Your Company Name' },
-                  { label: 'Webhook URL', value: localSettings.integrations?.sendgrid?.webhookUrl || '', onChange: (v) => updateNested('integrations.sendgrid.webhookUrl', v), type: 'text', placeholder: 'https://your-domain.com/webhooks/sendgrid' },
+                  { label: 'API Key', value: localSettings.integrations?.sendgrid?.apiKey || '', onChange: (v: string) => updateNested('integrations.sendgrid.apiKey', v), type: 'password', placeholder: 'SG.xxxxxxxxxxxxxxxxxxxx' },
+                  { label: 'Verified Domain', value: localSettings.integrations?.sendgrid?.domain || '', onChange: (v: string) => updateNested('integrations.sendgrid.domain', v), type: 'text', placeholder: 'your-domain.com' },
+                  { label: 'From Email', value: localSettings.integrations?.sendgrid?.fromEmail || '', onChange: (v: string) => updateNested('integrations.sendgrid.fromEmail', v), type: 'text', placeholder: 'noreply@your-domain.com' },
+                  { label: 'From Name', value: localSettings.integrations?.sendgrid?.fromName || '', onChange: (v: string) => updateNested('integrations.sendgrid.fromName', v), type: 'text', placeholder: 'Your Company Name' },
+                  { label: 'Webhook URL', value: localSettings.integrations?.sendgrid?.webhookUrl || '', onChange: (v: string) => updateNested('integrations.sendgrid.webhookUrl', v), type: 'text', placeholder: 'https://your-domain.com/webhooks/sendgrid' },
                 ]}
               />
             </div>
@@ -756,19 +757,19 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 icon={<Phone size={24} />}
                 description="Bring your own SIP provider (Telstra, Optus, Aatrox, etc.)"
                 enabled={localSettings.integrations?.byoSip?.enabled || false}
-                onToggle={(v) => updateNested('integrations.byoSip.enabled', v)}
+                onToggle={(v: boolean) => updateNested('integrations.byoSip.enabled', v)}
                 fields={[
-                  { label: 'Provider Name', value: localSettings.integrations?.byoSip?.provider || '', onChange: (v) => updateNested('integrations.byoSip.provider', v), type: 'text', placeholder: 'e.g., Aatrox, Telcoinabox, Wholesale Provider' },
-                  { label: 'SIP Server', value: localSettings.integrations?.byoSip?.sipServer || '', onChange: (v) => updateNested('integrations.byoSip.sipServer', v), type: 'text', placeholder: 'sip.provider.com.au' },
-                  { label: 'SIP Port', value: localSettings.integrations?.byoSip?.sipPort || 5060, onChange: (v) => updateNested('integrations.byoSip.sipPort', parseInt(v) || 5060), type: 'number', placeholder: '5060' },
-                  { label: 'Transport', value: localSettings.integrations?.byoSip?.transport || 'udp', onChange: (v) => updateNested('integrations.byoSip.transport', v), type: 'select', options: [{ value: 'udp', label: 'UDP' }, { value: 'tcp', label: 'TCP' }, { value: 'tls', label: 'TLS' }] },
-                  { label: 'Username', value: localSettings.integrations?.byoSip?.username || '', onChange: (v) => updateNested('integrations.byoSip.username', v), type: 'text' },
-                  { label: 'Password', value: localSettings.integrations?.byoSip?.password || '', onChange: (v) => updateNested('integrations.byoSip.password', v), type: 'password' },
-                  { label: 'Realm (Optional)', value: localSettings.integrations?.byoSip?.realm || '', onChange: (v) => updateNested('integrations.byoSip.realm', v), type: 'text', placeholder: 'provider.com.au' },
-                  { label: 'Outbound Proxy (Optional)', value: localSettings.integrations?.byoSip?.outboundProxy || '', onChange: (v) => updateNested('integrations.byoSip.outboundProxy', v), type: 'text', placeholder: 'proxy.provider.com.au' },
-                  { label: 'Caller ID Name', value: localSettings.integrations?.byoSip?.callerIdName || '', onChange: (v) => updateNested('integrations.byoSip.callerIdName', v), type: 'text', placeholder: 'Your Company Name' },
-                  { label: 'Caller ID Number', value: localSettings.integrations?.byoSip?.callerIdNumber || '', onChange: (v) => updateNested('integrations.byoSip.callerIdNumber', v), type: 'text', placeholder: '+61412345678' },
-                  { label: 'Register Expires (sec)', value: localSettings.integrations?.byoSip?.registerExpires || 600, onChange: (v) => updateNested('integrations.byoSip.registerExpires', parseInt(v) || 600), type: 'number', placeholder: '600' },
+                  { label: 'Provider Name', value: localSettings.integrations?.byoSip?.provider || '', onChange: (v: string) => updateNested('integrations.byoSip.provider', v), type: 'text', placeholder: 'e.g., Aatrox, Telcoinabox, Wholesale Provider' },
+                  { label: 'SIP Server', value: localSettings.integrations?.byoSip?.sipServer || '', onChange: (v: string) => updateNested('integrations.byoSip.sipServer', v), type: 'text', placeholder: 'sip.provider.com.au' },
+                  { label: 'SIP Port', value: localSettings.integrations?.byoSip?.sipPort || 5060, onChange: (v: string) => updateNested('integrations.byoSip.sipPort', parseInt(v) || 5060), type: 'number', placeholder: '5060' },
+                  { label: 'Transport', value: localSettings.integrations?.byoSip?.transport || 'udp', onChange: (v: string) => updateNested('integrations.byoSip.transport', v), type: 'select', options: [{ value: 'udp', label: 'UDP' }, { value: 'tcp', label: 'TCP' }, { value: 'tls', label: 'TLS' }] },
+                  { label: 'Username', value: localSettings.integrations?.byoSip?.username || '', onChange: (v: string) => updateNested('integrations.byoSip.username', v), type: 'text' },
+                  { label: 'Password', value: localSettings.integrations?.byoSip?.password || '', onChange: (v: string) => updateNested('integrations.byoSip.password', v), type: 'password' },
+                  { label: 'Realm (Optional)', value: localSettings.integrations?.byoSip?.realm || '', onChange: (v: string) => updateNested('integrations.byoSip.realm', v), type: 'text', placeholder: 'provider.com.au' },
+                  { label: 'Outbound Proxy (Optional)', value: localSettings.integrations?.byoSip?.outboundProxy || '', onChange: (v: string) => updateNested('integrations.byoSip.outboundProxy', v), type: 'text', placeholder: 'proxy.provider.com.au' },
+                  { label: 'Caller ID Name', value: localSettings.integrations?.byoSip?.callerIdName || '', onChange: (v: string) => updateNested('integrations.byoSip.callerIdName', v), type: 'text', placeholder: 'Your Company Name' },
+                  { label: 'Caller ID Number', value: localSettings.integrations?.byoSip?.callerIdNumber || '', onChange: (v: string) => updateNested('integrations.byoSip.callerIdNumber', v), type: 'text', placeholder: '+61412345678' },
+                  { label: 'Register Expires (sec)', value: localSettings.integrations?.byoSip?.registerExpires || 600, onChange: (v: string) => updateNested('integrations.byoSip.registerExpires', parseInt(v) || 600), type: 'number', placeholder: '600' },
                 ]}
               />
               <IntegrationCard
@@ -776,16 +777,16 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 icon={<MessageSquare size={24} />}
                 description="Bring your own SMS provider (MessageMedia, ClickSend, SMS Global, etc.)"
                 enabled={localSettings.integrations?.byoSms?.enabled || false}
-                onToggle={(v) => updateNested('integrations.byoSms.enabled', v)}
+                onToggle={(v: boolean) => updateNested('integrations.byoSms.enabled', v)}
                 fields={[
-                  { label: 'Provider Name', value: localSettings.integrations?.byoSms?.provider || '', onChange: (v) => updateNested('integrations.byoSms.provider', v), type: 'text', placeholder: 'e.g., MessageMedia, ClickSend, SMS Global' },
-                  { label: 'API Endpoint', value: localSettings.integrations?.byoSms?.apiEndpoint || '', onChange: (v) => updateNested('integrations.byoSms.apiEndpoint', v), type: 'text', placeholder: 'https://api.provider.com.au/sms/v1' },
-                  { label: 'API Key', value: localSettings.integrations?.byoSms?.apiKey || '', onChange: (v) => updateNested('integrations.byoSms.apiKey', v), type: 'password' },
-                  { label: 'API Secret (Optional)', value: localSettings.integrations?.byoSms?.apiSecret || '', onChange: (v) => updateNested('integrations.byoSms.apiSecret', v), type: 'password', placeholder: 'For HMAC signing' },
-                  { label: 'Auth Method', value: localSettings.integrations?.byoSms?.authMethod || 'bearer', onChange: (v) => updateNested('integrations.byoSms.authMethod', v), type: 'select', options: [{ value: 'bearer', label: 'Bearer Token' }, { value: 'basic', label: 'Basic Auth' }, { value: 'header', label: 'Custom Header' }] },
-                  { label: 'From Number (E.164)', value: localSettings.integrations?.byoSms?.fromNumber || '', onChange: (v) => updateNested('integrations.byoSms.fromNumber', v), type: 'text', placeholder: '+61412345678' },
-                  { label: 'From Name (Optional)', value: localSettings.integrations?.byoSms?.fromName || '', onChange: (v) => updateNested('integrations.byoSms.fromName', v), type: 'text', placeholder: '11 chars max, may not work on all carriers' },
-                  { label: 'Webhook URL (Optional)', value: localSettings.integrations?.byoSms?.webhookUrl || '', onChange: (v) => updateNested('integrations.byoSms.webhookUrl', v), type: 'text', placeholder: 'https://your-domain.com/webhooks/sms' },
+                  { label: 'Provider Name', value: localSettings.integrations?.byoSms?.provider || '', onChange: (v: string) => updateNested('integrations.byoSms.provider', v), type: 'text', placeholder: 'e.g., MessageMedia, ClickSend, SMS Global' },
+                  { label: 'API Endpoint', value: localSettings.integrations?.byoSms?.apiEndpoint || '', onChange: (v: string) => updateNested('integrations.byoSms.apiEndpoint', v), type: 'text', placeholder: 'https://api.provider.com.au/sms/v1' },
+                  { label: 'API Key', value: localSettings.integrations?.byoSms?.apiKey || '', onChange: (v: string) => updateNested('integrations.byoSms.apiKey', v), type: 'password' },
+                  { label: 'API Secret (Optional)', value: localSettings.integrations?.byoSms?.apiSecret || '', onChange: (v: string) => updateNested('integrations.byoSms.apiSecret', v), type: 'password', placeholder: 'For HMAC signing' },
+                  { label: 'Auth Method', value: localSettings.integrations?.byoSms?.authMethod || 'bearer', onChange: (v: string) => updateNested('integrations.byoSms.authMethod', v), type: 'select', options: [{ value: 'bearer', label: 'Bearer Token' }, { value: 'basic', label: 'Basic Auth' }, { value: 'header', label: 'Custom Header' }] },
+                  { label: 'From Number (E.164)', value: localSettings.integrations?.byoSms?.fromNumber || '', onChange: (v: string) => updateNested('integrations.byoSms.fromNumber', v), type: 'text', placeholder: '+61412345678' },
+                  { label: 'From Name (Optional)', value: localSettings.integrations?.byoSms?.fromName || '', onChange: (v: string) => updateNested('integrations.byoSms.fromName', v), type: 'text', placeholder: '11 chars max, may not work on all carriers' },
+                  { label: 'Webhook URL (Optional)', value: localSettings.integrations?.byoSms?.webhookUrl || '', onChange: (v: string) => updateNested('integrations.byoSms.webhookUrl', v), type: 'text', placeholder: 'https://your-domain.com/webhooks/sms' },
                 ]}
               />
             </div>
@@ -798,10 +799,10 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 icon={<MapPin size={24} />}
                 description="Maps & geocoding"
                 enabled={localSettings.integrations?.googleMaps?.enabled || false}
-                onToggle={(v) => updateNested('integrations.googleMaps.enabled', v)}
+                onToggle={(v: boolean) => updateNested('integrations.googleMaps.enabled', v)}
                 fields={[
-                  { label: 'API Key', value: localSettings.integrations?.googleMaps?.apiKey || '', onChange: (v) => updateNested('integrations.googleMaps.apiKey', v), type: 'password', placeholder: 'Enable Geocoding, Places, and Maps JavaScript API' },
-                  { label: 'Default Region', value: localSettings.integrations?.googleMaps?.defaultRegion || 'AU', onChange: (v) => updateNested('integrations.googleMaps.defaultRegion', v), type: 'text', placeholder: 'AU' },
+                  { label: 'API Key', value: localSettings.integrations?.googleMaps?.apiKey || '', onChange: (v: string) => updateNested('integrations.googleMaps.apiKey', v), type: 'password', placeholder: 'Enable Geocoding, Places, and Maps JavaScript API' },
+                  { label: 'Default Region', value: localSettings.integrations?.googleMaps?.defaultRegion || 'AU', onChange: (v: string) => updateNested('integrations.googleMaps.defaultRegion', v), type: 'text', placeholder: 'AU' },
                 ]}
               />
               <IntegrationCard
@@ -809,12 +810,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 icon={<Sparkles size={24} />}
                 description="AI-powered features"
                 enabled={localSettings.integrations?.openai?.enabled || false}
-                onToggle={(v) => updateNested('integrations.openai.enabled', v)}
+                onToggle={(v: boolean) => updateNested('integrations.openai.enabled', v)}
                 fields={[
-                  { label: 'API Key', value: localSettings.integrations?.openai?.apiKey || '', onChange: (v) => updateNested('integrations.openai.apiKey', v), type: 'password', placeholder: 'sk-...' },
-                  { label: 'Organization ID (Optional)', value: localSettings.integrations?.openai?.organizationId || '', onChange: (v) => updateNested('integrations.openai.organizationId', v), type: 'text', placeholder: 'org-...' },
-                  { label: 'Default Model', value: localSettings.integrations?.openai?.defaultModel || 'gpt-4-turbo', onChange: (v) => updateNested('integrations.openai.defaultModel', v), type: 'select', options: [{ value: 'gpt-4-turbo', label: 'GPT-4 Turbo' }, { value: 'gpt-4', label: 'GPT-4' }, { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' }] },
-                  { label: 'Max Tokens', value: localSettings.integrations?.openai?.maxTokens || 2000, onChange: (v) => updateNested('integrations.openai.maxTokens', parseInt(v) || 2000), type: 'number', placeholder: '2000' },
+                  { label: 'API Key', value: localSettings.integrations?.openai?.apiKey || '', onChange: (v: string) => updateNested('integrations.openai.apiKey', v), type: 'password', placeholder: 'sk-...' },
+                  { label: 'Organization ID (Optional)', value: localSettings.integrations?.openai?.organizationId || '', onChange: (v: string) => updateNested('integrations.openai.organizationId', v), type: 'text', placeholder: 'org-...' },
+                  { label: 'Default Model', value: localSettings.integrations?.openai?.defaultModel || 'gpt-4-turbo', onChange: (v: string) => updateNested('integrations.openai.defaultModel', v), type: 'select', options: [{ value: 'gpt-4-turbo', label: 'GPT-4 Turbo' }, { value: 'gpt-4', label: 'GPT-4' }, { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' }] },
+                  { label: 'Max Tokens', value: localSettings.integrations?.openai?.maxTokens || 2000, onChange: (v: string) => updateNested('integrations.openai.maxTokens', parseInt(v) || 2000), type: 'number', placeholder: '2000' },
                 ]}
               />
               <IntegrationCard
@@ -822,11 +823,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 icon={<Receipt size={24} />}
                 description="Accounting sync (OAuth 2.0)"
                 enabled={localSettings.integrations?.xero?.enabled || false}
-                onToggle={(v) => updateNested('integrations.xero.enabled', v)}
+                onToggle={(v: boolean) => updateNested('integrations.xero.enabled', v)}
                 fields={[
-                  { label: 'Sync Frequency', value: localSettings.integrations?.xero?.syncFrequency || 'daily', onChange: (v) => updateNested('integrations.xero.syncFrequency', v), type: 'select', options: [{ value: 'daily', label: 'Daily' }, { value: 'weekly', label: 'Weekly' }, { value: 'manual', label: 'Manual' }] },
-                  { label: 'Client ID (OAuth)', value: localSettings.integrations?.xero?.clientId || '', onChange: (v) => updateNested('integrations.xero.clientId', v), type: 'text', placeholder: 'Get from Xero Developer Portal' },
-                  { label: 'Tenant ID', value: localSettings.integrations?.xero?.tenantId || '', onChange: (v) => updateNested('integrations.xero.tenantId', v), type: 'text', placeholder: 'Xero organization ID' },
+                  { label: 'Sync Frequency', value: localSettings.integrations?.xero?.syncFrequency || 'daily', onChange: (v: string) => updateNested('integrations.xero.syncFrequency', v), type: 'select', options: [{ value: 'daily', label: 'Daily' }, { value: 'weekly', label: 'Weekly' }, { value: 'manual', label: 'Manual' }] },
+                  { label: 'Client ID (OAuth)', value: localSettings.integrations?.xero?.clientId || '', onChange: (v: string) => updateNested('integrations.xero.clientId', v), type: 'text', placeholder: 'Get from Xero Developer Portal' },
+                  { label: 'Tenant ID', value: localSettings.integrations?.xero?.tenantId || '', onChange: (v: string) => updateNested('integrations.xero.tenantId', v), type: 'text', placeholder: 'Xero organization ID' },
                 ]}
               />
             </div>
@@ -839,11 +840,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 icon={<Calendar size={24} />}
                 description="Two-way calendar sync (OAuth 2.0)"
                 enabled={localSettings.integrations?.googleCalendar?.enabled || false}
-                onToggle={(v) => updateNested('integrations.googleCalendar.enabled', v)}
+                onToggle={(v: boolean) => updateNested('integrations.googleCalendar.enabled', v)}
                 fields={[
-                  { label: 'Enable Sync', value: localSettings.integrations?.googleCalendar?.syncEnabled || false, onChange: (v) => updateNested('integrations.googleCalendar.syncEnabled', v), type: 'checkbox' },
-                  { label: 'Client ID (OAuth)', value: localSettings.integrations?.googleCalendar?.clientId || '', onChange: (v) => updateNested('integrations.googleCalendar.clientId', v), type: 'text', placeholder: 'Get from Google Cloud Console' },
-                  { label: 'Calendar ID', value: localSettings.integrations?.googleCalendar?.calendarId || '', onChange: (v) => updateNested('integrations.googleCalendar.calendarId', v), type: 'text', placeholder: 'primary or custom calendar ID' },
+                  { label: 'Enable Sync', value: localSettings.integrations?.googleCalendar?.syncEnabled || false, onChange: (v: string) => updateNested('integrations.googleCalendar.syncEnabled', v), type: 'checkbox' },
+                  { label: 'Client ID (OAuth)', value: localSettings.integrations?.googleCalendar?.clientId || '', onChange: (v: string) => updateNested('integrations.googleCalendar.clientId', v), type: 'text', placeholder: 'Get from Google Cloud Console' },
+                  { label: 'Calendar ID', value: localSettings.integrations?.googleCalendar?.calendarId || '', onChange: (v: string) => updateNested('integrations.googleCalendar.calendarId', v), type: 'text', placeholder: 'primary or custom calendar ID' },
                 ]}
               />
               <IntegrationCard
@@ -851,11 +852,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 icon={<Mail size={24} />}
                 description="Microsoft calendar sync (Azure AD OAuth)"
                 enabled={localSettings.integrations?.outlook?.enabled || false}
-                onToggle={(v) => updateNested('integrations.outlook.enabled', v)}
+                onToggle={(v: boolean) => updateNested('integrations.outlook.enabled', v)}
                 fields={[
-                  { label: 'Enable Sync', value: localSettings.integrations?.outlook?.syncEnabled || false, onChange: (v) => updateNested('integrations.outlook.syncEnabled', v), type: 'checkbox' },
-                  { label: 'Client ID (Azure AD)', value: localSettings.integrations?.outlook?.clientId || '', onChange: (v) => updateNested('integrations.outlook.clientId', v), type: 'text', placeholder: 'Get from Azure Portal' },
-                  { label: 'Tenant ID', value: localSettings.integrations?.outlook?.tenantId || '', onChange: (v) => updateNested('integrations.outlook.tenantId', v), type: 'text', placeholder: 'Azure AD tenant ID' },
+                  { label: 'Enable Sync', value: localSettings.integrations?.outlook?.syncEnabled || false, onChange: (v: string) => updateNested('integrations.outlook.syncEnabled', v), type: 'checkbox' },
+                  { label: 'Client ID (Azure AD)', value: localSettings.integrations?.outlook?.clientId || '', onChange: (v: string) => updateNested('integrations.outlook.clientId', v), type: 'text', placeholder: 'Get from Azure Portal' },
+                  { label: 'Tenant ID', value: localSettings.integrations?.outlook?.tenantId || '', onChange: (v: string) => updateNested('integrations.outlook.tenantId', v), type: 'text', placeholder: 'Azure AD tenant ID' },
                 ]}
               />
             </div>
@@ -910,7 +911,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                     <select
                       className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500"
                       value={localSettings.automation?.executionMode || 'synchronous'}
-                      onChange={(e) => updateNested('automation.executionMode', e.target.amount)}
+                      onChange={(e) => updateNested('automation.executionMode', e.target.value)}
                     >
                       <option value="synchronous">Synchronous</option>
                       <option value="asynchronous">Asynchronous</option>
@@ -922,7 +923,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                     <select
                       className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500"
                       value={localSettings.automation?.retryPolicy || 3}
-                      onChange={(e) => updateNested('automation.retryPolicy', parseInt(e.target.amount))}
+                      onChange={(e) => updateNested('automation.retryPolicy', parseInt(e.target.value))}
                     >
                       <option value={0}>No Retry</option>
                       <option value={3}>Retry 3 times</option>
@@ -930,16 +931,16 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                       <option value={10}>Retry 10 times</option>
                     </select>
                   </div>
-                  <ToggleSwitch label="Workflow Logging" description="Record all workflow executions" value={localSettings.automation?.loggingEnabled ?? true} onChange={(v) => updateNested('automation.loggingEnabled', v)} />
-                  <ToggleSwitch label="Error Notifications" description="Send alerts on workflow failures" value={localSettings.automation?.errorNotifications ?? true} onChange={(v) => updateNested('automation.errorNotifications', v)} />
+                  <ToggleSwitch label="Workflow Logging" description="Record all workflow executions" value={localSettings.automation?.loggingEnabled ?? true} onChange={(v: boolean) => updateNested('automation.loggingEnabled', v)} />
+                  <ToggleSwitch label="Error Notifications" description="Send alerts on workflow failures" value={localSettings.automation?.errorNotifications ?? true} onChange={(v: boolean) => updateNested('automation.errorNotifications', v)} />
                 </div>
               </SettingsCard>
 
               <SettingsCard title="Email Automation" icon={Mail}>
                 <div className="space-y-6">
-                  <ConfigInput label="From Email Address" value={localSettings.automation?.emailFrom || ''} onChange={(v) => updateNested('automation.emailFrom', v)} />
-                  <ConfigInput label="From Name" value={localSettings.automation?.emailFromName || ''} onChange={(v) => updateNested('automation.emailFromName', v)} />
-                  <ToggleSwitch label="Track Email Opens" description="Monitor email engagement" value={localSettings.automation?.trackOpens ?? true} onChange={(v) => updateNested('automation.trackOpens', v)} />
+                  <ConfigInput label="From Email Address" value={localSettings.automation?.emailFrom || ''} onChange={(v: string) => updateNested('automation.emailFrom', v)} />
+                  <ConfigInput label="From Name" value={localSettings.automation?.emailFromName || ''} onChange={(v: string) => updateNested('automation.emailFromName', v)} />
+                  <ToggleSwitch label="Track Email Opens" description="Monitor email engagement" value={localSettings.automation?.trackOpens ?? true} onChange={(v: boolean) => updateNested('automation.trackOpens', v)} />
                 </div>
               </SettingsCard>
             </div>
@@ -1261,7 +1262,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                           value={stage.label}
                           onChange={(e) => {
                             const newStages = [...localSettings.dealStages];
-                            newStages[i] = { ...stage, label: e.target.amount };
+                            newStages[i] = { ...stage, label: e.target.value };
                             setLocalSettings({ ...localSettings, dealStages: newStages });
                           }}
                         />
@@ -1271,7 +1272,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                           value={Math.round(stage.probability * 100)}
                           onChange={(e) => {
                             const newStages = [...localSettings.dealStages];
-                            newStages[i] = { ...stage, probability: parseInt(e.target.amount) / 100 };
+                            newStages[i] = { ...stage, probability: parseInt(e.target.value) / 100 };
                             setLocalSettings({ ...localSettings, dealStages: newStages });
                           }}
                         />
@@ -1299,8 +1300,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
 
                 <SettingsCard title="Quote Settings" icon={FileText}>
                   <div className="space-y-6">
-                    <ConfigInput label="Quote Validity (Days)" type="number" value={localSettings.quoteValidityDays || 30} onChange={(v) => updateNested('quoteValidityDays', parseInt(v))} />
-                    <ConfigInput label="Payment Terms" value={localSettings.paymentTerms || 'Net 30'} onChange={(v) => updateNested('paymentTerms', v)} />
+                    <ConfigInput label="Quote Validity (Days)" type="number" value={localSettings.quoteValidityDays || 30} onChange={(v: string) => updateNested('quoteValidityDays', parseInt(v))} />
+                    <ConfigInput label="Payment Terms" value={localSettings.paymentTerms || 'Net 30'} onChange={(v: string) => updateNested('paymentTerms', v)} />
                   </div>
                 </SettingsCard>
 
@@ -1345,16 +1346,16 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 <SettingsCard title="Document Numbering" icon={Hash}>
                   <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
-                      <ConfigInput label="Invoice Prefix" value={localSettings.numberingSeries?.invoicePrefix || 'INV-'} onChange={(v) => updateNested('numberingSeries.invoicePrefix', v)} />
-                      <ConfigInput label="Next Number" type="number" value={localSettings.numberingSeries?.invoiceNextNumber || 1001} onChange={(v) => updateNested('numberingSeries.invoiceNextNumber', parseInt(v))} />
+                      <ConfigInput label="Invoice Prefix" value={localSettings.numberingSeries?.invoicePrefix || 'INV-'} onChange={(v: string) => updateNested('numberingSeries.invoicePrefix', v)} />
+                      <ConfigInput label="Next Number" type="number" value={localSettings.numberingSeries?.invoiceNextNumber || 1001} onChange={(v: string) => updateNested('numberingSeries.invoiceNextNumber', parseInt(v))} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <ConfigInput label="Quote Prefix" value={localSettings.numberingSeries?.quotePrefix || 'QT-'} onChange={(v) => updateNested('numberingSeries.quotePrefix', v)} />
-                      <ConfigInput label="Next Number" type="number" value={localSettings.numberingSeries?.quoteNextNumber || 1001} onChange={(v) => updateNested('numberingSeries.quoteNextNumber', parseInt(v))} />
+                      <ConfigInput label="Quote Prefix" value={localSettings.numberingSeries?.quotePrefix || 'QT-'} onChange={(v: string) => updateNested('numberingSeries.quotePrefix', v)} />
+                      <ConfigInput label="Next Number" type="number" value={localSettings.numberingSeries?.quoteNextNumber || 1001} onChange={(v: string) => updateNested('numberingSeries.quoteNextNumber', parseInt(v))} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <ConfigInput label="PO Prefix" value={localSettings.numberingSeries?.poPrefix || 'PO-'} onChange={(v) => updateNested('numberingSeries.poPrefix', v)} />
-                      <ConfigInput label="Next Number" type="number" value={localSettings.numberingSeries?.poNextNumber || 1001} onChange={(v) => updateNested('numberingSeries.poNextNumber', parseInt(v))} />
+                      <ConfigInput label="PO Prefix" value={localSettings.numberingSeries?.poPrefix || 'PO-'} onChange={(v: string) => updateNested('numberingSeries.poPrefix', v)} />
+                      <ConfigInput label="Next Number" type="number" value={localSettings.numberingSeries?.poNextNumber || 1001} onChange={(v: string) => updateNested('numberingSeries.poNextNumber', parseInt(v))} />
                     </div>
                   </div>
                 </SettingsCard>
@@ -1380,21 +1381,21 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <SettingsCard title="Scheduling Settings" icon={Calendar}>
                   <div className="space-y-6">
-                    <ConfigInput label="Booking Buffer (Minutes)" type="number" value={localSettings.scheduling?.bookingBuffer || 15} onChange={(v) => updateNested('scheduling.bookingBuffer', parseInt(v))} />
+                    <ConfigInput label="Booking Buffer (Minutes)" type="number" value={localSettings.scheduling?.bookingBuffer || 15} onChange={(v: string) => updateNested('scheduling.bookingBuffer', parseInt(v))} />
                     <div className="grid grid-cols-2 gap-4">
-                      <ConfigInput label="Work Hours Start" value={localSettings.scheduling?.workingHoursStart || '08:00'} onChange={(v) => updateNested('scheduling.workingHoursStart', v)} />
-                      <ConfigInput label="Work Hours End" value={localSettings.scheduling?.workingHoursEnd || '17:00'} onChange={(v) => updateNested('scheduling.workingHoursEnd', v)} />
+                      <ConfigInput label="Work Hours Start" value={localSettings.scheduling?.workingHoursStart || '08:00'} onChange={(v: string) => updateNested('scheduling.workingHoursStart', v)} />
+                      <ConfigInput label="Work Hours End" value={localSettings.scheduling?.workingHoursEnd || '17:00'} onChange={(v: string) => updateNested('scheduling.workingHoursEnd', v)} />
                     </div>
-                    <ConfigInput label="Max Jobs/Crew/Day" type="number" value={localSettings.scheduling?.maxJobsPerCrewPerDay || 8} onChange={(v) => updateNested('scheduling.maxJobsPerCrewPerDay', parseInt(v))} />
-                    <ConfigInput label="Service Radius (Miles)" type="number" value={localSettings.scheduling?.defaultServiceRadius || 50} onChange={(v) => updateNested('scheduling.defaultServiceRadius', parseInt(v))} />
+                    <ConfigInput label="Max Jobs/Crew/Day" type="number" value={localSettings.scheduling?.maxJobsPerCrewPerDay || 8} onChange={(v: string) => updateNested('scheduling.maxJobsPerCrewPerDay', parseInt(v))} />
+                    <ConfigInput label="Service Radius (Miles)" type="number" value={localSettings.scheduling?.defaultServiceRadius || 50} onChange={(v: string) => updateNested('scheduling.defaultServiceRadius', parseInt(v))} />
                   </div>
                 </SettingsCard>
 
                 <SettingsCard title="Inventory Rules" icon={Package}>
                   <div className="space-y-6">
-                    <ConfigInput label="Low Stock Threshold" type="number" value={localSettings.inventoryRules?.lowStockThreshold || 20} onChange={(v) => updateNested('inventoryRules.lowStockThreshold', parseInt(v))} />
-                    <ConfigInput label="Critical Stock Threshold" type="number" value={localSettings.inventoryRules?.criticalStockThreshold || 10} onChange={(v) => updateNested('inventoryRules.criticalStockThreshold', parseInt(v))} />
-                    <ToggleSwitch label="Auto-Reorder" description="Automatically create POs at critical level" value={localSettings.inventoryRules?.autoReorderEnabled || false} onChange={(v) => updateNested('inventoryRules.autoReorderEnabled', v)} />
+                    <ConfigInput label="Low Stock Threshold" type="number" value={localSettings.inventoryRules?.lowStockThreshold || 20} onChange={(v: string) => updateNested('inventoryRules.lowStockThreshold', parseInt(v))} />
+                    <ConfigInput label="Critical Stock Threshold" type="number" value={localSettings.inventoryRules?.criticalStockThreshold || 10} onChange={(v: string) => updateNested('inventoryRules.criticalStockThreshold', parseInt(v))} />
+                    <ToggleSwitch label="Auto-Reorder" description="Automatically create POs at critical level" value={localSettings.inventoryRules?.autoReorderEnabled || false} onChange={(v: boolean) => updateNested('inventoryRules.autoReorderEnabled', v)} />
                   </div>
                 </SettingsCard>
 
@@ -1428,7 +1429,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                           <p className="text-sm font-bold text-slate-900">{platform.name}</p>
                           <p className="text-[10px] text-slate-400">{platform.url || 'No URL configured'}</p>
                         </div>
-                        <ToggleSwitch value={platform.enabled} onChange={(v) => {
+                        <ToggleSwitch value={platform.enabled} onChange={(v: boolean) => {
                           const newPlatforms = [...(localSettings.reviewPlatforms || [])];
                           newPlatforms[i] = { ...platform, enabled: v };
                           setLocalSettings({ ...localSettings, reviewPlatforms: newPlatforms });
@@ -1440,9 +1441,9 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
 
                 <SettingsCard title="Referral Program" icon={Gift}>
                   <div className="space-y-6">
-                    <ConfigInput label="Referrer Reward ($)" type="number" value={localSettings.referralSettings?.referrerReward || 100} onChange={(v) => updateNested('referralSettings.referrerReward', parseInt(v))} />
-                    <ConfigInput label="Referee Discount ($)" type="number" value={localSettings.referralSettings?.refereeDiscount || 50} onChange={(v) => updateNested('referralSettings.refereeDiscount', parseInt(v))} />
-                    <ConfigInput label="Min Purchase for Reward ($)" type="number" value={localSettings.referralSettings?.minPurchaseForReward || 500} onChange={(v) => updateNested('referralSettings.minPurchaseForReward', parseInt(v))} />
+                    <ConfigInput label="Referrer Reward ($)" type="number" value={localSettings.referralSettings?.referrerReward || 100} onChange={(v: string) => updateNested('referralSettings.referrerReward', parseInt(v))} />
+                    <ConfigInput label="Referee Discount ($)" type="number" value={localSettings.referralSettings?.refereeDiscount || 50} onChange={(v: string) => updateNested('referralSettings.refereeDiscount', parseInt(v))} />
+                    <ConfigInput label="Min Purchase for Reward ($)" type="number" value={localSettings.referralSettings?.minPurchaseForReward || 500} onChange={(v: string) => updateNested('referralSettings.minPurchaseForReward', parseInt(v))} />
                   </div>
                 </SettingsCard>
 
@@ -1516,8 +1517,30 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                   <div className="flex gap-3">
                     <button
                       onClick={() => {
-                        // Download template logic will be added
-                        alert(`Downloading ${selectedRequiredFieldsEntity} template...`);
+                        // Generate CSV template based on selected entity
+                        const templates: Record<string, string[]> = {
+                          leads: ['firstName', 'lastName', 'email', 'phone', 'company', 'source', 'status', 'leadScore'],
+                          contacts: ['firstName', 'lastName', 'email', 'phone', 'company', 'title', 'department'],
+                          accounts: ['name', 'email', 'phone', 'industry', 'website', 'billingStreet', 'billingCity', 'billingState', 'billingPostcode'],
+                          deals: ['name', 'accountId', 'value', 'stage', 'probability', 'expectedCloseDate', 'owner'],
+                          tasks: ['title', 'description', 'priority', 'status', 'dueDate', 'assigneeId'],
+                          products: ['name', 'sku', 'description', 'category', 'unitPrice', 'taxRate', 'stockQty'],
+                          services: ['name', 'code', 'description', 'category', 'unitPrice', 'durationMins', 'taxRate'],
+                          jobs: ['title', 'accountId', 'status', 'priority', 'scheduledDate', 'assignedCrewId'],
+                          crews: ['name', 'specialization', 'status', 'baseLocation'],
+                          equipment: ['name', 'type', 'serialNumber', 'status', 'assignedToCrewId'],
+                          zones: ['name', 'region', 'postalCodes'],
+                          inventory: ['productId', 'warehouseId', 'quantity', 'minStockLevel', 'maxStockLevel']
+                        };
+                        const columns = templates[selectedRequiredFieldsEntity] || ['id', 'name'];
+                        const csvContent = columns.join(',') + '\\n' + columns.map(() => '').join(',');
+                        const blob = new Blob([csvContent], { type: 'text/csv' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${selectedRequiredFieldsEntity}_template.csv`;
+                        a.click();
+                        URL.revokeObjectURL(url);
                       }}
                       className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-[24px] text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95"
                     >
@@ -1535,8 +1558,18 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                         input.onchange = (e) => {
                           const file = (e.target as HTMLInputElement).files?.[0];
                           if (file) {
-                            alert(`Importing ${file.name} to ${selectedRequiredFieldsEntity}...`);
-                            // Import logic will be implemented
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              const text = event.target?.result as string;
+                              const lines = text.split('\\n').filter(line => line.trim());
+                              const headers = lines[0]?.split(',').map(h => h.trim());
+                              const rows = lines.slice(1);
+                              const validRows = rows.filter(row => row.split(',').length === headers?.length);
+
+                              // In demo mode, show parsed data info
+                              alert(`CSV Import Preview:\\n\\nFile: ${file.name}\\nEntity: ${selectedRequiredFieldsEntity}\\nColumns: ${headers?.join(', ')}\\nValid Rows: ${validRows.length}\\n\\nNote: In demo mode, data is not persisted. Connect to Supabase for full import functionality.`);
+                            };
+                            reader.readAsText(file);
                           }
                         };
                         input.click();
@@ -1566,6 +1599,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                   <div>
                     <label className="block text-[10px] font-black text-slate-700 uppercase tracking-widest mb-3">Select Module</label>
                     <select
+                      value={selectedExportEntity}
+                      onChange={(e) => setSelectedExportEntity(e.target.value)}
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="accounts">Accounts</option>
@@ -1605,7 +1640,44 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
 
                   <div className="flex gap-3">
                     <button
-                      onClick={() => alert('Exporting data...')}
+                      onClick={() => {
+                        // Get data based on selected entity
+                        const dataMap: Record<string, any[]> = {
+                          accounts, contacts, leads, deals, tasks, campaigns, tickets, products, services, invoices, jobs
+                        };
+                        const data = dataMap[selectedExportEntity] || [];
+
+                        if (data.length === 0) {
+                          alert(`No ${selectedExportEntity} data to export.`);
+                          return;
+                        }
+
+                        // Get all unique keys from the data
+                        const allKeys = new Set<string>();
+                        data.forEach(item => Object.keys(item).forEach(key => allKeys.add(key)));
+                        const headers = Array.from(allKeys);
+
+                        // Convert to CSV
+                        const csvRows = [headers.join(',')];
+                        data.forEach(item => {
+                          const row = headers.map(header => {
+                            const value = item[header];
+                            if (value === null || value === undefined) return '';
+                            if (typeof value === 'object') return JSON.stringify(value).replace(/,/g, ';');
+                            return String(value).replace(/,/g, ';').replace(/\\n/g, ' ');
+                          });
+                          csvRows.push(row.join(','));
+                        });
+
+                        const csvContent = csvRows.join('\\n');
+                        const blob = new Blob([csvContent], { type: 'text/csv' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${selectedExportEntity}_export_${new Date().toISOString().split('T')[0]}.csv`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
                       className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-emerald-600 text-white rounded-[24px] text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all active:scale-95"
                     >
                       <Download size={16} />
@@ -1706,7 +1778,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                   <select
                     className="px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-900 focus:outline-none"
                     value={auditFilter.entityType}
-                    onChange={(e) => setAuditFilter({ ...auditFilter, entityType: e.target.amount })}
+                    onChange={(e) => setAuditFilter({ ...auditFilter, entityType: e.target.value })}
                   >
                     <option value="">All Entities</option>
                     <option value="leads">Leads</option>
@@ -1720,7 +1792,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                     placeholder="Filter by action..."
                     className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-900 focus:outline-none"
                     value={auditFilter.action}
-                    onChange={(e) => setAuditFilter({ ...auditFilter, action: e.target.amount })}
+                    onChange={(e) => setAuditFilter({ ...auditFilter, action: e.target.value })}
                   />
                 </div>
 
@@ -1753,10 +1825,10 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <SettingsCard title="Data Retention" icon={Database}>
                 <div className="space-y-6">
-                  <ConfigInput label="Audit Log Retention (Days)" type="number" value={localSettings.diagnostics?.auditLogRetentionDays || 90} onChange={(v) => updateNested('diagnostics.auditLogRetentionDays', parseInt(v))} />
-                  <ConfigInput label="Email Log Retention (Days)" type="number" value={localSettings.diagnostics?.emailLogRetentionDays || 30} onChange={(v) => updateNested('diagnostics.emailLogRetentionDays', parseInt(v))} />
-                  <ToggleSwitch label="API Usage Tracking" description="Monitor API call patterns" value={localSettings.diagnostics?.apiUsageTracking ?? true} onChange={(v) => updateNested('diagnostics.apiUsageTracking', v)} />
-                  <ToggleSwitch label="Data Integrity Checks" description="Run periodic orphan detection" value={localSettings.diagnostics?.dataIntegrityChecks ?? true} onChange={(v) => updateNested('diagnostics.dataIntegrityChecks', v)} />
+                  <ConfigInput label="Audit Log Retention (Days)" type="number" value={localSettings.diagnostics?.auditLogRetentionDays || 90} onChange={(v: string) => updateNested('diagnostics.auditLogRetentionDays', parseInt(v))} />
+                  <ConfigInput label="Email Log Retention (Days)" type="number" value={localSettings.diagnostics?.emailLogRetentionDays || 30} onChange={(v: string) => updateNested('diagnostics.emailLogRetentionDays', parseInt(v))} />
+                  <ToggleSwitch label="API Usage Tracking" description="Monitor API call patterns" value={localSettings.diagnostics?.apiUsageTracking ?? true} onChange={(v: boolean) => updateNested('diagnostics.apiUsageTracking', v)} />
+                  <ToggleSwitch label="Data Integrity Checks" description="Run periodic orphan detection" value={localSettings.diagnostics?.dataIntegrityChecks ?? true} onChange={(v: boolean) => updateNested('diagnostics.dataIntegrityChecks', v)} />
                 </div>
               </SettingsCard>
 
@@ -1836,7 +1908,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
 
 // ============ Reusable Components ============
 
-const SettingsCard = ({ title, icon: Icon, children }: any) => (
+const SettingsCard = ({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) => (
   <div className="bg-white border border-slate-200 rounded-[45px] p-10 shadow-sm flex flex-col hover:shadow-xl transition-all">
     <div className="flex items-center gap-3 mb-8">
       <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-blue-600 shadow-sm">
@@ -1848,20 +1920,20 @@ const SettingsCard = ({ title, icon: Icon, children }: any) => (
   </div>
 );
 
-const ConfigInput = ({ label, value, onChange, type = "text", placeholder = "" }: any) => (
+const ConfigInput = ({ label, value, onChange, type = "text", placeholder = "" }: { label: string; value: string | number | boolean; onChange: (v: string) => void; type?: string; placeholder?: string }) => (
   <div>
     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">{label}</label>
     <input
       type={type}
       className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500 transition-all"
-      value={value}
-      onChange={(e) => onChange(e.target.amount)}
+      value={typeof value === 'boolean' ? String(value) : value}
+      onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
     />
   </div>
 );
 
-const EditableList = ({ items, onUpdate, onAdd, onRemove }: any) => {
+const EditableList = ({ items, onUpdate, onAdd, onRemove }: { items: string[]; onUpdate: (i: number, v: string) => void; onAdd: () => void; onRemove: (i: number) => void }) => {
   const safeItems = items || [];
   return (
     <div className="space-y-3">
@@ -1870,7 +1942,7 @@ const EditableList = ({ items, onUpdate, onAdd, onRemove }: any) => {
           <input
             className="flex-1 bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500 transition-all"
             value={item}
-            onChange={(e) => onUpdate(i, e.target.amount)}
+            onChange={(e) => onUpdate(i, e.target.value)}
           />
           <button onClick={() => onRemove(i)} className="p-3 text-slate-300 hover:text-rose-500 transition-colors"><Trash2 size={16}/></button>
         </div>
@@ -1880,7 +1952,7 @@ const EditableList = ({ items, onUpdate, onAdd, onRemove }: any) => {
   );
 };
 
-const ToggleSwitch = ({ label, description, value, onChange, disabled = false, mini = false }: any) => {
+const ToggleSwitch = ({ label, description, value, onChange, disabled = false, mini = false }: { label?: string; description?: string; value: boolean; onChange: (v: boolean) => void; disabled?: boolean; mini?: boolean }) => {
   if (mini) {
     return (
       <button
@@ -1916,20 +1988,20 @@ const ToggleSwitch = ({ label, description, value, onChange, disabled = false, m
   );
 };
 
-const ColorPicker = ({ label, value, onChange }: any) => (
+const ColorPicker = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
   <div>
     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">{label}</label>
     <div className="flex gap-3">
       <input
         type="color"
         value={value}
-        onChange={(e) => onChange(e.target.amount)}
+        onChange={(e) => onChange(e.target.value)}
         className="w-14 h-14 rounded-2xl border-2 border-slate-100 cursor-pointer"
       />
       <input
         type="text"
         value={value}
-        onChange={(e) => onChange(e.target.amount)}
+        onChange={(e) => onChange(e.target.value)}
         className="flex-1 px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500"
         placeholder="#000000"
       />
@@ -1937,7 +2009,16 @@ const ColorPicker = ({ label, value, onChange }: any) => (
   </div>
 );
 
-const IntegrationCard = ({ name, icon, description, enabled, onToggle, fields = [], compact = false }: any) => (
+interface IntegrationField {
+  label: string;
+  value: string | number | boolean;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+  options?: { value: string; label: string }[];
+}
+
+const IntegrationCard = ({ name, icon, description, enabled, onToggle, fields = [], compact = false }: { name: string; icon: React.ReactNode; description: string; enabled: boolean; onToggle: (v: boolean) => void; fields?: IntegrationField[]; compact?: boolean }) => (
   <div className={`p-6 rounded-[35px] border transition-all ${
     enabled ? 'bg-white border-emerald-200 shadow-lg' : 'bg-slate-50 border-slate-100'
   }`}>
@@ -1957,11 +2038,11 @@ const IntegrationCard = ({ name, icon, description, enabled, onToggle, fields = 
     </div>
     {enabled && !compact && fields.length > 0 && (
       <div className="space-y-4 pt-4 border-t border-slate-100">
-        {fields.map((field: any, idx: number) => (
+        {fields.map((field: IntegrationField, idx: number) => (
           <ConfigInput
             key={idx}
             label={field.label}
-            value={field.amount}
+            value={field.value}
             onChange={field.onChange}
             type={field.type || 'text'}
           />

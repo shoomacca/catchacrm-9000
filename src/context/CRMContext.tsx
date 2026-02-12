@@ -7,7 +7,8 @@ import {
   Review, ReferralReward, InboundForm, ChatWidget, Calculator, ReviewPlatform, CalculatorType, FormField,
   AutomationWorkflow, Webhook, WorkflowTriggerType, WorkflowNodeType, WorkflowActionType, WorkflowTrigger, WorkflowNode,
   IndustryTemplate, LayoutSection, CustomFieldDef, Role, Team, CrewConfig, Pipeline, LeadScoringRule, TaxRate, LedgerMapping,
-  JobTemplate, ZoneConfig, Warehouse, FieldSecurityRule, PermissionMatrix, IndustryBlueprint
+  JobTemplate, ZoneConfig, Warehouse, FieldSecurityRule, PermissionMatrix, IndustryBlueprint,
+  TacticalQueueItem, WarehouseLocation, DispatchAlert, RFQ, SupplierQuote
 } from '../types';
 import { generateDemoData } from '../utils/seedData';
 import { INDUSTRY_BLUEPRINTS, getActiveBlueprint } from '../utils/industryBlueprints';
@@ -68,6 +69,11 @@ interface CRMContextType {
   automationWorkflows: AutomationWorkflow[];
   webhooks: Webhook[];
   industryTemplates: IndustryTemplate[];
+  tacticalQueue: TacticalQueueItem[];
+  warehouseLocations: WarehouseLocation[];
+  dispatchAlerts: DispatchAlert[];
+  rfqs: RFQ[];
+  supplierQuotes: SupplierQuote[];
   settings: CRMSettings;
   currentUserId: string;
   currentUser: User | undefined;
@@ -95,6 +101,8 @@ interface CRMContextType {
   
   // CRUD
   upsertRecord: (type: EntityType, data: any) => void;
+  updateRecord: (type: EntityType, id: string, data: any) => void;
+  addRecord: (type: EntityType, data: any) => void;
   deleteRecord: (type: EntityType, id: string, force?: boolean) => boolean;
   addTicketMessage: (ticketId: string, text: string, isInternal?: boolean) => void;
   sendChatMessage: (conversationId: string, content: string) => void;
@@ -134,7 +142,9 @@ interface CRMContextType {
   // Job Workflow
   updateJobWorkflow: (jobId: string, updates: {
     swmsSigned?: boolean;
+    swmsSignedAt?: string;
     status?: JobStatus;
+    completedAt?: string;
     evidencePhotos?: string[];
     completionSignature?: string;
   }) => { success: boolean };
@@ -599,6 +609,11 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [automationWorkflows, setAutomationWorkflows] = useState<AutomationWorkflow[]>([]);
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [industryTemplates, setIndustryTemplates] = useState<IndustryTemplate[]>([]);
+  const [tacticalQueue, setTacticalQueue] = useState<TacticalQueueItem[]>([]);
+  const [warehouseLocations, setWarehouseLocations] = useState<WarehouseLocation[]>([]);
+  const [dispatchAlerts, setDispatchAlerts] = useState<DispatchAlert[]>([]);
+  const [rfqs, setRfqs] = useState<RFQ[]>([]);
+  const [supplierQuotes, setSupplierQuotes] = useState<SupplierQuote[]>([]);
   const [settings, setSettings] = useState<CRMSettings>(DEFAULT_SETTINGS);
   const [currentUserId, setCurrentUserIdState] = useState<string>('');
 
@@ -679,6 +694,29 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               setBankTransactions(crmData.bankTransactions);
               setExpenses(crmData.expenses);
               setReviews(crmData.reviews);
+              // Marketing module
+              setReferralRewards(crmData.referralRewards);
+              setInboundForms(crmData.inboundForms);
+              setChatWidgets(crmData.chatWidgets);
+              setCalculators(crmData.calculators);
+              // Automation module
+              setAutomationWorkflows(crmData.automationWorkflows);
+              setWebhooks(crmData.webhooks);
+              setIndustryTemplates(crmData.industryTemplates);
+              // Communication module
+              setConversations(crmData.conversations);
+              setChatMessages(crmData.chatMessages);
+              // System
+              setNotifications(crmData.notifications);
+              setDocuments(crmData.documents);
+              setAuditLogs(crmData.auditLogs);
+              // Operations - additional tables
+              setTacticalQueue(crmData.tacticalQueue);
+              setWarehouseLocations(crmData.warehouseLocations);
+              setDispatchAlerts(crmData.dispatchAlerts);
+              // Procurement
+              setRfqs(crmData.rfqs);
+              setSupplierQuotes(crmData.supplierQuotes);
 
               // Set current user to first admin user
               const adminUser = crmData.users.find(u => u.role === 'admin');
@@ -692,75 +730,14 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           }
         } catch (err) {
-          console.log('⚠️ Supabase connection failed, falling back to localStorage:', err);
+          console.error('❌ Supabase connection failed:', err);
+          setDataSource('supabase'); // Still mark as supabase mode, just with connection error
         }
       }
 
-      // Fallback to localStorage
-      console.log('📦 Loading from localStorage...');
-      const stored = localStorage.getItem(STORAGE_KEY);
-
-      if (stored) {
-        const db = JSON.parse(stored);
-        const hasData = db.leads && db.leads.length > 0;
-
-        if (!hasData) {
-          console.log('ℹ️ No data found in localStorage, generating seed data...');
-          seedInitialData();
-          setDataSource('localStorage');
-          return;
-        }
-
-        setLeads(db.leads || []);
-        setDeals(db.deals || []);
-        setAccounts(db.accounts || []);
-        setContacts(db.contacts || []);
-        setTasks(db.tasks || []);
-        setCampaigns(db.campaigns || []);
-        setTickets(db.tickets || []);
-        setInvoices(db.invoices || []);
-        setQuotes(db.quotes || []);
-        setProducts(db.products || []);
-        setServices(db.services || []);
-        setSubscriptions(db.subscriptions || []);
-        setDocuments(db.documents || []);
-        setCommunications(db.communications || []);
-        setCalendarEvents(db.calendarEvents || []);
-        setConversations(db.conversations || []);
-        setChatMessages(db.chatMessages || []);
-        setNotifications(db.notifications || []);
-        setAuditLogs(db.auditLogs || []);
-        setUsers(db.users || []);
-        setCrews(db.crews || []);
-        setJobs(db.jobs || []);
-        setZones(db.zones || []);
-        setEquipment(db.equipment || []);
-        setInventoryItems(db.inventoryItems || []);
-        setPurchaseOrders(db.purchaseOrders || []);
-        setBankTransactions(db.bankTransactions || []);
-        setExpenses(db.expenses || []);
-        setReviews(db.reviews || []);
-        setSettings({ ...DEFAULT_SETTINGS, ...(db.settings || {}) });
-        setCurrentUserIdState(db.currentUserId || 'USR-MATRIX');
-        console.log(`✓ Loaded ${db.leads?.length || 0} leads, ${db.deals?.length || 0} deals from localStorage`);
-      } else {
-        console.log('ℹ️ No localStorage data, generating seed data...');
-        seedInitialData();
-      }
-
-      setDataSource('localStorage');
-
-      // Demo mode: Check for 24hr reset
-      if (isDemoMode) {
-        const demoStart = localStorage.getItem('catchacrm_demo_start');
-        if (demoStart) {
-          const hoursSinceStart = (Date.now() - new Date(demoStart).getTime()) / (1000 * 60 * 60);
-          if (hoursSinceStart > 24) {
-            console.log('ℹ️ Demo data expired (>24h), resetting...');
-            seedInitialData();
-          }
-        }
-      }
+      // If no Supabase or connection failed, log error - NO localStorage fallback
+      console.error('❌ Failed to load data from Supabase. Please check your connection.');
+      setDataSource('supabase');
     };
 
     initializeData();
@@ -853,6 +830,33 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setZones(crmData.zones);
         setEquipment(crmData.equipment);
         setInventoryItems(crmData.inventoryItems);
+        setPurchaseOrders(crmData.purchaseOrders);
+        setBankTransactions(crmData.bankTransactions);
+        setExpenses(crmData.expenses);
+        setQuotes(crmData.quotes);
+        setSubscriptions(crmData.subscriptions);
+        setCommunications(crmData.communications);
+        setCalendarEvents(crmData.calendarEvents);
+        setConversations(crmData.conversations);
+        setChatMessages(crmData.chatMessages);
+        setDocuments(crmData.documents);
+        setAuditLogs(crmData.auditLogs);
+        setNotifications(crmData.notifications);
+        setReviews(crmData.reviews);
+        setReferralRewards(crmData.referralRewards);
+        setInboundForms(crmData.inboundForms);
+        setChatWidgets(crmData.chatWidgets);
+        setCalculators(crmData.calculators);
+        setAutomationWorkflows(crmData.automationWorkflows);
+        setWebhooks(crmData.webhooks);
+        setIndustryTemplates(crmData.industryTemplates);
+        // Operations - additional tables
+        setTacticalQueue(crmData.tacticalQueue);
+        setWarehouseLocations(crmData.warehouseLocations);
+        setDispatchAlerts(crmData.dispatchAlerts);
+        // Procurement
+        setRfqs(crmData.rfqs);
+        setSupplierQuotes(crmData.supplierQuotes);
         console.log('✅ Demo reset complete');
       }
 
@@ -886,7 +890,9 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       reviews: setReviews, referralRewards: setReferralRewards, inboundForms: setInboundForms,
       chatWidgets: setChatWidgets, calculators: setCalculators,
       automationWorkflows: setAutomationWorkflows, webhooks: setWebhooks,
-      industryTemplates: setIndustryTemplates
+      industryTemplates: setIndustryTemplates,
+      tacticalQueue: setTacticalQueue, warehouseLocations: setWarehouseLocations,
+      dispatchAlerts: setDispatchAlerts, rfqs: setRfqs, supplierQuotes: setSupplierQuotes
     };
     if (!setters[type]) return;
 
@@ -1032,9 +1038,18 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     closeModal();
   };
 
+  // Thin wrappers around upsertRecord for pages that expect updateRecord/addRecord
+  const updateRecord = (type: EntityType, id: string, data: any) => {
+    upsertRecord(type, { ...data, id });
+  };
+
+  const addRecord = (type: EntityType, data: any) => {
+    upsertRecord(type, data);
+  };
+
   /**
    * Root Cause Patch 3: Cascading Delete Logic
-   * Ensures deleting a parent record (Account/Lead/Deal) also removes associated child records 
+   * Ensures deleting a parent record (Account/Lead/Deal) also removes associated child records
    * (communications, tasks, docs) to prevent ORPHAN_REFERENCE failures in the Audit Engine.
    */
   const deleteRecord = (type: EntityType, id: string): boolean => {
@@ -1050,7 +1065,9 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       reviews: setReviews, referralRewards: setReferralRewards, inboundForms: setInboundForms,
       chatWidgets: setChatWidgets, calculators: setCalculators,
       automationWorkflows: setAutomationWorkflows, webhooks: setWebhooks,
-      industryTemplates: setIndustryTemplates
+      industryTemplates: setIndustryTemplates,
+      tacticalQueue: setTacticalQueue, warehouseLocations: setWarehouseLocations,
+      dispatchAlerts: setDispatchAlerts, rfqs: setRfqs, supplierQuotes: setSupplierQuotes
     };
     if (!setters[type]) return false;
 
@@ -1271,6 +1288,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       entityId,
       action,
       metadata: { userId },
+      createdBy: userId,
       createdAt: timestamp,
       updatedAt: timestamp
     };
@@ -1969,7 +1987,9 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     jobId: string,
     updates: {
       swmsSigned?: boolean;
+      swmsSignedAt?: string;
       status?: JobStatus;
+      completedAt?: string;
       evidencePhotos?: string[];
       completionSignature?: string;
     }
@@ -2261,7 +2281,9 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <CRMContext.Provider value={{
       leads, deals, accounts, contacts, tasks, campaigns, tickets, invoices, quotes, products, services, subscriptions, conversations, chatMessages,
-      documents, communications, auditLogs, calendarEvents, notifications, users, crews, jobs, zones, equipment, inventoryItems, purchaseOrders, bankTransactions, expenses, reviews, referralRewards, inboundForms, chatWidgets, calculators, automationWorkflows, webhooks, industryTemplates, settings, currentUserId, currentUser, 
+      documents, communications, auditLogs, calendarEvents, notifications, users, crews, jobs, zones, equipment, inventoryItems, purchaseOrders, bankTransactions, expenses, reviews, referralRewards, inboundForms, chatWidgets, calculators, automationWorkflows, webhooks, industryTemplates,
+      tacticalQueue, warehouseLocations, dispatchAlerts, rfqs, supplierQuotes,
+      settings, currentUserId, currentUser, 
       searchQuery, setSearchQuery, setCurrentUserId: (id) => { setCurrentUserIdState(id); saveToDisk({ currentUserId: id }); }, 
       restoreDefaultSettings, resetDemoData, hardReset, resetSupabaseDemo, dataSource, isSupabaseConnected,
       addNote, updateStatus, toggleTask: (id) => {
@@ -2271,11 +2293,25 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           return updated;
         });
       }, convertLead, convertQuoteToInvoice, markNotificationRead, updateSettings,
-      upsertRecord, deleteRecord, addTicketMessage, getCommunicationsForEntity, getAccountRevenueStats, canAccessRecord, hasPermission,
+      upsertRecord, updateRecord, addRecord, deleteRecord, addTicketMessage, getCommunicationsForEntity, getAccountRevenueStats, canAccessRecord, hasPermission,
       sendChatMessage, startConversation, convertLeadToDeal, acceptQuote, closeDealAsWon, recordPayment, createUser, updateUser, deleteUser, updateJobWorkflow, pickBOMItem, reconcileTransaction, getReconciliationSuggestions,
       modal, openModal, closeModal, globalSearchResults,
-      salesStats, financialStats, marketingStats: { totalLeads: permittedLeads.length, roi: 3.5, leadsBySource: {}, campaignPerformance: [], trends: { roi: 2, leads: 5 } },
-      opsStats: { efficiencySaved: 42, projectsCompleted: 12, activeTickets: permittedTickets.length, urgentTickets: 5, overdueTasksCount: tasks.filter(t => t.status !== 'Completed' && new Date(t.dueDate) < new Date()).length, trends: { activeTickets: -2, efficiency: 10 } },
+      salesStats, financialStats,
+      marketingStats: {
+        totalLeads: permittedLeads.length,
+        roi: (() => { const spent = campaigns.reduce((s, c) => s + (c.spent ?? 0), 0); const rev = campaigns.reduce((s, c) => s + (c.revenueGenerated ?? 0), 0); return spent > 0 ? Math.round((rev / spent) * 10) / 10 : 0; })(),
+        leadsBySource: leads.reduce((acc, l) => { acc[l.source] = (acc[l.source] || 0) + 1; return acc; }, {} as Record<string, number>),
+        campaignPerformance: campaigns.map(c => ({ name: c.name, leads: c.leadsGenerated ?? 0, revenue: c.revenueGenerated ?? 0 })),
+        trends: { roi: 2, leads: 5 }
+      },
+      opsStats: {
+        efficiencySaved: Math.round(jobs.filter(j => j.status === 'Completed').length / (jobs.length || 1) * 100),
+        projectsCompleted: jobs.filter(j => j.status === 'Completed').length,
+        activeTickets: permittedTickets.length,
+        urgentTickets: tickets.filter(t => t.priority === 'Urgent' && t.status !== 'Resolved').length,
+        overdueTasksCount: tasks.filter(t => t.status !== 'Completed' && new Date(t.dueDate) < new Date()).length,
+        trends: { activeTickets: -2, efficiency: 10 }
+      },
       activeBlueprint, getCustomEntities, upsertCustomEntity, deleteCustomEntity
     }}>
       {children}

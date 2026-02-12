@@ -42,6 +42,15 @@ export const TABLE_MAP: Record<EntityType, string> = {
   automationWorkflows: 'automation_workflows',
   webhooks: 'webhooks',
   industryTemplates: 'industry_templates',
+  currencies: 'currencies',
+  payments: 'payments',
+  warehouses: 'warehouses',
+  roles: 'roles',
+  tacticalQueue: 'tactical_queue',
+  warehouseLocations: 'warehouse_locations',
+  dispatchAlerts: 'dispatch_alerts',
+  rfqs: 'rfqs',
+  supplierQuotes: 'supplier_quotes',
 };
 
 /**

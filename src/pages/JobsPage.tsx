@@ -56,7 +56,7 @@ const JobsPage: React.FC = () => {
     // Search filter
     if (searchQuery) {
       filtered = filtered.filter(j =>
-        j.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (j.name || j.subject || j.jobNumber).toLowerCase().includes(searchQuery.toLowerCase()) ||
         j.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         ((j as any).zone || '').toLowerCase().includes(searchQuery.toLowerCase())
       );
@@ -143,7 +143,7 @@ const JobsPage: React.FC = () => {
     const headers = ['ID', 'Name', 'Status', 'Priority', 'Zone', 'Date', 'Value'];
     const rows = jobsToExport.map(j => [
       j.id,
-      j.name,
+      j.name || j.subject || j.jobNumber,
       (j as any).status || '',
       (j as any).priority || '',
       (j as any).zone || '',
@@ -236,7 +236,7 @@ const JobsPage: React.FC = () => {
         <div className="bg-white border border-slate-200 p-6 rounded-[25px] shadow-sm">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Completed</p>
           <p className="text-3xl font-black text-slate-900">{stats.completed}</p>
-          <p className="text-xs text-slate-500 mt-1">{Math.round((stats.completed / stats.total) * 100)}% completion rate</p>
+          <p className="text-xs text-slate-500 mt-1">{stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}% completion rate</p>
         </div>
 
         <div className="bg-white border border-slate-200 p-6 rounded-[25px] shadow-sm">
@@ -311,10 +311,10 @@ const JobsPage: React.FC = () => {
               {selectedJobs.size} job{selectedJobs.size !== 1 ? 's' : ''} selected
             </span>
             <div className="flex gap-2">
-              <button className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition-all">
+              <button disabled title="Coming soon" className="bg-white/20 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition-all opacity-50 cursor-not-allowed">
                 Assign Crew
               </button>
-              <button className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition-all">
+              <button disabled title="Coming soon" className="bg-white/20 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition-all opacity-50 cursor-not-allowed">
                 Update Status
               </button>
               <button
@@ -408,7 +408,7 @@ const JobsPage: React.FC = () => {
                     </td>
                     <td className="p-4">
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold text-slate-900">{job.name}</span>
+                        <span className="text-sm font-bold text-slate-900">{job.name || job.subject || job.jobNumber}</span>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ID: {job.id}</span>
                       </div>
                     </td>
@@ -460,13 +460,25 @@ const JobsPage: React.FC = () => {
                             </div>
 
                             <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
-                              <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide shadow-md active:scale-95 transition-all">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/jobs/${jobData.id}`);
+                                }}
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide shadow-md active:scale-95 transition-all"
+                              >
                                 View Details
                               </button>
-                              <button className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openModal('jobs', jobData);
+                                }}
+                                className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all"
+                              >
                                 Edit
                               </button>
-                              <button className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all">
+                              <button disabled title="Coming soon" className="bg-white text-slate-400 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 opacity-50 cursor-not-allowed">
                                 Assign Crew
                               </button>
                             </div>

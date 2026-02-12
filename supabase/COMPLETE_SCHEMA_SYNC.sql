@@ -1,434 +1,680 @@
--- ============================================
--- CatchaCRM - Complete Schema Sync
--- Audit Date: 2026-02-09
--- Purpose: Add all missing tables and fields to match frontend types.ts
--- ============================================
+-- COMPLETE SCHEMA SYNC FOR CATCHA CRM
+-- Run this ONCE in Supabase SQL Editor: https://supabase.com/dashboard/project/anawatvgypmrpbmjfcht/sql/new
+-- This ensures all tables have columns matching src/types.ts
 
--- ============================================
--- SECTION 1: MISSING TABLES
--- These tables exist in frontend types.ts but not in database
--- ============================================
+-- ============================================================
+-- BASE COLUMNS (All tables need these)
+-- ============================================================
 
--- 1.1 Organization Users (User-Org Mapping for Multi-tenancy)
-CREATE TABLE IF NOT EXISTS organization_users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL, -- References auth.users
-  role TEXT NOT NULL DEFAULT 'member', -- 'owner', 'admin', 'manager', 'member'
-  active BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(org_id, user_id)
-);
-CREATE INDEX IF NOT EXISTS idx_organization_users_user_id ON organization_users(user_id);
-CREATE INDEX IF NOT EXISTS idx_organization_users_org_id ON organization_users(org_id);
-ALTER TABLE organization_users ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "allow_all_organization_users" ON organization_users;
-CREATE POLICY "allow_all_organization_users" ON organization_users FOR ALL USING (true);
+-- users
+ALTER TABLE users ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE users ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS manager_id UUID;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS team TEXT;
 
--- 1.2 Subscriptions
-CREATE TABLE IF NOT EXISTS subscriptions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  account_id UUID,
-  name TEXT NOT NULL,
-  status TEXT DEFAULT 'Active', -- 'Active', 'Paused', 'Cancelled'
-  billing_cycle TEXT DEFAULT 'monthly', -- 'one-off', 'monthly', 'quarterly', 'yearly', 'custom'
-  next_bill_date DATE,
-  start_date DATE,
-  end_date DATE,
-  items JSONB, -- Array of line items
-  auto_generate_invoice BOOLEAN DEFAULT true,
-  last_invoice_id UUID,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_subscriptions_org_id ON subscriptions(org_id);
-CREATE INDEX IF NOT EXISTS idx_subscriptions_account_id ON subscriptions(account_id);
-ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "allow_all_subscriptions" ON subscriptions;
-CREATE POLICY "allow_all_subscriptions" ON subscriptions FOR ALL USING (true);
+-- accounts
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS industry TEXT;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS website TEXT;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS employee_count INTEGER;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS avatar TEXT;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS tier TEXT;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS city TEXT;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS state TEXT;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS logo TEXT;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS address JSONB;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS commission_rate NUMERIC;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS custom_data JSONB;
 
--- 1.3 Documents
-CREATE TABLE IF NOT EXISTS documents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  file_type TEXT,
-  file_size TEXT,
-  url TEXT,
-  related_to_type TEXT,
-  related_to_id UUID,
-  owner_id UUID,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_documents_org_id ON documents(org_id);
-CREATE INDEX IF NOT EXISTS idx_documents_related_to ON documents(related_to_type, related_to_id);
-ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "allow_all_documents" ON documents;
-CREATE POLICY "allow_all_documents" ON documents FOR ALL USING (true);
+-- contacts
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS account_id UUID;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS avatar TEXT;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS company TEXT;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS address JSONB;
+ALTER TABLE contacts ADD COLUMN IF NOT EXISTS custom_data JSONB;
 
--- 1.4 Notifications
-CREATE TABLE IF NOT EXISTS notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id UUID,
-  title TEXT NOT NULL,
-  message TEXT,
-  type TEXT DEFAULT 'info', -- 'info', 'warning', 'success', 'urgent'
-  read BOOLEAN DEFAULT false,
-  link TEXT,
-  owner_id UUID,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_notifications_org_id ON notifications(org_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
-ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "allow_all_notifications" ON notifications;
-CREATE POLICY "allow_all_notifications" ON notifications FOR ALL USING (true);
+-- leads
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS company TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS source TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS campaign_id UUID;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS account_id UUID;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS estimated_value NUMERIC;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS avatar TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS score INTEGER;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS address JSONB;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS last_contact_date TIMESTAMPTZ;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS commission_rate NUMERIC;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS converted_to_deal_id UUID;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS converted_at TIMESTAMPTZ;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS converted_by TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS custom_data JSONB;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS temperature TEXT;
 
--- 1.5 Conversations (Team Chat)
-CREATE TABLE IF NOT EXISTS conversations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  participant_ids UUID[],
-  name TEXT,
-  is_system BOOLEAN DEFAULT false,
-  owner_id UUID,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_conversations_org_id ON conversations(org_id);
-ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "allow_all_conversations" ON conversations;
-CREATE POLICY "allow_all_conversations" ON conversations FOR ALL USING (true);
+-- deals
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS account_id UUID;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS contact_id UUID;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS amount NUMERIC;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS stage TEXT;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS probability NUMERIC;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS expected_close_date DATE;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS assignee_id UUID;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS avatar TEXT;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS stage_entry_date TIMESTAMPTZ;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS campaign_id UUID;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS commission_rate NUMERIC;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS commission_amount NUMERIC;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS lead_id UUID;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS won_at TIMESTAMPTZ;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS created_account_id UUID;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS created_contact_id UUID;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS custom_data JSONB;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS assigned_to UUID;
+ALTER TABLE deals ADD COLUMN IF NOT EXISTS notes TEXT;
 
--- 1.6 Chat Messages
-CREATE TABLE IF NOT EXISTS chat_messages (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  conversation_id UUID,
-  sender_id UUID,
-  content TEXT,
-  owner_id UUID,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_chat_messages_org_id ON chat_messages(org_id);
-CREATE INDEX IF NOT EXISTS idx_chat_messages_conversation_id ON chat_messages(conversation_id);
-ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "allow_all_chat_messages" ON chat_messages;
-CREATE POLICY "allow_all_chat_messages" ON chat_messages FOR ALL USING (true);
+-- tasks
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assignee_id UUID;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS due_date TIMESTAMPTZ;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS priority TEXT;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS related_to_id UUID;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS related_to_type TEXT;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assigned_to UUID;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS related_entity_id UUID;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS related_entity_type TEXT;
 
--- 1.7 Referral Rewards (Marketing)
-CREATE TABLE IF NOT EXISTS referral_rewards (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  referrer_id UUID,
-  referred_lead_id UUID,
-  reward_amount DECIMAL(12,2),
-  status TEXT DEFAULT 'Active', -- 'Active', 'Pending Payout', 'Paid', 'Cancelled'
-  payout_date DATE,
-  notes TEXT,
-  owner_id UUID,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_referral_rewards_org_id ON referral_rewards(org_id);
-ALTER TABLE referral_rewards ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "allow_all_referral_rewards" ON referral_rewards;
-CREATE POLICY "allow_all_referral_rewards" ON referral_rewards FOR ALL USING (true);
+-- campaigns
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS type TEXT;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS budget NUMERIC;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS spent NUMERIC;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS revenue NUMERIC;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS revenue_generated NUMERIC;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS leads_generated INTEGER;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS start_date DATE;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS end_date DATE;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS expected_cpl NUMERIC;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS target_audience TEXT;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS template_id UUID;
 
--- 1.8 Inbound Forms (Marketing)
-CREATE TABLE IF NOT EXISTS inbound_forms (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  type TEXT, -- 'Contact', 'Lead', 'Quote Request', 'Support'
-  fields JSONB, -- Array of form fields
-  submit_button_text TEXT DEFAULT 'Submit',
-  success_message TEXT,
-  target_campaign_id UUID,
-  submission_count INTEGER DEFAULT 0,
-  conversion_rate DECIMAL(5,2),
-  status TEXT DEFAULT 'Active', -- 'Active', 'Inactive', 'Draft'
-  embed_code TEXT,
-  owner_id UUID,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_inbound_forms_org_id ON inbound_forms(org_id);
-ALTER TABLE inbound_forms ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "allow_all_inbound_forms" ON inbound_forms;
-CREATE POLICY "allow_all_inbound_forms" ON inbound_forms FOR ALL USING (true);
+-- tickets
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ticket_number TEXT;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS subject TEXT;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS requester_id UUID;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS account_id UUID;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS assignee_id UUID;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS priority TEXT;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS sla_deadline TIMESTAMPTZ;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS messages JSONB;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS internal_notes JSONB;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS custom_data JSONB;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS related_to_id UUID;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS related_to_type TEXT;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS assigned_to UUID;
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS resolved_at TIMESTAMPTZ;
 
--- 1.9 Chat Widgets (Marketing)
-CREATE TABLE IF NOT EXISTS chat_widgets (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  page TEXT,
-  bubble_color TEXT,
-  welcome_message TEXT,
-  is_active BOOLEAN DEFAULT true,
-  status TEXT DEFAULT 'Active',
-  routing_user_id UUID,
-  conversations INTEGER DEFAULT 0,
-  avg_response_time INTEGER,
-  owner_id UUID,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_chat_widgets_org_id ON chat_widgets(org_id);
-ALTER TABLE chat_widgets ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "allow_all_chat_widgets" ON chat_widgets;
-CREATE POLICY "allow_all_chat_widgets" ON chat_widgets FOR ALL USING (true);
+-- calendar_events
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS start_time TIMESTAMPTZ;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS end_time TIMESTAMPTZ;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS type TEXT;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS location TEXT;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS related_to_type TEXT;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS related_to_id UUID;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS priority TEXT;
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS is_all_day BOOLEAN;
 
--- 1.10 Calculators (Marketing)
-CREATE TABLE IF NOT EXISTS calculators (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  type TEXT, -- 'ROI', 'Repayment', 'SolarYield'
-  base_rate DECIMAL(10,4),
-  is_active BOOLEAN DEFAULT true,
-  status TEXT DEFAULT 'Active',
-  usage_count INTEGER DEFAULT 0,
-  lead_conversion_rate DECIMAL(5,2),
-  owner_id UUID,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_calculators_org_id ON calculators(org_id);
-ALTER TABLE calculators ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "allow_all_calculators" ON calculators;
-CREATE POLICY "allow_all_calculators" ON calculators FOR ALL USING (true);
+-- communications
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS type TEXT;
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS subject TEXT;
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS content TEXT;
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS direction TEXT;
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS related_to_type TEXT;
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS related_to_id UUID;
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS outcome TEXT;
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS next_step TEXT;
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS next_follow_up_date TIMESTAMPTZ;
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS metadata JSONB;
+ALTER TABLE communications ADD COLUMN IF NOT EXISTS duration TEXT;
 
--- 1.11 Automation Workflows
-CREATE TABLE IF NOT EXISTS automation_workflows (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  description TEXT,
-  trigger JSONB, -- WorkflowTrigger object
-  nodes JSONB, -- Array of WorkflowNode
-  is_active BOOLEAN DEFAULT true,
-  execution_count INTEGER DEFAULT 0,
-  last_run_at TIMESTAMPTZ,
-  category TEXT, -- 'Sales', 'Operations', 'Logistics', 'System'
-  owner_id UUID,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_automation_workflows_org_id ON automation_workflows(org_id);
-ALTER TABLE automation_workflows ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "allow_all_automation_workflows" ON automation_workflows;
-CREATE POLICY "allow_all_automation_workflows" ON automation_workflows FOR ALL USING (true);
+-- products
+ALTER TABLE products ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE products ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sku TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS code TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS type TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS unit_price NUMERIC;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS cost_price NUMERIC;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS tax_rate NUMERIC;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active BOOLEAN;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS stock_level INTEGER;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS reorder_point INTEGER;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS reorder_quantity INTEGER;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS specifications TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS images JSONB;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS dimensions JSONB;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS weight JSONB;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS manufacturer TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier_sku TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS warranty_months INTEGER;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS warranty_details TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS tags JSONB;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS custom_fields JSONB;
 
--- 1.12 Webhooks
-CREATE TABLE IF NOT EXISTS webhooks (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  url TEXT NOT NULL,
-  method TEXT DEFAULT 'POST', -- 'GET', 'POST', 'PUT', 'DELETE'
-  headers JSONB,
-  is_active BOOLEAN DEFAULT true,
-  trigger_event TEXT,
-  last_triggered_at TIMESTAMPTZ,
-  success_count INTEGER DEFAULT 0,
-  failure_count INTEGER DEFAULT 0,
-  owner_id UUID,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_webhooks_org_id ON webhooks(org_id);
-ALTER TABLE webhooks ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "allow_all_webhooks" ON webhooks;
-CREATE POLICY "allow_all_webhooks" ON webhooks FOR ALL USING (true);
+-- services
+ALTER TABLE services ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE services ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE services ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS code TEXT;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS sku TEXT;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS type TEXT;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS billing_cycle TEXT;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS unit_price NUMERIC;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS cost_price NUMERIC;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS tax_rate NUMERIC;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS is_active BOOLEAN;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS duration_hours INTEGER;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS duration_minutes INTEGER;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS prerequisites TEXT;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS deliverables TEXT;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS skills_required JSONB;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS crew_size INTEGER;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS equipment_needed JSONB;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS sla_response_hours INTEGER;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS sla_completion_days INTEGER;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS quality_checklist JSONB;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS images JSONB;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS tags JSONB;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS custom_fields JSONB;
 
--- 1.13 Industry Templates
-CREATE TABLE IF NOT EXISTS industry_templates (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  target_entity TEXT,
-  industry TEXT,
-  sections JSONB, -- Array of LayoutSection
-  is_active BOOLEAN DEFAULT true,
-  version INTEGER DEFAULT 1,
-  owner_id UUID,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_industry_templates_org_id ON industry_templates(org_id);
-ALTER TABLE industry_templates ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "allow_all_industry_templates" ON industry_templates;
-CREATE POLICY "allow_all_industry_templates" ON industry_templates FOR ALL USING (true);
+-- quotes
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS quote_number TEXT;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS deal_id UUID;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS account_id UUID;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS issue_date DATE;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS expiry_date DATE;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS line_items JSONB;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS subtotal NUMERIC;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS tax_total NUMERIC;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS total NUMERIC;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS terms TEXT;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMPTZ;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS accepted_by TEXT;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS superseded_by UUID;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS version INTEGER;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS valid_until DATE;
 
--- ============================================
--- SECTION 2: MISSING FIELDS ON EXISTING TABLES
--- ============================================
+-- invoices
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS account_id UUID;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS deal_id UUID;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS quote_id UUID;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS payment_status TEXT;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS issue_date DATE;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_date DATE;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS due_date DATE;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS sent_at TIMESTAMPTZ;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS line_items JSONB;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS subtotal NUMERIC;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS tax_total NUMERIC;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS total NUMERIC;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS terms TEXT;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS credits JSONB;
 
--- 2.1 Add owner_id to existing tables (for permission checks)
-DO $$
-BEGIN
-  -- Accounts
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'accounts' AND column_name = 'owner_id') THEN
-    ALTER TABLE accounts ADD COLUMN owner_id UUID;
-  END IF;
+-- subscriptions
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS account_id UUID;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS billing_cycle TEXT;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS next_bill_date DATE;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS start_date DATE;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS end_date DATE;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS items JSONB;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS auto_generate_invoice BOOLEAN;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS last_invoice_id UUID;
 
-  -- Leads
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'leads' AND column_name = 'owner_id') THEN
-    ALTER TABLE leads ADD COLUMN owner_id UUID;
-  END IF;
+-- crews
+ALTER TABLE crews ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE crews ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE crews ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE crews ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE crews ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE crews ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE crews ADD COLUMN IF NOT EXISTS leader_id UUID;
+ALTER TABLE crews ADD COLUMN IF NOT EXISTS member_ids JSONB;
+ALTER TABLE crews ADD COLUMN IF NOT EXISTS color TEXT;
 
-  -- Deals
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'deals' AND column_name = 'owner_id') THEN
-    ALTER TABLE deals ADD COLUMN owner_id UUID;
-  END IF;
+-- zones
+ALTER TABLE zones ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE zones ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE zones ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE zones ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE zones ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE zones ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE zones ADD COLUMN IF NOT EXISTS region TEXT;
+ALTER TABLE zones ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE zones ADD COLUMN IF NOT EXISTS color TEXT;
 
-  -- Contacts
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'contacts' AND column_name = 'owner_id') THEN
-    ALTER TABLE contacts ADD COLUMN owner_id UUID;
-  END IF;
+-- jobs
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS job_number TEXT;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS subject TEXT;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS account_id UUID;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS assignee_id UUID;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS crew_id UUID;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS job_type TEXT;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS priority TEXT;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS zone TEXT;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS estimated_duration INTEGER;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS scheduled_date TIMESTAMPTZ;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS scheduled_end_date TIMESTAMPTZ;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS lat NUMERIC;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS lng NUMERIC;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS job_fields JSONB;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS swms_signed BOOLEAN;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS completion_signature TEXT;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS evidence_photos JSONB;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS bom JSONB;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS invoice_id UUID;
 
-  -- Tasks
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tasks' AND column_name = 'owner_id') THEN
-    ALTER TABLE tasks ADD COLUMN owner_id UUID;
-  END IF;
-END $$;
+-- equipment
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS type TEXT;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS barcode TEXT;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS condition TEXT;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS location TEXT;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS assigned_to UUID;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS last_service_date DATE;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS next_service_date DATE;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS purchase_date DATE;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS purchase_price NUMERIC;
 
--- 2.2 Add missing fields to accounts table
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'accounts' AND column_name = 'address') THEN
-    ALTER TABLE accounts ADD COLUMN address JSONB;
-  END IF;
-END $$;
+-- inventory_items
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS sku TEXT;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS warehouse_qty INTEGER;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS reorder_point INTEGER;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS unit_price NUMERIC;
 
--- 2.3 Add missing fields to leads table
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'leads' AND column_name = 'address') THEN
-    ALTER TABLE leads ADD COLUMN address JSONB;
-  END IF;
-END $$;
+-- purchase_orders
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS po_number TEXT;
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS supplier_id UUID;
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS account_id UUID;
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS items JSONB;
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS total NUMERIC;
+ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS linked_job_id UUID;
 
--- 2.4 Add missing fields to contacts table
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'contacts' AND column_name = 'address') THEN
-    ALTER TABLE contacts ADD COLUMN address JSONB;
-  END IF;
-END $$;
+-- bank_transactions
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS date DATE;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS amount NUMERIC;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS type TEXT;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS match_confidence TEXT;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS matched_to_id UUID;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS matched_to_type TEXT;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS reconciled BOOLEAN;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS reconciled_at TIMESTAMPTZ;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS reconciled_by TEXT;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS bank_reference TEXT;
+ALTER TABLE bank_transactions ADD COLUMN IF NOT EXISTS notes TEXT;
 
--- 2.5 Add missing fields to organizations table
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'plan') THEN
-    ALTER TABLE organizations ADD COLUMN plan TEXT DEFAULT 'free';
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'subscription_status') THEN
-    ALTER TABLE organizations ADD COLUMN subscription_status TEXT DEFAULT 'active';
-  END IF;
-END $$;
+-- expenses
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS vendor TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS amount NUMERIC;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS date DATE;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS receipt_url TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS approved_by TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS notes TEXT;
 
--- ============================================
--- SECTION 3: DEMO ORGANIZATION SETUP
--- ============================================
+-- reviews
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS author_name TEXT;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS rating INTEGER;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS content TEXT;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS platform TEXT;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS replied BOOLEAN;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS reply_content TEXT;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS replied_at TIMESTAMPTZ;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS job_id UUID;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS account_id UUID;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS sentiment TEXT;
 
--- Ensure demo organization exists
-INSERT INTO organizations (id, name, slug, plan, subscription_status)
-VALUES (
-  '00000000-0000-0000-0000-000000000001',
-  'Demo Organization',
-  'demo',
-  'enterprise',
-  'active'
-) ON CONFLICT (id) DO UPDATE SET
-  name = 'Demo Organization',
-  plan = 'enterprise',
-  subscription_status = 'active';
+-- referral_rewards
+ALTER TABLE referral_rewards ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE referral_rewards ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE referral_rewards ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE referral_rewards ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE referral_rewards ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE referral_rewards ADD COLUMN IF NOT EXISTS referrer_id UUID;
+ALTER TABLE referral_rewards ADD COLUMN IF NOT EXISTS referred_lead_id UUID;
+ALTER TABLE referral_rewards ADD COLUMN IF NOT EXISTS reward_amount NUMERIC;
+ALTER TABLE referral_rewards ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE referral_rewards ADD COLUMN IF NOT EXISTS payout_date DATE;
+ALTER TABLE referral_rewards ADD COLUMN IF NOT EXISTS notes TEXT;
 
--- Create demo user if not exists
-INSERT INTO users (id, org_id, name, email, role, avatar, created_at, updated_at, created_by)
-VALUES (
-  '00000000-0000-0000-0000-000000000002',
-  '00000000-0000-0000-0000-000000000001',
-  'Demo User',
-  'demo@catchacrm.com',
-  'admin',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=demo',
-  NOW(),
-  NOW(),
-  'system'
-) ON CONFLICT (id) DO NOTHING;
+-- inbound_forms
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS type TEXT;
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS fields JSONB;
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS submit_button_text TEXT;
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS success_message TEXT;
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS target_campaign_id UUID;
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS submission_count INTEGER;
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS conversion_rate NUMERIC;
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE inbound_forms ADD COLUMN IF NOT EXISTS embed_code TEXT;
 
--- ============================================
--- SECTION 4: VERIFICATION QUERY
--- ============================================
+-- chat_widgets
+ALTER TABLE chat_widgets ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE chat_widgets ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE chat_widgets ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE chat_widgets ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE chat_widgets ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE chat_widgets ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE chat_widgets ADD COLUMN IF NOT EXISTS page TEXT;
+ALTER TABLE chat_widgets ADD COLUMN IF NOT EXISTS bubble_color TEXT;
+ALTER TABLE chat_widgets ADD COLUMN IF NOT EXISTS welcome_message TEXT;
+ALTER TABLE chat_widgets ADD COLUMN IF NOT EXISTS is_active BOOLEAN;
+ALTER TABLE chat_widgets ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE chat_widgets ADD COLUMN IF NOT EXISTS routing_user_id UUID;
+ALTER TABLE chat_widgets ADD COLUMN IF NOT EXISTS conversations INTEGER;
+ALTER TABLE chat_widgets ADD COLUMN IF NOT EXISTS avg_response_time INTEGER;
 
--- Run this to verify all tables exist:
-DO $$
-DECLARE
-  expected_tables TEXT[] := ARRAY[
-    'organizations', 'organization_users', 'users',
-    'accounts', 'contacts', 'leads', 'deals',
-    'tasks', 'calendar_events', 'campaigns', 'communications', 'tickets',
-    'invoices', 'quotes', 'products', 'services', 'subscriptions', 'expenses', 'bank_transactions',
-    'jobs', 'crews', 'zones', 'equipment', 'inventory_items', 'purchase_orders', 'warehouses',
-    'referral_rewards', 'inbound_forms', 'chat_widgets', 'calculators', 'reviews',
-    'automation_workflows', 'webhooks', 'industry_templates',
-    'notifications', 'documents', 'audit_log', 'conversations', 'chat_messages'
-  ];
-  tbl TEXT;
-  missing_tables TEXT[] := ARRAY[]::TEXT[];
-  found_count INTEGER := 0;
-BEGIN
-  FOREACH tbl IN ARRAY expected_tables LOOP
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = tbl) THEN
-      found_count := found_count + 1;
-    ELSE
-      missing_tables := array_append(missing_tables, tbl);
-    END IF;
-  END LOOP;
+-- calculators
+ALTER TABLE calculators ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE calculators ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE calculators ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE calculators ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE calculators ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE calculators ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE calculators ADD COLUMN IF NOT EXISTS type TEXT;
+ALTER TABLE calculators ADD COLUMN IF NOT EXISTS base_rate NUMERIC;
+ALTER TABLE calculators ADD COLUMN IF NOT EXISTS is_active BOOLEAN;
+ALTER TABLE calculators ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE calculators ADD COLUMN IF NOT EXISTS usage_count INTEGER;
+ALTER TABLE calculators ADD COLUMN IF NOT EXISTS lead_conversion_rate NUMERIC;
 
-  RAISE NOTICE '============================================';
-  RAISE NOTICE 'SCHEMA AUDIT RESULTS';
-  RAISE NOTICE '============================================';
-  RAISE NOTICE 'Expected tables: %', array_length(expected_tables, 1);
-  RAISE NOTICE 'Found tables: %', found_count;
-  RAISE NOTICE 'Missing tables: %', COALESCE(array_length(missing_tables, 1), 0);
+-- automation_workflows
+ALTER TABLE automation_workflows ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE automation_workflows ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE automation_workflows ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE automation_workflows ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE automation_workflows ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE automation_workflows ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE automation_workflows ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE automation_workflows ADD COLUMN IF NOT EXISTS trigger JSONB;
+ALTER TABLE automation_workflows ADD COLUMN IF NOT EXISTS nodes JSONB;
+ALTER TABLE automation_workflows ADD COLUMN IF NOT EXISTS is_active BOOLEAN;
+ALTER TABLE automation_workflows ADD COLUMN IF NOT EXISTS execution_count INTEGER;
+ALTER TABLE automation_workflows ADD COLUMN IF NOT EXISTS last_run_at TIMESTAMPTZ;
+ALTER TABLE automation_workflows ADD COLUMN IF NOT EXISTS category TEXT;
 
-  IF array_length(missing_tables, 1) > 0 THEN
-    RAISE NOTICE 'MISSING: %', array_to_string(missing_tables, ', ');
-  ELSE
-    RAISE NOTICE '✅ ALL TABLES PRESENT!';
-  END IF;
-  RAISE NOTICE '============================================';
-END $$;
+-- webhooks
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS url TEXT;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS method TEXT;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS headers JSONB;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS is_active BOOLEAN;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS trigger_event TEXT;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS last_triggered_at TIMESTAMPTZ;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS success_count INTEGER;
+ALTER TABLE webhooks ADD COLUMN IF NOT EXISTS failure_count INTEGER;
 
--- List all tables with row counts for verification
-SELECT
-  t.table_name,
-  CASE WHEN c.reltuples >= 0 THEN c.reltuples::bigint ELSE 0 END as approx_row_count
-FROM information_schema.tables t
-LEFT JOIN pg_class c ON c.relname = t.table_name
-WHERE t.table_schema = 'public'
-  AND t.table_type = 'BASE TABLE'
-ORDER BY t.table_name;
+-- industry_templates
+ALTER TABLE industry_templates ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE industry_templates ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE industry_templates ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE industry_templates ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE industry_templates ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE industry_templates ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE industry_templates ADD COLUMN IF NOT EXISTS target_entity TEXT;
+ALTER TABLE industry_templates ADD COLUMN IF NOT EXISTS industry TEXT;
+ALTER TABLE industry_templates ADD COLUMN IF NOT EXISTS sections JSONB;
+ALTER TABLE industry_templates ADD COLUMN IF NOT EXISTS is_active BOOLEAN;
+ALTER TABLE industry_templates ADD COLUMN IF NOT EXISTS version INTEGER;
+
+-- conversations
+ALTER TABLE conversations ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE conversations ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE conversations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE conversations ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE conversations ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE conversations ADD COLUMN IF NOT EXISTS participant_ids JSONB;
+ALTER TABLE conversations ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE conversations ADD COLUMN IF NOT EXISTS is_system BOOLEAN;
+
+-- chat_messages
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS conversation_id UUID;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS sender_id UUID;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS content TEXT;
+
+-- notifications
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS message TEXT;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type TEXT;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS read BOOLEAN;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS link TEXT;
+
+-- documents
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_type TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_size TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS url TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS related_to_type TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS related_to_id UUID;
+
+-- audit_log
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS entity_type TEXT;
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS entity_id UUID;
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS action TEXT;
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS previous_value TEXT;
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS new_value TEXT;
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS metadata JSONB;
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS batch_id UUID;
+
+-- payments
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS invoice_id UUID;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS amount NUMERIC;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS method TEXT;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS reference TEXT;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ;
+
+-- warehouses
+ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS org_id UUID;
+ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS created_by TEXT;
+ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS owner_id UUID;
+ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS is_default BOOLEAN;
+
+-- organizations
+ALTER TABLE organizations ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE organizations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE organizations ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE organizations ADD COLUMN IF NOT EXISTS settings JSONB;
+
+-- ============================================================
+-- COMPLETION MESSAGE
+-- ============================================================
+SELECT 'Schema sync complete! All columns added.' AS result;

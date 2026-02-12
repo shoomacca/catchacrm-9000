@@ -108,10 +108,10 @@ const MySchedule: React.FC = () => {
         assignedTo: task.assigneeId,
         relatedTo: task.relatedToType && task.relatedToId ? {
           type: task.relatedToType,
-          name: task.relatedToType === 'leads' ? leads.find(l => l.id === task.relatedToId)?.name :
+          name: (task.relatedToType === 'leads' ? leads.find(l => l.id === task.relatedToId)?.name :
                 task.relatedToType === 'deals' ? deals.find(d => d.id === task.relatedToId)?.name :
                 task.relatedToType === 'contacts' ? contacts.find(c => c.id === task.relatedToId)?.name :
-                accounts.find(a => a.id === task.relatedToId)?.name || 'Unknown',
+                accounts.find(a => a.id === task.relatedToId)?.name) || 'Unknown',
           id: task.relatedToId
         } : undefined
       });
@@ -129,11 +129,11 @@ const MySchedule: React.FC = () => {
           dueDate: ticket.slaDeadline,
           priority: (ticket.priority?.toLowerCase() as any) || 'medium',
           status: slaDate && slaDate < today ? 'overdue' : 'pending',
-          assignedTo: ticket.assignedTo,
+          assignedTo: ticket.assigneeId,
           relatedTo: ticket.relatedToType && ticket.relatedToId ? {
             type: ticket.relatedToType,
-            name: ticket.relatedToType === 'contacts' ? contacts.find(c => c.id === ticket.relatedToId)?.name :
-                  accounts.find(a => a.id === ticket.relatedToId)?.name || 'Unknown',
+            name: (ticket.relatedToType === 'contacts' ? contacts.find(c => c.id === ticket.relatedToId)?.name :
+                  accounts.find(a => a.id === ticket.relatedToId)?.name) || 'Unknown',
             id: ticket.relatedToId
           } : undefined
         });
@@ -733,7 +733,7 @@ const MySchedule: React.FC = () => {
                 placeholder="Search tasks, tickets, follow-ups..."
                 className="w-full pl-12 pr-6 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.amount)}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
               {searchQuery && (
                 <button

@@ -66,21 +66,21 @@ const MarketingDashboard: React.FC = () => {
     const activeForms = inboundForms.filter(f => f.status === 'Active').length;
     const totalSubmissions = inboundForms.reduce((sum, f) => sum + f.submissionCount, 0);
     const avgConversionRate = inboundForms.length > 0
-      ? inboundForms.reduce((sum, f) => sum + f.conversionRate, 0) / inboundForms.length
+      ? inboundForms.reduce((sum, f) => sum + (f.conversionRate ?? 0), 0) / inboundForms.length
       : 0;
 
     // Chat Widgets stats
     const activeWidgets = chatWidgets.filter(w => w.status === 'Active').length;
-    const totalConversations = chatWidgets.reduce((sum, w) => sum + w.conversations, 0);
+    const totalConversations = chatWidgets.reduce((sum, w) => sum + (w.conversations ?? 0), 0);
     const avgResponseTime = chatWidgets.length > 0
-      ? chatWidgets.reduce((sum, w) => sum + w.avgResponseTime, 0) / chatWidgets.length
+      ? chatWidgets.reduce((sum, w) => sum + (w.avgResponseTime ?? 0), 0) / chatWidgets.length
       : 0;
 
     // Calculators stats
     const activeCalculators = calculators.filter(c => c.status === 'Active').length;
-    const totalCalculations = calculators.reduce((sum, c) => sum + c.usageCount, 0);
+    const totalCalculations = calculators.reduce((sum, c) => sum + (c.usageCount ?? 0), 0);
     const avgLeadConversion = calculators.length > 0
-      ? calculators.reduce((sum, c) => sum + c.leadConversionRate, 0) / calculators.length
+      ? calculators.reduce((sum, c) => sum + (c.leadConversionRate ?? 0), 0) / calculators.length
       : 0;
 
     return {
@@ -374,12 +374,12 @@ const MarketingDashboard: React.FC = () => {
                   <div className="text-right">
                     <p className="text-lg font-black text-slate-900">{form.submissionCount}</p>
                     <p className="text-[9px] font-bold text-emerald-600 uppercase">
-                      {form.conversionRate.toFixed(1)}% CVR
+                      {(form.conversionRate ?? 0).toFixed(1)}% CVR
                     </p>
                   </div>
                 </div>
                 <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-600 transition-all" style={{ width: `${form.conversionRate}%` }} />
+                  <div className="h-full bg-blue-600 transition-all" style={{ width: `${form.conversionRate ?? 0}%` }} />
                 </div>
               </Link>
             ))}
@@ -408,12 +408,12 @@ const MarketingDashboard: React.FC = () => {
                   <div>
                     <p className="text-sm font-black text-slate-900 group-hover:text-green-600 transition-colors">{widget.name}</p>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">
-                      {widget.page} • {widget.avgResponseTime.toFixed(0)}s response
+                      {widget.page} • {(widget.avgResponseTime ?? 0).toFixed(0)}s response
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${widget.status === 'Active' ? 'bg-green-500' : 'bg-slate-300'}`} />
-                    <p className="text-lg font-black text-slate-900">{widget.conversations}</p>
+                    <p className="text-lg font-black text-slate-900">{widget.conversations ?? 0}</p>
                   </div>
                 </div>
               </Link>

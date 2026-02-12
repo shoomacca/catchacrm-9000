@@ -261,23 +261,20 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
               />
             </div>
 
-            {/* Attachments (Placeholder) */}
+            {/* Attachments */}
             <div>
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">
                 Attachments
               </label>
-              <button
-                className="w-full p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-purple-300 hover:bg-purple-50/50 transition-all group"
-                onClick={() => alert('File upload coming soon in production version')}
-              >
-                <Paperclip size={24} className="mx-auto text-slate-300 group-hover:text-purple-400 mb-2" />
-                <p className="text-xs font-bold text-slate-400 group-hover:text-purple-600">
-                  Click to attach files
+              <div className="w-full p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                <Paperclip size={24} className="mx-auto text-slate-300 mb-2" />
+                <p className="text-xs font-bold text-slate-400 text-center">
+                  Attachments disabled in demo mode
                 </p>
-                <p className="text-[10px] text-slate-400 mt-1">
-                  (Feature available in production version)
+                <p className="text-[10px] text-slate-400 mt-1 text-center">
+                  Email sending with attachments requires SMTP integration
                 </p>
-              </button>
+              </div>
             </div>
 
             {/* Mock Mode Notice */}
@@ -294,7 +291,22 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         <div className="border-t border-slate-200 p-6 bg-slate-50 flex justify-between items-center">
           <div className="flex gap-2">
             <button
-              onClick={() => alert('Draft saving coming soon')}
+              onClick={() => {
+                const draft = {
+                  to,
+                  subject,
+                  body,
+                  cc,
+                  bcc,
+                  recipientId,
+                  recipientType,
+                  savedAt: new Date().toISOString()
+                };
+                const drafts = JSON.parse(localStorage.getItem('emailDrafts') || '[]');
+                drafts.push(draft);
+                localStorage.setItem('emailDrafts', JSON.stringify(drafts));
+                alert('Draft saved successfully!');
+              }}
               className="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all"
             >
               Save Draft

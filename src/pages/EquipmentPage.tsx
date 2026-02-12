@@ -288,10 +288,10 @@ const EquipmentPage: React.FC = () => {
               {selectedEquipment.size} item{selectedEquipment.size !== 1 ? 's' : ''} selected
             </span>
             <div className="flex gap-2">
-              <button className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition-all">
+              <button disabled title="Coming soon" className="bg-white/20 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition-all opacity-50 cursor-not-allowed">
                 Schedule Maintenance
               </button>
-              <button className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition-all">
+              <button disabled title="Coming soon" className="bg-white/20 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition-all opacity-50 cursor-not-allowed">
                 Update Status
               </button>
               <button
@@ -436,10 +436,16 @@ const EquipmentPage: React.FC = () => {
                               >
                                 View Details
                               </button>
-                              <button className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openModal('equipment', equip);
+                                }}
+                                className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all"
+                              >
                                 Edit
                               </button>
-                              <button className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all">
+                              <button disabled title="Coming soon" className="bg-white text-slate-400 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 opacity-50 cursor-not-allowed">
                                 Schedule Service
                               </button>
                             </div>
@@ -482,7 +488,7 @@ const EquipmentPage: React.FC = () => {
                 <p className="text-sm text-amber-100 font-semibold">{stats.needsMaintenance} equipment item{stats.needsMaintenance !== 1 ? 's' : ''} need{stats.needsMaintenance === 1 ? 's' : ''} servicing</p>
               </div>
             </div>
-            <button className="bg-white hover:bg-amber-50 text-amber-600 px-6 py-3 rounded-xl font-black uppercase tracking-wide shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
+            <button disabled title="Coming soon" className="bg-white text-amber-400 px-6 py-3 rounded-xl font-black uppercase tracking-wide shadow-lg opacity-50 cursor-not-allowed">
               Schedule All
             </button>
           </div>

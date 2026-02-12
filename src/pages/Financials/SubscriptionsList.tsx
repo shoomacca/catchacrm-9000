@@ -5,12 +5,14 @@ import { RefreshCcw, Plus, Calendar, DollarSign, Building2, Clock, CheckCircle, 
 type StatusFilter = 'all' | 'Active' | 'Paused' | 'Cancelled';
 type CycleFilter = 'all' | 'monthly' | 'yearly' | 'weekly';
 type ViewMode = 'grid' | 'list';
+type DueFilter = 'all' | 'due-soon';
 
 const SubscriptionsList: React.FC = () => {
   const { subscriptions, accounts, openModal, searchQuery, setSearchQuery } = useCRM();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [cycleFilter, setCycleFilter] = useState<CycleFilter>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [dueFilter, setDueFilter] = useState<DueFilter>('all');
 
   // Stats calculation
   const stats = useMemo(() => {
@@ -52,6 +54,17 @@ const SubscriptionsList: React.FC = () => {
       filtered = filtered.filter(s => s.billingCycle === cycleFilter);
     }
 
+    // Due filter (show only subscriptions due this week)
+    if (dueFilter === 'due-soon') {
+      const today = new Date();
+      const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+      filtered = filtered.filter(s => {
+        if (s.status !== 'Active') return false;
+        const nextBill = new Date(s.nextBillDate);
+        return nextBill >= today && nextBill <= weekFromNow;
+      });
+    }
+
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -63,7 +76,7 @@ const SubscriptionsList: React.FC = () => {
 
     // Sort by next bill date (soonest first)
     return filtered.sort((a, b) => new Date(a.nextBillDate).getTime() - new Date(b.nextBillDate).getTime());
-  }, [subscriptions, statusFilter, cycleFilter, searchQuery, accounts]);
+  }, [subscriptions, statusFilter, cycleFilter, dueFilter, searchQuery, accounts]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -128,9 +141,9 @@ const SubscriptionsList: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Total */}
         <button
-          onClick={() => { setStatusFilter('all'); setCycleFilter('all'); }}
+          onClick={() => { setStatusFilter('all'); setCycleFilter('all'); setDueFilter('all'); }}
           className={`bg-white border rounded-2xl p-5 text-left transition-all hover:shadow-lg ${
-            statusFilter === 'all' && cycleFilter === 'all' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-slate-200'
+            statusFilter === 'all' && cycleFilter === 'all' && dueFilter === 'all' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-slate-200'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -190,9 +203,9 @@ const SubscriptionsList: React.FC = () => {
 
         {/* Due Soon */}
         <button
-          onClick={() => {}}
+          onClick={() => setDueFilter(dueFilter === 'due-soon' ? 'all' : 'due-soon')}
           className={`bg-white border rounded-2xl p-5 text-left transition-all hover:shadow-lg ${
-            stats.dueSoon > 0 ? 'border-amber-200' : 'border-slate-200'
+            dueFilter === 'due-soon' ? 'border-amber-400 ring-2 ring-amber-100' : stats.dueSoon > 0 ? 'border-amber-200' : 'border-slate-200'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -235,9 +248,9 @@ const SubscriptionsList: React.FC = () => {
           ))}
         </div>
 
-        {(statusFilter !== 'all' || cycleFilter !== 'all' || searchQuery) && (
+        {(statusFilter !== 'all' || cycleFilter !== 'all' || dueFilter !== 'all' || searchQuery) && (
           <button
-            onClick={() => { setStatusFilter('all'); setCycleFilter('all'); setSearchQuery(''); }}
+            onClick={() => { setStatusFilter('all'); setCycleFilter('all'); setDueFilter('all'); setSearchQuery(''); }}
             className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 rounded-xl text-[10px] font-bold text-slate-600 hover:bg-slate-200 transition-all"
           >
             <X size={12} /> Clear

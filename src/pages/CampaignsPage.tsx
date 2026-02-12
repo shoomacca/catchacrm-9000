@@ -48,7 +48,7 @@ const CampaignsPage: React.FC = () => {
   const typeBreakdown = useMemo(() => {
     const breakdown: Record<string, number> = {};
     campaigns.forEach(c => {
-      const type = c.type || 'other';
+      const type = (c.type || 'other').toLowerCase();
       breakdown[type] = (breakdown[type] || 0) + 1;
     });
     return Object.entries(breakdown)
@@ -69,7 +69,7 @@ const CampaignsPage: React.FC = () => {
     }
 
     if (typeFilter !== 'all') {
-      filtered = filtered.filter(c => c.type === typeFilter);
+      filtered = filtered.filter(c => c.type.toLowerCase() === typeFilter);
     }
 
     if (statusFilter !== 'all') {
@@ -79,8 +79,10 @@ const CampaignsPage: React.FC = () => {
     // Sort
     filtered.sort((a, b) => {
       if (sortBy === 'roi') {
-        const roiA = a.spent > 0 ? ((a.revenue || 0) - a.spent) / a.spent : 0;
-        const roiB = b.spent > 0 ? ((b.revenue || 0) - b.spent) / b.spent : 0;
+        const spentA = a.spent ?? 0;
+        const spentB = b.spent ?? 0;
+        const roiA = spentA > 0 ? ((a.revenue || 0) - spentA) / spentA : 0;
+        const roiB = spentB > 0 ? ((b.revenue || 0) - spentB) / spentB : 0;
         return roiB - roiA;
       }
       if (sortBy === 'budget') return (b.budget || 0) - (a.budget || 0);
@@ -207,7 +209,7 @@ const CampaignsPage: React.FC = () => {
         <div className="flex gap-3 items-center">
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.amount as StatusFilter)}
+            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
             className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-violet-500"
           >
             <option value="all">All Statuses</option>
@@ -220,7 +222,7 @@ const CampaignsPage: React.FC = () => {
 
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.amount as typeof sortBy)}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
             className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-violet-500"
           >
             <option value="date">Newest First</option>

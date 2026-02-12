@@ -118,7 +118,7 @@ const AIImageSuite: React.FC = () => {
               placeholder="e.g. 'Add a professional background', 'Fix lighting', 'Remove background'..."
               className="w-full h-32 bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none mb-4 text-slate-200"
               value={prompt}
-              onChange={(e) => setPrompt(e.target.amount)}
+              onChange={(e) => setPrompt(e.target.value)}
             />
             <button 
               onClick={handleProcess}
@@ -285,7 +285,7 @@ const AIImageSuite: React.FC = () => {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Record</label>
                 <select 
                   value={targetId}
-                  onChange={(e) => setTargetId(e.target.amount)}
+                  onChange={(e) => setTargetId(e.target.value)}
                   className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:outline-none"
                 >
                   <option value="">Choose a record...</option>

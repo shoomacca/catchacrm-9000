@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useCRM } from '../context/CRMContext';
-import { InventoryItem } from '../types';
+import { InventoryItem, WarehouseLocation } from '../types';
 import {
   Warehouse as WarehouseIcon,
   MapPin,
@@ -23,20 +23,10 @@ import {
 
 type SortField = 'name' | 'warehouseQty' | 'category';
 type SortDirection = 'asc' | 'desc';
-type LocationType = 'Building' | 'Zone' | 'Bin';
-
-interface WarehouseLocation {
-  id: string;
-  name: string;
-  type: LocationType;
-  capacity: number;
-  currentStock: number;
-  itemCount: number;
-  parentId?: string;
-}
+type LocationType = 'zone' | 'aisle' | 'rack' | 'bin' | 'floor';
 
 const WarehousePage: React.FC = () => {
-  const { inventoryItems } = useCRM();
+  const { inventoryItems, warehouseLocations, upsertRecord } = useCRM();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'inventory' | 'locations'>('inventory');
@@ -45,22 +35,28 @@ const WarehousePage: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-  // Mock warehouse locations data
-  const locations: WarehouseLocation[] = useMemo(() => [
-    { id: 'BLDG-001', name: 'Main Warehouse', type: 'Building', capacity: 10000, currentStock: 6500, itemCount: 45 },
-    { id: 'ZONE-001', name: 'Zone A - Medical', type: 'Zone', capacity: 2000, currentStock: 1200, itemCount: 12, parentId: 'BLDG-001' },
-    { id: 'ZONE-002', name: 'Zone B - Technology', type: 'Zone', capacity: 3000, currentStock: 2800, itemCount: 18, parentId: 'BLDG-001' },
-    { id: 'ZONE-003', name: 'Zone C - Weapons', type: 'Zone', capacity: 2000, currentStock: 1500, itemCount: 8, parentId: 'BLDG-001' },
-    { id: 'ZONE-004', name: 'Zone D - Communications', type: 'Zone', capacity: 3000, currentStock: 1000, itemCount: 7, parentId: 'BLDG-001' },
-  ], []);
+  // Use warehouse locations from CRMContext (falls back to demo data if empty)
+  const locations = useMemo(() => {
+    if (warehouseLocations.length > 0) {
+      return warehouseLocations;
+    }
+    // Default demo locations if none exist
+    return [
+      { id: 'BLDG-001', name: 'Main Warehouse', type: 'floor' as const, capacity: 10000, currentCount: 6500, isActive: true, isPickable: true, isReceivable: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'ZONE-001', name: 'Zone A - Medical', type: 'zone' as const, capacity: 2000, currentCount: 1200, parentLocationId: 'BLDG-001', isActive: true, isPickable: true, isReceivable: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'ZONE-002', name: 'Zone B - Technology', type: 'zone' as const, capacity: 3000, currentCount: 2800, parentLocationId: 'BLDG-001', isActive: true, isPickable: true, isReceivable: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'ZONE-003', name: 'Zone C - Weapons', type: 'zone' as const, capacity: 2000, currentCount: 1500, parentLocationId: 'BLDG-001', isActive: true, isPickable: true, isReceivable: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'ZONE-004', name: 'Zone D - Communications', type: 'zone' as const, capacity: 3000, currentCount: 1000, parentLocationId: 'BLDG-001', isActive: true, isPickable: true, isReceivable: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    ] as WarehouseLocation[];
+  }, [warehouseLocations]);
 
   // Calculate stats
   const stats = useMemo(() => {
     const totalLocations = locations.length;
     const activeSKUs = inventoryItems.length;
     const movementsToday = 0; // Mock
-    const totalCapacity = locations.reduce((sum, loc) => sum + loc.capacity, 0);
-    const totalStock = locations.reduce((sum, loc) => sum + loc.currentStock, 0);
+    const totalCapacity = locations.reduce((sum, loc) => sum + (loc.capacity || 0), 0);
+    const totalStock = locations.reduce((sum, loc) => sum + (loc.currentCount || 0), 0);
     const capacityUsed = totalCapacity > 0 ? Math.round((totalStock / totalCapacity) * 100) : 0;
 
     return { totalLocations, activeSKUs, movementsToday, capacityUsed };
@@ -170,14 +166,13 @@ const WarehousePage: React.FC = () => {
       a.download = `warehouse-inventory-${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
     } else {
-      const headers = ['Location', 'Type', 'Capacity', 'Current Stock', 'Items', 'Utilization'];
+      const headers = ['Location', 'Type', 'Capacity', 'Current Stock', 'Utilization'];
       const rows = locations.map((loc) => [
         loc.name,
         loc.type,
-        loc.capacity,
-        loc.currentStock,
-        loc.itemCount,
-        `${Math.round((loc.currentStock / loc.capacity) * 100)}%`,
+        loc.capacity || 0,
+        loc.currentCount || 0,
+        `${loc.capacity ? Math.round(((loc.currentCount || 0) / loc.capacity) * 100) : 0}%`,
       ]);
 
       const csvContent = [headers, ...rows].map((row) => row.join(',')).join('\n');
@@ -190,14 +185,18 @@ const WarehousePage: React.FC = () => {
     }
   };
 
-  const getLocationIcon = (type: LocationType) => {
+  const getLocationIcon = (type: string) => {
     switch (type) {
-      case 'Building':
+      case 'floor':
         return Building2;
-      case 'Zone':
+      case 'zone':
+      case 'aisle':
         return Navigation;
-      case 'Bin':
+      case 'rack':
+      case 'bin':
         return Boxes;
+      default:
+        return Building2;
     }
   };
 
@@ -463,9 +462,6 @@ const WarehousePage: React.FC = () => {
                     Current Stock
                   </th>
                   <th className="px-6 py-5 text-left text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                    Items
-                  </th>
-                  <th className="px-6 py-5 text-left text-[10px] font-black text-slate-600 uppercase tracking-widest">
                     Utilization
                   </th>
                   <th className="px-6 py-5 text-left text-[10px] font-black text-slate-600 uppercase tracking-widest">
@@ -476,7 +472,7 @@ const WarehousePage: React.FC = () => {
               <tbody className="divide-y divide-slate-100">
                 {locations.map((location) => {
                   const Icon = getLocationIcon(location.type);
-                  const utilization = Math.round((location.currentStock / location.capacity) * 100);
+                  const utilization = location.capacity ? Math.round(((location.currentCount || 0) / location.capacity) * 100) : 0;
                   return (
                     <tr key={location.id} className="hover:bg-slate-50 transition-colors group">
                       <td className="px-6 py-5">
@@ -492,7 +488,10 @@ const WarehousePage: React.FC = () => {
                           <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                             <Icon size={20} className="text-blue-600" />
                           </div>
-                          <span className="font-black text-slate-900">{location.name}</span>
+                          <div>
+                            <span className="font-black text-slate-900 block">{location.name}</span>
+                            {location.code && <span className="text-xs text-slate-400">{location.code}</span>}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-5">
@@ -501,13 +500,10 @@ const WarehousePage: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-5">
-                        <span className="text-slate-900 font-semibold">{location.capacity.toLocaleString()}</span>
+                        <span className="text-slate-900 font-semibold">{(location.capacity || 0).toLocaleString()}</span>
                       </td>
                       <td className="px-6 py-5">
-                        <span className="text-slate-900 font-black text-lg">{location.currentStock.toLocaleString()}</span>
-                      </td>
-                      <td className="px-6 py-5">
-                        <span className="text-slate-600 font-semibold">{location.itemCount} SKUs</span>
+                        <span className="text-slate-900 font-black text-lg">{(location.currentCount || 0).toLocaleString()}</span>
                       </td>
                       <td className="px-6 py-5">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${getUtilizationColor(utilization)}`}>

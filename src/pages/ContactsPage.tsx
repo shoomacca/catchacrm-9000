@@ -43,13 +43,13 @@ const ContactsPage: React.FC = () => {
   // Get related entities count
   const getRelatedCounts = (contact: any) => {
     const relatedDeals = deals.filter(d => d.contactId === contact.id);
-    const relatedLeads = leads.filter(l => l.contactId === contact.id);
+    const relatedLeads = leads.filter(l => l.accountId === contact.accountId);
     const account = accounts.find(a => a.id === contact.accountId);
     return {
       deals: relatedDeals.length,
       leads: relatedLeads.length,
       account,
-      totalValue: relatedDeals.reduce((sum, d) => sum + (d.amount || d.amount || 0), 0)
+      totalValue: relatedDeals.reduce((sum, d) => sum + (d.amount || 0), 0)
     };
   };
 
@@ -277,12 +277,12 @@ const ContactsPage: React.FC = () => {
             placeholder="Search contacts..."
             className="w-full pl-12 pr-6 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.amount)}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <select
           value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.amount)}
+          onChange={(e) => setRoleFilter(e.target.value)}
           className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none cursor-pointer"
         >
           <option value="all">All Roles</option>
@@ -290,7 +290,7 @@ const ContactsPage: React.FC = () => {
         </select>
         <select
           value={sortBy}
-          onChange={(e) => setSortBy(e.target.amount as any)}
+          onChange={(e) => setSortBy(e.target.value as any)}
           className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none cursor-pointer"
         >
           <option value="activity">Sort by Activity</option>

@@ -50,8 +50,8 @@ const ListView: React.FC<{ module?: string }> = ({ module: propModule }) => {
     }
   }, [module, leads, deals, accounts, contacts, campaigns, jobs, crews, zones, equipment, inventoryItems, purchaseOrders, bankTransactions, expenses, reviews, referralRewards, inboundForms, chatWidgets, calculators, automationWorkflows, webhooks, industryTemplates]);
 
-  const filteredData = allData.filter(item => 
-    (item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredData = allData.filter(item =>
+    ((item as any).name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (item.id || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -76,7 +76,7 @@ const ListView: React.FC<{ module?: string }> = ({ module: propModule }) => {
             </div>
             <div className="space-y-4">
               {stageDeals.map((deal) => (
-                <div key={deal.id} draggable onClick={() => navigate(`/deals/${deal.id}`)} className="bg-white border border-slate-100 p-5 rounded-[28px] shadow-sm hover:shadow-xl transition-all cursor-pointer">
+                <div key={deal.id} onClick={() => navigate(`/deals/${deal.id}`)} className="bg-white border border-slate-100 p-5 rounded-[28px] shadow-sm hover:shadow-xl transition-all cursor-pointer">
                   <h4 className="text-sm font-black text-slate-900 truncate">{deal.name}</h4>
                   <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
                     <span className="text-xs font-black text-blue-600">${deal.amount.toLocaleString()}</span>
@@ -139,7 +139,7 @@ const ListView: React.FC<{ module?: string }> = ({ module: propModule }) => {
                         )}
                       </div>
                       <div>
-                        <p className="font-black text-slate-900 group-hover:text-blue-600 transition-colors text-base leading-none mb-2">{item.name}</p>
+                        <p className="font-black text-slate-900 group-hover:text-blue-600 transition-colors text-base leading-none mb-2">{(item as any).name}</p>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID: {item.id} {module === 'campaigns' ? `• ${(item as any).type}` : ''}</p>
                       </div>
                     </div>

@@ -416,12 +416,12 @@ const LeadsPage: React.FC = () => {
             placeholder="Search leads..."
             className="w-full pl-12 pr-6 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.amount)}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.amount)}
+          onChange={(e) => setStatusFilter(e.target.value)}
           className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none cursor-pointer"
         >
           <option value="all">All Statuses</option>
@@ -433,7 +433,7 @@ const LeadsPage: React.FC = () => {
         </select>
         <select
           value={sortBy}
-          onChange={(e) => setSortBy(e.target.amount as any)}
+          onChange={(e) => setSortBy(e.target.value as any)}
           className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none cursor-pointer"
         >
           <option value="score">Sort by Score</option>

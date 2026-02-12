@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { useCRM } from '../../context/CRMContext';
 
 // Fix for default marker icons in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -41,35 +42,80 @@ const createCustomIcon = (color: string, icon: string) => {
   });
 };
 
-// Mock data for staff and jobs
-const mockStaff = [
-  { id: 1, name: 'Thomas Anderson', role: 'Admin', lat: 40.7128, lng: -74.0060, status: 'active' },
-  { id: 2, name: 'Trinity Moss', role: 'Agent', lat: 40.7580, lng: -73.9855, status: 'active' },
-  { id: 3, name: 'Neo Smith', role: 'Tech', lat: 40.7489, lng: -73.9680, status: 'active' },
-  { id: 4, name: 'Morpheus Jones', role: 'Lead', lat: 40.7614, lng: -73.9776, status: 'active' },
+// Default demo data for map display
+const defaultMapStaff = [
+  { id: '1', name: 'Thomas Anderson', role: 'Admin', lat: 40.7128, lng: -74.0060, status: 'active' },
+  { id: '2', name: 'Trinity Moss', role: 'Agent', lat: 40.7580, lng: -73.9855, status: 'active' },
+  { id: '3', name: 'Neo Smith', role: 'Tech', lat: 40.7489, lng: -73.9680, status: 'active' },
+  { id: '4', name: 'Morpheus Jones', role: 'Lead', lat: 40.7614, lng: -73.9776, status: 'active' },
 ];
 
-const mockJobs = [
-  { id: 1, title: 'HVAC Repair - Downtown', lat: 40.7306, lng: -73.9352, status: 'active', priority: 'high' },
-  { id: 2, title: 'Plumbing Service - Midtown', lat: 40.7549, lng: -73.9840, status: 'active', priority: 'normal' },
-  { id: 3, title: 'Electrical Install - Upper West', lat: 40.7870, lng: -73.9754, status: 'active', priority: 'normal' },
+const defaultMapJobs = [
+  { id: '1', title: 'HVAC Repair - Downtown', lat: 40.7306, lng: -73.9352, status: 'active', priority: 'high' },
+  { id: '2', title: 'Plumbing Service - Midtown', lat: 40.7549, lng: -73.9840, status: 'active', priority: 'normal' },
+  { id: '3', title: 'Electrical Install - Upper West', lat: 40.7870, lng: -73.9754, status: 'active', priority: 'normal' },
 ];
 
-const mockAlerts = [
-  { id: 1, title: 'Emergency Call - Brooklyn', lat: 40.6782, lng: -73.9442, type: 'emergency', severity: 'critical' },
+const defaultMapAlerts = [
+  { id: '1', title: 'Emergency Call - Brooklyn', lat: 40.6782, lng: -73.9442, type: 'emergency', severity: 'critical' },
 ];
 
 const DispatchMatrix: React.FC = () => {
+  const { jobs, crews, users, dispatchAlerts, upsertRecord } = useCRM();
   const [mapOverlays, setMapOverlays] = useState({
     clockedStaff: true,
     activeJobs: true,
     emergencyAlerts: true,
   });
 
-  const [activeJobs, setActiveJobs] = useState(mockJobs.length);
-  const [techsInField, setTechsInField] = useState(mockStaff.length);
   const [slaCompliance, setSlaCompliance] = useState(98);
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Use CRM data or fallback to defaults for map display
+  const mapStaff = useMemo(() => {
+    if (users.length > 0) {
+      // Map users to map-compatible format with mock coordinates
+      return users.slice(0, 4).map((u, i) => ({
+        id: u.id,
+        name: u.name,
+        role: u.role,
+        lat: defaultMapStaff[i % defaultMapStaff.length].lat,
+        lng: defaultMapStaff[i % defaultMapStaff.length].lng,
+        status: 'active' as const
+      }));
+    }
+    return defaultMapStaff;
+  }, [users]);
+
+  const mapJobs = useMemo(() => {
+    const activeJobs = jobs.filter(j => j.status === 'Scheduled' || j.status === 'InProgress');
+    if (activeJobs.length > 0) {
+      return activeJobs.slice(0, 5).map((j, i) => ({
+        id: j.id,
+        title: j.subject,
+        lat: defaultMapJobs[i % defaultMapJobs.length].lat,
+        lng: defaultMapJobs[i % defaultMapJobs.length].lng,
+        status: 'active' as const,
+        priority: j.priority === 'Urgent' || j.priority === 'High' ? 'high' : 'normal'
+      }));
+    }
+    return defaultMapJobs;
+  }, [jobs]);
+
+  const mapAlerts = useMemo(() => {
+    const activeAlerts = dispatchAlerts.filter(a => !a.isDismissed && !a.isAcknowledged);
+    if (activeAlerts.length > 0) {
+      return activeAlerts.slice(0, 3).map((a, i) => ({
+        id: a.id,
+        title: a.title,
+        lat: defaultMapAlerts[i % defaultMapAlerts.length]?.lat || 40.6782,
+        lng: defaultMapAlerts[i % defaultMapAlerts.length]?.lng || -73.9442,
+        type: a.type === 'critical' ? 'emergency' : a.type,
+        severity: a.type
+      }));
+    }
+    return defaultMapAlerts;
+  }, [dispatchAlerts]);
 
   // Simulate real-time updates
   useEffect(() => {
@@ -82,19 +128,23 @@ const DispatchMatrix: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Calculate summary stats
+  // Calculate summary stats from real data
   const stats = useMemo(() => {
+    const activeJobsCount = jobs.filter(j => j.status === 'Scheduled' || j.status === 'InProgress').length;
+    const completedJobsCount = jobs.filter(j => j.status === 'Completed').length;
+    const activeAlertsCount = dispatchAlerts.filter(a => !a.isDismissed && !a.isAcknowledged).length;
+
     return {
-      activeJobs: mockJobs.length,
-      techsInField: mockStaff.filter(s => s.status === 'active').length,
+      activeJobs: activeJobsCount || mapJobs.length,
+      techsInField: mapStaff.filter(s => s.status === 'active').length,
       slaCompliance,
-      emergencyAlerts: mockAlerts.length,
+      emergencyAlerts: activeAlertsCount || mapAlerts.length,
       avgResponseTime: 8,
       completionRate: 94,
-      jobsCompleted: 127,
+      jobsCompleted: completedJobsCount || 127,
       totalDistance: 428,
     };
-  }, [slaCompliance]);
+  }, [jobs, dispatchAlerts, mapStaff, mapJobs, mapAlerts, slaCompliance]);
 
   const toggleOverlay = (key: 'clockedStaff' | 'activeJobs' | 'emergencyAlerts') => {
     setMapOverlays(prev => ({ ...prev, [key]: !prev[key] }));
@@ -237,7 +287,7 @@ const DispatchMatrix: React.FC = () => {
               <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></div>
               <div>
                 <span className="text-sm font-bold text-slate-700 uppercase tracking-wide block">Clocked-On Staff</span>
-                <span className="text-xs font-bold text-emerald-600">{techsInField} active</span>
+                <span className="text-xs font-bold text-emerald-600">{stats.techsInField} active</span>
               </div>
             </div>
             <button
@@ -258,7 +308,7 @@ const DispatchMatrix: React.FC = () => {
               <div className="w-3 h-3 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50"></div>
               <div>
                 <span className="text-sm font-bold text-slate-700 uppercase tracking-wide block">Active Service Jobs</span>
-                <span className="text-xs font-bold text-blue-600">{activeJobs} jobs</span>
+                <span className="text-xs font-bold text-blue-600">{stats.activeJobs} jobs</span>
               </div>
             </div>
             <button
@@ -279,7 +329,7 @@ const DispatchMatrix: React.FC = () => {
               <div className="w-3 h-3 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50 animate-pulse"></div>
               <div>
                 <span className="text-sm font-bold text-slate-700 uppercase tracking-wide block">Emergency Alerts</span>
-                <span className="text-xs font-bold text-rose-600">{mockAlerts.length} critical</span>
+                <span className="text-xs font-bold text-rose-600">{mapAlerts.length} critical</span>
               </div>
             </div>
             <button
@@ -327,7 +377,7 @@ const DispatchMatrix: React.FC = () => {
             />
 
             {/* Staff Markers */}
-            {mapOverlays.clockedStaff && mockStaff.map(staff => (
+            {mapOverlays.clockedStaff && mapStaff.map(staff => (
               <Marker key={staff.id} position={[staff.lat, staff.lng]} icon={staffIcon}>
                 <Popup>
                   <div className="p-2">
@@ -343,7 +393,7 @@ const DispatchMatrix: React.FC = () => {
             ))}
 
             {/* Job Markers */}
-            {mapOverlays.activeJobs && mockJobs.map(job => (
+            {mapOverlays.activeJobs && mapJobs.map(job => (
               <Marker key={job.id} position={[job.lat, job.lng]} icon={jobIcon}>
                 <Popup>
                   <div className="p-2">
@@ -358,7 +408,7 @@ const DispatchMatrix: React.FC = () => {
             ))}
 
             {/* Emergency Alerts */}
-            {mapOverlays.emergencyAlerts && mockAlerts.map(alert => (
+            {mapOverlays.emergencyAlerts && mapAlerts.map(alert => (
               <React.Fragment key={alert.id}>
                 <Marker position={[alert.lat, alert.lng]} icon={alertIcon}>
                   <Popup>
@@ -386,7 +436,7 @@ const DispatchMatrix: React.FC = () => {
       <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 rounded-[35px] shadow-2xl overflow-hidden border border-slate-700">
         {/* Animated background dots */}
         <div className="absolute inset-0 opacity-20">
-          {mockStaff.map((staff, i) => (
+          {mapStaff.map((staff, i) => (
             <div
               key={i}
               className="absolute w-3 h-3 bg-emerald-400 rounded-full animate-pulse"
@@ -397,7 +447,7 @@ const DispatchMatrix: React.FC = () => {
               }}
             ></div>
           ))}
-          {mockJobs.map((job, i) => (
+          {mapJobs.map((job, i) => (
             <div
               key={i}
               className="absolute w-3 h-3 bg-blue-400 rounded-full animate-pulse"
@@ -428,10 +478,10 @@ const DispatchMatrix: React.FC = () => {
 
           <div className="mb-6">
             <p className="text-5xl font-black text-white mb-2">
-              {activeJobs} Active Job{activeJobs !== 1 ? 's' : ''}
+              {stats.activeJobs} Active Job{stats.activeJobs !== 1 ? 's' : ''}
             </p>
             <p className="text-sm font-bold text-slate-400 uppercase tracking-wide">
-              {techsInField} Techs in Field • {slaCompliance.toFixed(0)}% SLA Compliance
+              {stats.techsInField} Techs in Field • {slaCompliance.toFixed(0)}% SLA Compliance
             </p>
           </div>
 
@@ -446,7 +496,7 @@ const DispatchMatrix: React.FC = () => {
             </div>
             <div className="bg-white/5 backdrop-blur-sm p-4 rounded-[25px] border border-white/10">
               <p className="text-slate-400 text-xs font-bold uppercase mb-1">Emergencies</p>
-              <p className="text-2xl font-black text-rose-400">{mockAlerts.length}</p>
+              <p className="text-2xl font-black text-rose-400">{mapAlerts.length}</p>
             </div>
           </div>
         </div>
@@ -483,7 +533,7 @@ const DispatchMatrix: React.FC = () => {
 
         {/* Team Members Schedule */}
         <div className="space-y-4">
-          {mockStaff.map((staff, index) => {
+          {mapStaff.map((staff, index) => {
             const colors = [
               { gradient: 'from-blue-500 to-cyan-500', bg: 'from-blue-50 to-cyan-50', border: 'border-blue-100' },
               { gradient: 'from-emerald-500 to-teal-500', bg: 'from-emerald-50 to-teal-50', border: 'border-emerald-100' },
@@ -505,7 +555,7 @@ const DispatchMatrix: React.FC = () => {
                 </div>
                 <div className="flex-1 bg-white rounded-[20px] p-3 border border-slate-200 shadow-sm">
                   <div className={`h-2 bg-gradient-to-r ${colorSet.gradient} rounded-full transition-all shadow-sm`} style={{ width: scheduleWidth }}></div>
-                  <p className="text-xs font-bold text-slate-500 mt-2">{mockJobs[index % mockJobs.length]?.title || 'Available'}</p>
+                  <p className="text-xs font-bold text-slate-500 mt-2">{mapJobs[index % mapJobs.length]?.title || 'Available'}</p>
                 </div>
                 <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full border border-emerald-200">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/50"></div>

@@ -170,7 +170,7 @@ const QuoteDetail: React.FC = () => {
                   <p className="text-sm text-slate-600">{account.phone}</p>
                 )}
                 {account?.address && (
-                  <p className="text-sm text-slate-600 mt-2">{account.address}</p>
+                  <p className="text-sm text-slate-600 mt-2">{`${account.address.street}, ${account.address.suburb} ${account.address.state} ${account.address.postcode}`}</p>
                 )}
               </div>
             </div>

@@ -246,7 +246,7 @@ const ProductDetail: React.FC = () => {
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Weight</h3>
                   </div>
                   <p className="text-sm font-bold text-slate-900">
-                    {product.weight.amount} {product.weight.unit}
+                    {product.weight.value} {product.weight.unit}
                   </p>
                 </div>
               )}

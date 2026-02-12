@@ -12,7 +12,8 @@ import type {
   Crew, Job, Zone, Equipment, InventoryItem, PurchaseOrder, BankTransaction,
   Expense, Review, Subscription, ReferralReward, InboundForm, ChatWidget,
   Calculator, AutomationWorkflow, Webhook, IndustryTemplate, Conversation,
-  ChatMessage, Notification, Document
+  ChatMessage, Notification, Document, AuditLog,
+  TacticalQueueItem, WarehouseLocation, DispatchAlert, RFQ, SupplierQuote
 } from '../types';
 
 // Demo org ID - this is the fixed UUID for the demo organization
@@ -58,7 +59,9 @@ type TableName = 'accounts' | 'contacts' | 'leads' | 'deals' | 'tasks' | 'campai
   'expenses' | 'reviews' | 'subscriptions' | 'warehouses' | 'notifications' |
   'documents' | 'audit_log' | 'referral_rewards' | 'inbound_forms' | 'chat_widgets' |
   'calculators' | 'automation_workflows' | 'webhooks' | 'industry_templates' |
-  'conversations' | 'chat_messages' | 'payments' | 'ticket_messages';
+  'conversations' | 'chat_messages' | 'payments' | 'ticket_messages' |
+  'currencies' | 'roles' | 'tactical_queue' | 'warehouse_locations' |
+  'dispatch_alerts' | 'rfqs' | 'supplier_quotes';
 
 export async function fetchAll<T>(table: TableName): Promise<T[]> {
   const orgId = await getCurrentOrgId();
@@ -217,6 +220,129 @@ export async function fetchJobsWithRelations(): Promise<Job[]> {
 }
 
 // ============================================
+// ORGANIZATION SETUP (Fallback if trigger doesn't fire)
+// ============================================
+
+export async function ensureUserOrganization(userId: string, metadata: {
+  companyName?: string;
+  fullName?: string;
+  email?: string;
+}): Promise<{ orgId: string | null; success: boolean; message: string }> {
+  try {
+    // First check if user already has an org via organization_users
+    const { data: existingOrgUser, error: checkError } = await supabase
+      .from('organization_users')
+      .select('org_id')
+      .eq('user_id', userId)
+      .single();
+
+    if (existingOrgUser?.org_id) {
+      console.log('User already has organization:', existingOrgUser.org_id);
+      return { orgId: existingOrgUser.org_id, success: true, message: 'Organization already exists' };
+    }
+
+    const companyName = metadata.companyName || 'My Organization';
+    const fullName = metadata.fullName || metadata.email?.split('@')[0] || 'User';
+    const emailDomain = metadata.email?.split('@')[1] || 'example.com';
+
+    // Create organization
+    const { data: newOrg, error: orgError } = await supabase
+      .from('organizations')
+      .insert({
+        name: companyName,
+        slug: companyName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + userId.substring(0, 8),
+        plan: 'free',
+        subscription_status: 'active',
+        user_limit: 5
+      })
+      .select()
+      .single();
+
+    if (orgError) {
+      console.error('Error creating organization:', orgError);
+      return { orgId: null, success: false, message: orgError.message };
+    }
+
+    const newOrgId = newOrg.id;
+
+    // Link user to org as owner
+    const { error: linkError } = await supabase
+      .from('organization_users')
+      .insert({
+        org_id: newOrgId,
+        user_id: userId,
+        role: 'owner',
+        active: true
+      });
+
+    if (linkError) {
+      console.error('Error linking user to org:', linkError);
+    }
+
+    // Create CRM user record
+    const { data: newUser, error: userError } = await supabase
+      .from('users')
+      .insert({
+        org_id: newOrgId,
+        name: fullName,
+        email: metadata.email,
+        role: 'admin',
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error('Error creating CRM user:', userError);
+    }
+
+    // Create initial account for the company
+    const { data: newAccount, error: accountError } = await supabase
+      .from('accounts')
+      .insert({
+        org_id: newOrgId,
+        name: companyName,
+        industry: 'Technology',
+        tier: 'Silver',
+        website: `https://${emailDomain}`,
+        status: 'Active',
+        owner_id: newUser?.id
+      })
+      .select()
+      .single();
+
+    if (accountError) {
+      console.error('Error creating initial account:', accountError);
+    }
+
+    // Create initial contact for the user
+    if (newAccount) {
+      const { error: contactError } = await supabase
+        .from('contacts')
+        .insert({
+          org_id: newOrgId,
+          account_id: newAccount.id,
+          name: fullName,
+          email: metadata.email,
+          title: 'Owner',
+          status: 'Active',
+          owner_id: newUser?.id
+        });
+
+      if (contactError) {
+        console.error('Error creating initial contact:', contactError);
+      }
+    }
+
+    console.log('Organization setup complete:', newOrgId);
+    return { orgId: newOrgId, success: true, message: 'Organization created successfully' };
+  } catch (err) {
+    console.error('Error in ensureUserOrganization:', err);
+    return { orgId: null, success: false, message: 'Failed to setup organization' };
+  }
+}
+
+// ============================================
 // DEMO RESET
 // ============================================
 
@@ -280,6 +406,14 @@ export interface CRMData {
   // System
   notifications: Notification[];
   documents: Document[];
+  auditLogs: AuditLog[];
+  // Operations - additional tables
+  tacticalQueue: TacticalQueueItem[];
+  warehouseLocations: WarehouseLocation[];
+  dispatchAlerts: DispatchAlert[];
+  // Procurement
+  rfqs: RFQ[];
+  supplierQuotes: SupplierQuote[];
 }
 
 export async function loadAllCRMData(): Promise<CRMData> {
@@ -325,7 +459,15 @@ export async function loadAllCRMData(): Promise<CRMData> {
     chatMessages,
     // System
     notifications,
-    documents
+    documents,
+    auditLogs,
+    // Operations - additional tables
+    tacticalQueue,
+    warehouseLocations,
+    dispatchAlerts,
+    // Procurement
+    rfqs,
+    supplierQuotes
   ] = await Promise.all([
     fetchAll<Account>('accounts'),
     fetchAll<Contact>('contacts'),
@@ -365,7 +507,15 @@ export async function loadAllCRMData(): Promise<CRMData> {
     fetchAll<ChatMessage>('chat_messages'),
     // System
     fetchAll<Notification>('notifications'),
-    fetchAll<Document>('documents')
+    fetchAll<Document>('documents'),
+    fetchAll<AuditLog>('audit_log'),
+    // Operations - additional tables
+    fetchAll<TacticalQueueItem>('tactical_queue'),
+    fetchAll<WarehouseLocation>('warehouse_locations'),
+    fetchAll<DispatchAlert>('dispatch_alerts'),
+    // Procurement
+    fetchAll<RFQ>('rfqs'),
+    fetchAll<SupplierQuote>('supplier_quotes')
   ]);
 
   console.log(`Loaded: ${accounts.length} accounts, ${contacts.length} contacts, ${leads.length} leads, ${deals.length} deals, ${reviews.length} reviews, ${referralRewards.length} referrals`);
@@ -409,7 +559,15 @@ export async function loadAllCRMData(): Promise<CRMData> {
     chatMessages,
     // System
     notifications,
-    documents
+    documents,
+    auditLogs,
+    // Operations - additional tables
+    tacticalQueue,
+    warehouseLocations,
+    dispatchAlerts,
+    // Procurement
+    rfqs,
+    supplierQuotes
   };
 }
 
@@ -453,6 +611,7 @@ export default {
   fetchDealsWithRelations,
   fetchContactsWithAccount,
   fetchJobsWithRelations,
+  ensureUserOrganization,
   resetDemoOrganization,
   loadAllCRMData,
   subscribeToTable

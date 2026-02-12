@@ -73,7 +73,7 @@ BEGIN
   -- Delete in correct order (respect FK constraints)
   DELETE FROM chat_messages WHERE org_id = demo_org_id;
   DELETE FROM conversations WHERE org_id = demo_org_id;
-  DELETE FROM ticket_messages WHERE org_id = demo_org_id;
+  -- ticket_messages table removed (messages stored in tickets.messages JSONB)
   DELETE FROM notifications WHERE org_id = demo_org_id;
   DELETE FROM audit_log WHERE org_id = demo_org_id;
   DELETE FROM documents WHERE org_id = demo_org_id;
@@ -115,9 +115,9 @@ BEGIN
   -- STEP 2: ENSURE DEMO ORGANIZATION EXISTS
   -- ============================================
 
-  INSERT INTO organizations (id, name, slug, plan, subscription_status)
-  VALUES (demo_org_id, 'Catcha CRM Demo', 'demo', 'enterprise', 'active')
-  ON CONFLICT (id) DO UPDATE SET name = 'Catcha CRM Demo', plan = 'enterprise';
+  INSERT INTO organizations (id, name, slug)
+  VALUES (demo_org_id, 'Catcha CRM Demo', 'demo')
+  ON CONFLICT (id) DO UPDATE SET name = 'Catcha CRM Demo';
 
   -- ============================================
   -- STEP 3: INSERT USERS
@@ -144,7 +144,7 @@ BEGIN
   campaign_defend := gen_random_uuid();
   campaign_oracle := gen_random_uuid();
 
-  INSERT INTO campaigns (id, org_id, name, type, budget, spent, revenue, revenue_generated, leads_generated, status, expected_c_p_l) VALUES
+  INSERT INTO campaigns (id, org_id, name, type, budget, spent, revenue, revenue_generated, leads_generated, status, expected_cpl) VALUES
     (campaign_redpill, demo_org_id, 'Red Pill Initiative', 'Email', 100000, 78000, 2500000, 2500000, 47, 'Active', 1500),
     (campaign_defend, demo_org_id, 'Defend Zion', 'Event', 500000, 425000, 1200000, 1200000, 12, 'Active', 35000),
     (campaign_oracle, demo_org_id, 'Oracle Prophecy Tour', 'Social', 75000, 75000, 180000, 180000, 23, 'Completed', 3000);
@@ -191,12 +191,12 @@ BEGIN
   account_vigilant := gen_random_uuid();
   account_icarus := gen_random_uuid();
 
-  INSERT INTO accounts (id, org_id, name, industry, website, employee_count, tier, owner_id, status, avatar) VALUES
-    (account_neb, demo_org_id, 'Nebuchadnezzar', 'Reconnaissance', 'nebuchadnezzar.zion', 9, 'Tier A', user_morpheus, 'active', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nebuchadnezzar'),
-    (account_logos, demo_org_id, 'Logos', 'Strike Force', 'logos.zion', 4, 'Tier A', user_niobe, 'active', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Logos'),
-    (account_hammer, demo_org_id, 'Mjolnir (Hammer)', 'Heavy Assault', 'hammer.zion', 12, 'Tier A', user_neo, 'active', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Hammer'),
-    (account_vigilant, demo_org_id, 'Vigilant', 'Patrol', 'vigilant.zion', 6, 'Tier B', user_trinity, 'active', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vigilant'),
-    (account_icarus, demo_org_id, 'Icarus', 'Exploration', 'icarus.zion', 5, 'Tier B', user_link, 'inactive', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Icarus');
+  INSERT INTO accounts (id, org_id, name, industry, website, employee_count, tier, owner_id, avatar) VALUES
+    (account_neb, demo_org_id, 'Nebuchadnezzar', 'Reconnaissance', 'nebuchadnezzar.zion', 9, 'Tier A', user_morpheus, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nebuchadnezzar'),
+    (account_logos, demo_org_id, 'Logos', 'Strike Force', 'logos.zion', 4, 'Tier A', user_niobe, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Logos'),
+    (account_hammer, demo_org_id, 'Mjolnir (Hammer)', 'Heavy Assault', 'hammer.zion', 12, 'Tier A', user_neo, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Hammer'),
+    (account_vigilant, demo_org_id, 'Vigilant', 'Patrol', 'vigilant.zion', 6, 'Tier B', user_trinity, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vigilant'),
+    (account_icarus, demo_org_id, 'Icarus', 'Exploration', 'icarus.zion', 5, 'Tier B', user_link, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Icarus');
 
   -- ============================================
   -- STEP 8: INSERT CONTACTS (Crew members)
@@ -211,15 +211,15 @@ BEGIN
   contact_roland := gen_random_uuid();
   contact_soren := gen_random_uuid();
 
-  INSERT INTO contacts (id, org_id, name, account_id, email, phone, title, is_primary, avatar) VALUES
-    (contact_morpheus, demo_org_id, 'Morpheus', account_neb, 'morpheus@nebuchadnezzar.zion', '+1-ZION-001', 'Captain', true, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Morpheus'),
-    (contact_neo, demo_org_id, 'Neo', account_neb, 'neo@nebuchadnezzar.zion', '+1-ZION-002', 'The One', false, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Neo'),
-    (contact_trinity, demo_org_id, 'Trinity', account_neb, 'trinity@nebuchadnezzar.zion', '+1-ZION-003', 'First Mate', false, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Trinity'),
-    (contact_tank, demo_org_id, 'Tank', account_neb, 'tank@nebuchadnezzar.zion', '+1-ZION-004', 'Operator', false, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Tank'),
-    (contact_niobe, demo_org_id, 'Niobe', account_logos, 'niobe@logos.zion', '+1-ZION-010', 'Captain', true, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Niobe'),
-    (contact_ghost, demo_org_id, 'Ghost', account_logos, 'ghost@logos.zion', '+1-ZION-011', 'First Mate', false, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ghost'),
-    (contact_roland, demo_org_id, 'Roland', account_hammer, 'roland@hammer.zion', '+1-ZION-020', 'Captain', true, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Roland'),
-    (contact_soren, demo_org_id, 'Soren', account_vigilant, 'soren@vigilant.zion', '+1-ZION-030', 'Captain', true, 'https://api.dicebear.com/7.x/avataaars/svg?seed=Soren');
+  INSERT INTO contacts (id, org_id, name, account_id, email, phone, title, avatar) VALUES
+    (contact_morpheus, demo_org_id, 'Morpheus', account_neb, 'morpheus@nebuchadnezzar.zion', '+1-ZION-001', 'Captain', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Morpheus'),
+    (contact_neo, demo_org_id, 'Neo', account_neb, 'neo@nebuchadnezzar.zion', '+1-ZION-002', 'The One', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Neo'),
+    (contact_trinity, demo_org_id, 'Trinity', account_neb, 'trinity@nebuchadnezzar.zion', '+1-ZION-003', 'First Mate', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Trinity'),
+    (contact_tank, demo_org_id, 'Tank', account_neb, 'tank@nebuchadnezzar.zion', '+1-ZION-004', 'Operator', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Tank'),
+    (contact_niobe, demo_org_id, 'Niobe', account_logos, 'niobe@logos.zion', '+1-ZION-010', 'Captain', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Niobe'),
+    (contact_ghost, demo_org_id, 'Ghost', account_logos, 'ghost@logos.zion', '+1-ZION-011', 'First Mate', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ghost'),
+    (contact_roland, demo_org_id, 'Roland', account_hammer, 'roland@hammer.zion', '+1-ZION-020', 'Captain', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Roland'),
+    (contact_soren, demo_org_id, 'Soren', account_vigilant, 'soren@vigilant.zion', '+1-ZION-030', 'Captain', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Soren');
 
   -- ============================================
   -- STEP 9: INSERT LEADS
@@ -231,7 +231,7 @@ BEGIN
   lead_mero := gen_random_uuid();
   lead_smith := gen_random_uuid();
 
-  INSERT INTO leads (id, org_id, name, company, email, phone, status, source, campaign_id, estimated_value, score, assigned_to) VALUES
+  INSERT INTO leads (id, org_id, name, company, email, phone, status, source, campaign_id, estimated_value, score, owner_id) VALUES
     (lead_kid, demo_org_id, 'The Kid', 'Self-Substantiation', 'kid@freed.matrix', '+1-MATRIX-005', 'New', 'Search', campaign_redpill, 150000, 92, user_neo),
     (lead_seraph, demo_org_id, 'Seraph', 'Oracle Security', 'seraph@oracle.matrix', '+1-MATRIX-004', 'New', 'LinkedIn', campaign_redpill, 200000, 88, user_morpheus),
     (lead_persephone, demo_org_id, 'Persephone', 'Club Hel', 'persephone@clubhel.matrix', '+1-MATRIX-003', 'Qualified', 'Referral', campaign_oracle, 350000, 78, user_trinity),
@@ -262,9 +262,9 @@ BEGIN
   crew_alpha := gen_random_uuid();
   crew_bravo := gen_random_uuid();
 
-  INSERT INTO crews (id, org_id, name, leader_id, member_ids, color, status) VALUES
-    (crew_alpha, demo_org_id, 'Alpha Strike Team', user_neo, ARRAY[user_neo, user_trinity, user_morpheus], '#3B82F6', 'active'),
-    (crew_bravo, demo_org_id, 'Bravo Extraction', user_niobe, ARRAY[user_niobe, user_link], '#10B981', 'active');
+  INSERT INTO crews (id, org_id, name, leader_id, member_ids, color) VALUES
+    (crew_alpha, demo_org_id, 'Alpha Strike Team', user_neo, ARRAY[user_neo, user_trinity, user_morpheus]::uuid[], '#3B82F6'),
+    (crew_bravo, demo_org_id, 'Bravo Extraction', user_niobe, ARRAY[user_niobe, user_link]::uuid[], '#10B981');
 
   -- ============================================
   -- STEP 12: INSERT ZONES
@@ -274,10 +274,10 @@ BEGIN
   zone_industrial := gen_random_uuid();
   zone_residential := gen_random_uuid();
 
-  INSERT INTO zones (id, org_id, name, region, description, color, status) VALUES
-    (zone_downtown, demo_org_id, 'Downtown', 'Megacity Core', 'High-traffic area with multiple hardlines', '#EF4444', 'active'),
-    (zone_industrial, demo_org_id, 'Industrial', 'Factory District', 'Sentinel patrol routes nearby', '#F59E0B', 'active'),
-    (zone_residential, demo_org_id, 'Residential', 'Suburbs', 'Lower security, limited exit points', '#3B82F6', 'active');
+  INSERT INTO zones (id, org_id, name, region, description, color) VALUES
+    (zone_downtown, demo_org_id, 'Downtown', 'Megacity Core', 'High-traffic area with multiple hardlines', '#EF4444'),
+    (zone_industrial, demo_org_id, 'Industrial', 'Factory District', 'Sentinel patrol routes nearby', '#F59E0B'),
+    (zone_residential, demo_org_id, 'Residential', 'Suburbs', 'Lower security, limited exit points', '#3B82F6');
 
   -- ============================================
   -- STEP 13: INSERT JOBS
@@ -372,9 +372,9 @@ BEGIN
   -- STEP 22: INSERT WAREHOUSES
   -- ============================================
 
-  INSERT INTO warehouses (id, org_id, name, location, capacity, status, is_default) VALUES
-    (gen_random_uuid(), demo_org_id, 'Zion Main Warehouse', 'Dock Level 3, Zion', 10000, 'active', true),
-    (gen_random_uuid(), demo_org_id, 'Nebuchadnezzar Storage', 'Cargo Bay, Nebuchadnezzar', 500, 'active', false);
+  INSERT INTO warehouses (id, org_id, name, address, is_default) VALUES
+    (gen_random_uuid(), demo_org_id, 'Zion Main Warehouse', 'Dock Level 3, Zion', true),
+    (gen_random_uuid(), demo_org_id, 'Nebuchadnezzar Storage', 'Cargo Bay, Nebuchadnezzar', false);
 
   -- ============================================
   -- STEP 23: INSERT REFERRAL REWARDS
@@ -422,16 +422,16 @@ BEGIN
   -- STEP 27: INSERT SUBSCRIPTIONS
   -- ============================================
 
-  INSERT INTO subscriptions (id, org_id, account_id, name, status, billing_cycle, next_bill_date, start_date, items, auto_generate_invoice, mrr) VALUES
+  INSERT INTO subscriptions (id, org_id, account_id, name, status, billing_cycle, next_bill_date, start_date, items, auto_generate_invoice) VALUES
     (gen_random_uuid(), demo_org_id, account_neb, 'Nebuchadnezzar Operations Package', 'Active', 'monthly', CURRENT_DATE + INTERVAL '15 days', CURRENT_DATE - INTERVAL '45 days',
      '[{"itemType":"service","description":"Operator Support","qty":1,"unitPrice":8000,"taxRate":10},{"itemType":"service","description":"Sentinel Watch","qty":1,"unitPrice":10000,"taxRate":0}]'::jsonb,
-     true, 18000),
+     true),
     (gen_random_uuid(), demo_org_id, account_logos, 'Logos Premium Support', 'Active', 'monthly', CURRENT_DATE + INTERVAL '22 days', CURRENT_DATE - INTERVAL '60 days',
      '[{"itemType":"service","description":"Operator Support","qty":1,"unitPrice":8000,"taxRate":10}]'::jsonb,
-     true, 8000),
+     true),
     (gen_random_uuid(), demo_org_id, account_hammer, 'Hammer Defense Package', 'Paused', 'yearly', CURRENT_DATE + INTERVAL '120 days', CURRENT_DATE - INTERVAL '245 days',
      '[{"itemType":"service","description":"Sentinel Watch Annual","qty":1,"unitPrice":120000,"taxRate":0}]'::jsonb,
-     true, 10000);
+     true);
 
   -- ============================================
   -- STEP 28: INSERT QUOTES
@@ -473,16 +473,16 @@ BEGIN
   -- STEP 31: INSERT PURCHASE ORDERS
   -- ============================================
 
-  INSERT INTO purchase_orders (id, org_id, po_number, supplier_id, account_id, status, items, total, expected_delivery) VALUES
+  INSERT INTO purchase_orders (id, org_id, po_number, supplier_id, account_id, status, items, total) VALUES
     (gen_random_uuid(), demo_org_id, 'PO-2026-0001', NULL, account_hammer, 'Ordered',
      '[{"sku":"WEAP-EMP","name":"EMP Device","qty":2,"price":250000}]'::jsonb,
-     500000, CURRENT_DATE + INTERVAL '14 days'),
+     500000),
     (gen_random_uuid(), demo_org_id, 'PO-2026-0002', NULL, account_neb, 'Delivered',
      '[{"sku":"HARD-PHONE","name":"Hardline Phone","qty":5,"price":15000}]'::jsonb,
-     75000, CURRENT_DATE - INTERVAL '3 days'),
+     75000),
     (gen_random_uuid(), demo_org_id, 'PO-2026-0003', NULL, account_logos, 'Draft',
      '[{"sku":"WEAP-CAP","name":"EMP Capacitors","qty":10,"price":5000}]'::jsonb,
-     50000, NULL);
+     50000);
 
   -- ============================================
   -- STEP 32: INSERT AUTOMATION WORKFLOWS
@@ -518,15 +518,15 @@ BEGIN
   -- STEP 34: INSERT CONVERSATIONS & MESSAGES
   -- ============================================
 
-  INSERT INTO conversations (id, org_id, participant_ids, name, is_system, last_message_at) VALUES
-    (gen_random_uuid(), demo_org_id, ARRAY[user_neo, user_trinity, user_morpheus, user_niobe, user_link], 'General', true, NOW() - INTERVAL '5 minutes'),
-    (gen_random_uuid(), demo_org_id, ARRAY[user_neo, user_trinity, user_morpheus], 'Sales Team', true, NOW() - INTERVAL '2 hours');
+  INSERT INTO conversations (id, org_id, participant_ids, name, is_system) VALUES
+    (gen_random_uuid(), demo_org_id, jsonb_build_array(user_neo::text, user_trinity::text, user_morpheus::text, user_niobe::text, user_link::text), 'General', true),
+    (gen_random_uuid(), demo_org_id, jsonb_build_array(user_neo::text, user_trinity::text, user_morpheus::text), 'Sales Team', true);
 
   -- ============================================
   -- STEP 35: INSERT NOTIFICATIONS
   -- ============================================
 
-  INSERT INTO notifications (id, org_id, user_id, title, message, type, read, link) VALUES
+  INSERT INTO notifications (id, org_id, owner_id, title, message, type, read, link) VALUES
     (gen_random_uuid(), demo_org_id, user_neo, 'New Lead Assigned', 'The Kid has been assigned to you as a new lead.', 'info', false, '/leads'),
     (gen_random_uuid(), demo_org_id, user_trinity, 'Invoice Overdue', 'Invoice INV-2026-0003 for Hammer is now overdue.', 'warning', false, '/financials/ledger/income'),
     (gen_random_uuid(), demo_org_id, user_morpheus, 'Deal Won!', 'Nebuchadnezzar Refit Contract has been closed as won!', 'success', true, '/deals'),

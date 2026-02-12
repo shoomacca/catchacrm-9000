@@ -7,8 +7,8 @@
  * This client is for client-side PayPal button rendering.
  */
 
-const PAYPAL_CLIENT_ID = import.meta.env.PAYPAL_CLIENT_ID || '';
-const PAYPAL_MODE = import.meta.env.PAYPAL_MODE || 'sandbox';
+const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID || '';
+const PAYPAL_MODE = import.meta.env.VITE_PAYPAL_MODE || 'sandbox';
 
 class PayPalService {
   private paypal: any = null;
@@ -18,7 +18,7 @@ class PayPalService {
     this.enabled = !!PAYPAL_CLIENT_ID;
 
     if (!this.enabled) {
-      console.warn('[PayPal] Service not configured. Set PAYPAL_CLIENT_ID.');
+      console.warn('[PayPal] Service not configured. Set VITE_PAYPAL_CLIENT_ID.');
     }
   }
 

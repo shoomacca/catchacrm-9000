@@ -40,20 +40,24 @@ CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
   new_org_id UUID;
+  new_account_id UUID;
   company_name TEXT;
   user_name TEXT;
+  user_email_domain TEXT;
 BEGIN
   -- Extract metadata from the new user
   company_name := COALESCE(NEW.raw_user_meta_data->>'company_name', 'My Organization');
   user_name := COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1));
+  user_email_domain := split_part(NEW.email, '@', 2);
 
   -- Create organization
-  INSERT INTO organizations (name, slug, plan, subscription_status)
+  INSERT INTO organizations (name, slug, plan, subscription_status, user_limit)
   VALUES (
     company_name,
     LOWER(REGEXP_REPLACE(company_name, '[^a-zA-Z0-9]', '-', 'g')) || '-' || SUBSTR(NEW.id::TEXT, 1, 8),
     'free',
-    'active'
+    'active',
+    5
   )
   RETURNING id INTO new_org_id;
 
@@ -69,6 +73,31 @@ BEGIN
     NEW.email,
     'admin',
     'https://api.dicebear.com/7.x/avataaars/svg?seed=' || NEW.id::TEXT
+  );
+
+  -- Create initial Account (company) for the organization
+  INSERT INTO accounts (org_id, name, industry, tier, website, status, owner_id)
+  VALUES (
+    new_org_id,
+    company_name,
+    'Technology', -- Default industry, user can change later
+    'Silver',     -- Default tier
+    'https://' || user_email_domain,
+    'Active',
+    (SELECT id FROM users WHERE org_id = new_org_id LIMIT 1)
+  )
+  RETURNING id INTO new_account_id;
+
+  -- Create initial Contact for the user
+  INSERT INTO contacts (org_id, account_id, name, email, title, status, owner_id)
+  VALUES (
+    new_org_id,
+    new_account_id,
+    user_name,
+    NEW.email,
+    'Owner',
+    'Active',
+    (SELECT id FROM users WHERE org_id = new_org_id LIMIT 1)
   );
 
   -- Store org_id in user metadata for easy access

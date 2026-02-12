@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useCRM } from '../context/CRMContext';
-import { Account } from '../types';
+import { Account, RFQ, SupplierQuote } from '../types';
 import {
   ShoppingCart,
   Building2,
@@ -26,32 +26,10 @@ import { useNavigate } from 'react-router-dom';
 type ViewMode = 'suppliers' | 'rfqs' | 'quotes';
 type SortField = 'name' | 'industry' | 'tier';
 type SortDirection = 'asc' | 'desc';
-type RFQStatus = 'Draft' | 'Sent' | 'Quoted' | 'Awarded' | 'Closed';
-
-interface RFQ {
-  id: string;
-  rfqNumber: string;
-  title: string;
-  supplierId: string;
-  status: RFQStatus;
-  value: number;
-  dueDate: string;
-  createdAt: string;
-  items: number;
-}
-
-interface Quote {
-  id: string;
-  rfqId: string;
-  supplierId: string;
-  amount: number;
-  deliveryDays: number;
-  validUntil: string;
-  notes: string;
-}
+type LocalRFQStatus = 'Draft' | 'Sent' | 'Quoted' | 'Awarded' | 'Closed';
 
 const ProcurementPage: React.FC = () => {
-  const { accounts } = useCRM();
+  const { accounts, rfqs: crmRfqs, supplierQuotes: crmQuotes, upsertRecord, deleteRecord } = useCRM();
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,17 +39,33 @@ const ProcurementPage: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-  // Mock RFQs and Quotes data
-  const rfqs: RFQ[] = useMemo(() => [
-    { id: 'RFQ-001', rfqNumber: 'RFQ-2026-001', title: 'EMP Capacitors Bulk Order', supplierId: 'ACC-HAMMER', status: 'Quoted', value: 75000, dueDate: '2026-02-15', createdAt: '2026-02-01', items: 3 },
-    { id: 'RFQ-002', rfqNumber: 'RFQ-2026-002', title: 'Communications Equipment', supplierId: 'ACC-LOGOS', status: 'Sent', value: 120000, dueDate: '2026-02-20', createdAt: '2026-02-05', items: 5 },
-    { id: 'RFQ-003', rfqNumber: 'RFQ-2026-003', title: 'Neural Interface Plugs', supplierId: 'ACC-NEBUCHADNEZZAR', status: 'Draft', value: 45000, dueDate: '2026-02-25', createdAt: '2026-02-08', items: 2 },
-  ], []);
+  // Default demo data for RFQs
+  const defaultRfqs = [
+    { id: 'RFQ-001', rfqNumber: 'RFQ-2026-001', title: 'EMP Capacitors Bulk Order', supplierId: 'ACC-HAMMER', status: 'quoted' as const, totalValue: 75000, dueDate: '2026-02-15', createdAt: '2026-02-01', lineItems: [{}, {}, {}] },
+    { id: 'RFQ-002', rfqNumber: 'RFQ-2026-002', title: 'Communications Equipment', supplierId: 'ACC-LOGOS', status: 'sent' as const, totalValue: 120000, dueDate: '2026-02-20', createdAt: '2026-02-05', lineItems: [{}, {}, {}, {}, {}] },
+    { id: 'RFQ-003', rfqNumber: 'RFQ-2026-003', title: 'Neural Interface Plugs', supplierId: 'ACC-NEBUCHADNEZZAR', status: 'draft' as const, totalValue: 45000, dueDate: '2026-02-25', createdAt: '2026-02-08', lineItems: [{}, {}] },
+  ];
 
-  const quotes: Quote[] = useMemo(() => [
-    { id: 'QTE-001', rfqId: 'RFQ-001', supplierId: 'ACC-HAMMER', amount: 72000, deliveryDays: 14, validUntil: '2026-02-28', notes: 'Bulk discount applied' },
-    { id: 'QTE-002', rfqId: 'RFQ-001', supplierId: 'ACC-LOGOS', amount: 78000, deliveryDays: 10, validUntil: '2026-02-28', notes: 'Express delivery available' },
-  ], []);
+  // Default demo data for quotes
+  const defaultQuotes = [
+    { id: 'QTE-001', rfqId: 'RFQ-001', supplierId: 'ACC-HAMMER', total: 72000, deliveryDays: 14, validUntil: '2026-02-28', evaluationNotes: 'Bulk discount applied' },
+    { id: 'QTE-002', rfqId: 'RFQ-001', supplierId: 'ACC-LOGOS', total: 78000, deliveryDays: 10, validUntil: '2026-02-28', evaluationNotes: 'Express delivery available' },
+  ];
+
+  // Use CRM data or fallback to defaults
+  const rfqs = useMemo(() => {
+    if (crmRfqs.length > 0) {
+      return crmRfqs;
+    }
+    return defaultRfqs as any[];
+  }, [crmRfqs]);
+
+  const quotes = useMemo(() => {
+    if (crmQuotes.length > 0) {
+      return crmQuotes;
+    }
+    return defaultQuotes as any[];
+  }, [crmQuotes]);
 
   // Filter suppliers (accounts that are suppliers)
   const suppliers = useMemo(() => {
@@ -81,9 +75,11 @@ const ProcurementPage: React.FC = () => {
   // Calculate stats
   const stats = useMemo(() => {
     const activeSuppliers = suppliers.length;
-    const openRFQs = rfqs.filter((rfq) => rfq.status === 'Sent' || rfq.status === 'Quoted').length;
-    const pendingQuotes = quotes.length;
-    const thisMonthSpend = 0; // Mock
+    const openRFQs = rfqs.filter((rfq: any) => rfq.status === 'sent' || rfq.status === 'quoted' || rfq.status === 'Sent' || rfq.status === 'Quoted').length;
+    const pendingQuotes = quotes.filter((q: any) => q.status === 'received' || !q.status).length;
+    const thisMonthSpend = rfqs
+      .filter((rfq: any) => rfq.status === 'awarded')
+      .reduce((sum: number, rfq: any) => sum + (rfq.totalValue || rfq.value || 0), 0);
 
     return { activeSuppliers, openRFQs, pendingQuotes, thisMonthSpend };
   }, [suppliers, rfqs, quotes]);
@@ -179,7 +175,7 @@ const ProcurementPage: React.FC = () => {
       a.click();
     } else if (viewMode === 'rfqs') {
       const headers = ['RFQ Number', 'Title', 'Status', 'Value', 'Due Date', 'Items'];
-      const rows = rfqs.map((r) => [r.rfqNumber, r.title, r.status, r.value, r.dueDate, r.items]);
+      const rows = rfqs.map((r: any) => [r.rfqNumber, r.title, r.status, r.totalValue || r.value || 0, r.dueDate || '', r.lineItems?.length || r.items || 0]);
       const csvContent = [headers, ...rows].map((row) => row.join(',')).join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
@@ -190,16 +186,18 @@ const ProcurementPage: React.FC = () => {
     }
   };
 
-  const getRFQStatusBadge = (status: RFQStatus) => {
-    const config = {
-      Draft: { bg: 'bg-slate-100', text: 'text-slate-700', icon: FileText },
-      Sent: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Clock },
-      Quoted: { bg: 'bg-purple-100', text: 'text-purple-700', icon: DollarSign },
-      Awarded: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: CheckCircle2 },
-      Closed: { bg: 'bg-slate-100', text: 'text-slate-600', icon: CheckCircle2 },
+  const getRFQStatusBadge = (status: string) => {
+    const normalizedStatus = status.toLowerCase();
+    const config: Record<string, { bg: string; text: string; icon: any }> = {
+      draft: { bg: 'bg-slate-100', text: 'text-slate-700', icon: FileText },
+      sent: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Clock },
+      quoted: { bg: 'bg-purple-100', text: 'text-purple-700', icon: DollarSign },
+      awarded: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: CheckCircle2 },
+      closed: { bg: 'bg-slate-100', text: 'text-slate-600', icon: CheckCircle2 },
+      cancelled: { bg: 'bg-red-100', text: 'text-red-700', icon: AlertTriangle },
     };
 
-    const { bg, text, icon: Icon } = config[status];
+    const { bg, text, icon: Icon } = config[normalizedStatus] || config.draft;
 
     return (
       <span className={`${bg} ${text} px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5`}>
@@ -244,7 +242,11 @@ const ProcurementPage: React.FC = () => {
             <Download size={16} />
             Export
           </button>
-          <button className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all">
+          <button
+            disabled
+            title="Coming soon"
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all opacity-50 cursor-not-allowed"
+          >
             <Plus size={16} />
             {viewMode === 'suppliers' ? 'Add Supplier' : 'New RFQ'}
           </button>
@@ -468,7 +470,11 @@ const ProcurementPage: React.FC = () => {
               </div>
               <h3 className="text-2xl font-black text-slate-900 mb-2">No Suppliers Found</h3>
               <p className="text-slate-500 mb-6">Add your first supplier to get started.</p>
-              <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20 active:scale-95 transition-all">
+              <button
+                disabled
+                title="Coming soon"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20 active:scale-95 transition-all opacity-50 cursor-not-allowed"
+              >
                 Add Supplier
               </button>
             </div>
@@ -515,7 +521,7 @@ const ProcurementPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {rfqs.map((rfq) => (
+                {rfqs.map((rfq: any) => (
                   <tr key={rfq.id} className="hover:bg-slate-50 transition-colors group">
                     <td className="px-6 py-5">
                       <input
@@ -532,14 +538,14 @@ const ProcurementPage: React.FC = () => {
                       <span className="text-slate-900 font-semibold">{rfq.title}</span>
                     </td>
                     <td className="px-6 py-5">
-                      <span className="text-slate-700">{getSupplierName(rfq.supplierId)}</span>
+                      <span className="text-slate-700">{getSupplierName(rfq.supplierId || rfq.supplierIds?.[0])}</span>
                     </td>
                     <td className="px-6 py-5">{getRFQStatusBadge(rfq.status)}</td>
                     <td className="px-6 py-5">
-                      <span className="text-slate-900 font-black text-lg">${rfq.value.toLocaleString()}</span>
+                      <span className="text-slate-900 font-black text-lg">${(rfq.totalValue || rfq.value || 0).toLocaleString()}</span>
                     </td>
                     <td className="px-6 py-5">
-                      <span className="text-slate-600 text-sm">{new Date(rfq.dueDate).toLocaleDateString()}</span>
+                      <span className="text-slate-600 text-sm">{rfq.dueDate ? new Date(rfq.dueDate).toLocaleDateString() : '—'}</span>
                     </td>
                     <td className="px-6 py-5">
                       <button className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 p-2 rounded-lg transition-all">
@@ -559,7 +565,11 @@ const ProcurementPage: React.FC = () => {
               </div>
               <h3 className="text-2xl font-black text-slate-900 mb-2">No RFQs Found</h3>
               <p className="text-slate-500 mb-6">Create your first RFQ to request quotes from suppliers.</p>
-              <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20 active:scale-95 transition-all">
+              <button
+                disabled
+                title="Coming soon"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20 active:scale-95 transition-all opacity-50 cursor-not-allowed"
+              >
                 Create RFQ
               </button>
             </div>
@@ -571,7 +581,7 @@ const ProcurementPage: React.FC = () => {
       {viewMode === 'quotes' && (
         <div className="bg-white border border-slate-200 rounded-[45px] shadow-sm overflow-hidden p-8">
           <div className="space-y-4">
-            {quotes.map((quote) => (
+            {quotes.map((quote: any) => (
               <div key={quote.id} className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-2xl border border-slate-200 hover:shadow-lg transition-all">
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -579,26 +589,32 @@ const ProcurementPage: React.FC = () => {
                     <p className="text-sm text-slate-600">For RFQ: {quote.rfqId}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-3xl font-black text-indigo-600">${quote.amount.toLocaleString()}</p>
+                    <p className="text-3xl font-black text-indigo-600">${(quote.total || quote.amount || 0).toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   <div>
                     <p className="text-xs text-slate-500 uppercase font-bold mb-1">Delivery</p>
-                    <p className="font-bold text-slate-900">{quote.deliveryDays} days</p>
+                    <p className="font-bold text-slate-900">{quote.deliveryDays || '—'} days</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 uppercase font-bold mb-1">Valid Until</p>
-                    <p className="font-bold text-slate-900">{new Date(quote.validUntil).toLocaleDateString()}</p>
+                    <p className="font-bold text-slate-900">{quote.validUntil ? new Date(quote.validUntil).toLocaleDateString() : '—'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 uppercase font-bold mb-1">Status</p>
-                    <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-bold">Pending Review</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                      quote.status === 'accepted' ? 'bg-emerald-100 text-emerald-700' :
+                      quote.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                      'bg-purple-100 text-purple-700'
+                    }`}>
+                      {quote.status ? quote.status.charAt(0).toUpperCase() + quote.status.slice(1) : 'Pending Review'}
+                    </span>
                   </div>
                 </div>
-                {quote.notes && (
+                {(quote.evaluationNotes || quote.notes) && (
                   <div className="bg-white p-3 rounded-xl border border-slate-200">
-                    <p className="text-sm text-slate-700">{quote.notes}</p>
+                    <p className="text-sm text-slate-700">{quote.evaluationNotes || quote.notes}</p>
                   </div>
                 )}
               </div>
@@ -622,10 +638,18 @@ const ProcurementPage: React.FC = () => {
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-6 animate-slide-up">
           <span className="font-bold">{selectedIds.size} selected</span>
           <div className="flex gap-3">
-            <button className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold transition-all">
+            <button
+              disabled
+              title="Coming soon"
+              className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold transition-all opacity-50 cursor-not-allowed"
+            >
               Send RFQ
             </button>
-            <button className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold transition-all">
+            <button
+              disabled
+              title="Coming soon"
+              className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold transition-all opacity-50 cursor-not-allowed"
+            >
               Export
             </button>
             <button

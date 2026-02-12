@@ -165,12 +165,12 @@ const Reports: React.FC = () => {
         <div key={i} className="space-y-1">
           <div className="flex justify-between items-center">
             <span className="text-xs font-bold text-slate-600">{item.label}</span>
-            <span className="text-sm font-black text-slate-900">{item.amount}</span>
+            <span className="text-sm font-black text-slate-900">{item.value}</span>
           </div>
           <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
             <div
               className={`h-full bg-gradient-to-r from-${color}-400 to-${color}-600 rounded-full transition-all duration-500`}
-              style={{ width: `${maxValue > 0 ? (item.amount / maxValue * 100) : 0}%` }}
+              style={{ width: `${maxValue > 0 ? (item.value / maxValue * 100) : 0}%` }}
             />
           </div>
         </div>
@@ -181,7 +181,7 @@ const Reports: React.FC = () => {
   const SimplePieChart = ({ data, total }: { data: { label: string; value: number; color: string }[]; total: number }) => (
     <div className="space-y-3">
       {data.map((item, i) => {
-        const percentage = total > 0 ? ((item.amount / total) * 100).toFixed(1) : '0';
+        const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0';
         return (
           <div key={i} className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -190,7 +190,7 @@ const Reports: React.FC = () => {
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xs text-slate-400">{percentage}%</span>
-              <span className="text-sm font-black text-slate-900">{item.amount}</span>
+              <span className="text-sm font-black text-slate-900">{item.value}</span>
             </div>
           </div>
         );
@@ -209,7 +209,7 @@ const Reports: React.FC = () => {
         <div className="flex items-center gap-3">
           <select
             value={dateRange}
-            onChange={(e) => setDateRange(e.target.amount as DateRange)}
+            onChange={(e) => setDateRange(e.target.value as DateRange)}
             className="px-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="7d">Last 7 days</option>
@@ -495,7 +495,7 @@ const Reports: React.FC = () => {
                 label: stage,
                 value: count as number
               }))}
-              maxValue={Math.max(...Object.amounts(metrics.dealsByStage) as number[])}
+              maxValue={Math.max(...Object.values(metrics.dealsByStage) as number[])}
               color="violet"
             />
           </div>

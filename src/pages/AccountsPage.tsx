@@ -34,7 +34,7 @@ const AccountsPage: React.FC = () => {
     const relatedDeals = deals.filter(d => d.accountId === account.id);
     const wonDeals = relatedDeals.filter(d => d.stage === 'Closed Won');
     const relatedInvoices = invoices?.filter(i => i.accountId === account.id) || [];
-    const totalRevenue = relatedInvoices.reduce((sum, i) => sum + (i.total || i.amount || 0), 0);
+    const totalRevenue = relatedInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
     const activeDeals = relatedDeals.filter(d => d.stage !== 'Closed Won' && d.stage !== 'Closed Lost');
 
     const daysSinceActivity = account.lastActivityDate
@@ -60,9 +60,9 @@ const AccountsPage: React.FC = () => {
     const relatedLeads = leads.filter(l => l.accountId === account.id);
     const relatedInvoices = invoices?.filter(i => i.accountId === account.id) || [];
 
-    const totalRevenue = relatedInvoices.reduce((sum, i) => sum + (i.total || i.amount || 0), 0);
-    const pipelineValue = openDeals.reduce((sum, d) => sum + (d.amount || d.amount || 0), 0);
-    const wonValue = wonDeals.reduce((sum, d) => sum + (d.amount || d.amount || 0), 0);
+    const totalRevenue = relatedInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
+    const pipelineValue = openDeals.reduce((sum, d) => sum + (d.amount || 0), 0);
+    const wonValue = wonDeals.reduce((sum, d) => sum + (d.amount || 0), 0);
 
     return {
       totalDeals: relatedDeals.length,
@@ -365,12 +365,12 @@ const AccountsPage: React.FC = () => {
             placeholder="Search accounts..."
             className="w-full pl-12 pr-6 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.amount)}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <select
           value={sortBy}
-          onChange={(e) => setSortBy(e.target.amount as any)}
+          onChange={(e) => setSortBy(e.target.value as any)}
           className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none cursor-pointer"
         >
           <option value="revenue">Sort by Revenue</option>

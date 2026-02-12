@@ -398,7 +398,7 @@ const FieldServicesDashboard: React.FC = () => {
               type="text"
               placeholder="Search jobs..."
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.amount)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>

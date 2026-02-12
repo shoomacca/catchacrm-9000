@@ -18,8 +18,6 @@ import LogisticsDashboard from './pages/LogisticsDashboard';
 import ListView from './pages/ListView';
 import EntityDetail from './pages/EntityDetail';
 // TaskManagement removed - consolidated into MySchedule
-import TicketManagement from './pages/TicketManagement';
-import SupportHub from './pages/SupportHub';
 import SupportTickets from './pages/SupportTickets';
 import CalendarView from './pages/CalendarView';
 import AIImageSuite from './pages/AIImageSuite';
@@ -73,7 +71,6 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { DemoMode } from './pages/DemoMode';
-import ComponentShowcase from './pages/ComponentShowcase';
 
 // Context for managing expandable nav groups - click outside collapses them
 const NavContext = React.createContext<{
@@ -892,7 +889,6 @@ const AppContent: React.FC = () => {
               {/* Standalone Diagnostics page (full system health view) */}
               <Route path="/diagnostics" element={<Diagnostics />} />
 
-              <Route path="/showcase" element={<ComponentShowcase />} />
               <Route path="*" element={<Navigate to="/sales" replace />} />
             </Routes>
             <RecordModal />

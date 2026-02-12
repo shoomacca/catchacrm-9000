@@ -343,7 +343,7 @@ const PurchaseLedger: React.FC = () => {
                 type="text"
                 placeholder="Search bills..."
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.amount)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
               />
             </div>
@@ -356,7 +356,7 @@ const PurchaseLedger: React.FC = () => {
               <input
                 type="date"
                 value={dateFrom}
-                onChange={e => setDateFrom(e.target.amount)}
+                onChange={e => setDateFrom(e.target.value)}
                 className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500"
                 placeholder="From"
               />
@@ -364,7 +364,7 @@ const PurchaseLedger: React.FC = () => {
               <input
                 type="date"
                 value={dateTo}
-                onChange={e => setDateTo(e.target.amount)}
+                onChange={e => setDateTo(e.target.value)}
                 className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500"
                 placeholder="To"
               />

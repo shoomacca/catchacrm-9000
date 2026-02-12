@@ -51,7 +51,7 @@ const defaultWidgetBuilder = {
 
 const defaultCalcBuilder = {
   name: '',
-  type: 'ROI' as const,
+  type: 'ROI' as 'ROI' | 'Repayment' | 'SolarYield',
   baseRate: 0,
   isActive: true,
 };
@@ -304,7 +304,7 @@ const InboundEngine: React.FC = () => {
                 <input
                   type="text"
                   value={formBuilder.name}
-                  onChange={(e) => setFormBuilder(prev => ({ ...prev, name: e.target.amount }))}
+                  onChange={(e) => setFormBuilder(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="My Contact Form"
                   className="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none font-semibold"
                 />
@@ -327,7 +327,7 @@ const InboundEngine: React.FC = () => {
                         value={field.label}
                         onChange={(e) => {
                           const updated = [...formBuilder.fields];
-                          updated[index].label = e.target.amount;
+                          updated[index].label = e.target.value;
                           setFormBuilder(prev => ({ ...prev, fields: updated }));
                         }}
                         className="flex-1 bg-transparent font-semibold focus:outline-none"
@@ -362,7 +362,7 @@ const InboundEngine: React.FC = () => {
                   <input
                     type="text"
                     value={formBuilder.submitButtonText}
-                    onChange={(e) => setFormBuilder(prev => ({ ...prev, submitButtonText: e.target.amount }))}
+                    onChange={(e) => setFormBuilder(prev => ({ ...prev, submitButtonText: e.target.value }))}
                     className="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none font-semibold"
                   />
                 </div>
@@ -371,7 +371,7 @@ const InboundEngine: React.FC = () => {
                   <input
                     type="text"
                     value={formBuilder.successMessage}
-                    onChange={(e) => setFormBuilder(prev => ({ ...prev, successMessage: e.target.amount }))}
+                    onChange={(e) => setFormBuilder(prev => ({ ...prev, successMessage: e.target.value }))}
                     className="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none font-semibold"
                   />
                 </div>
@@ -476,7 +476,7 @@ const InboundEngine: React.FC = () => {
                       type="text"
                       placeholder="Support Chat"
                       value={widgetBuilder.name}
-                      onChange={(e) => setWidgetBuilder(prev => ({ ...prev, name: e.target.amount }))}
+                      onChange={(e) => setWidgetBuilder(prev => ({ ...prev, name: e.target.value }))}
                       className="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-purple-500 focus:outline-none font-semibold"
                     />
                   </div>
@@ -486,7 +486,7 @@ const InboundEngine: React.FC = () => {
                     <textarea
                       placeholder="Hi! How can we help you today?"
                       value={widgetBuilder.welcomeMessage}
-                      onChange={(e) => setWidgetBuilder(prev => ({ ...prev, welcomeMessage: e.target.amount }))}
+                      onChange={(e) => setWidgetBuilder(prev => ({ ...prev, welcomeMessage: e.target.value }))}
                       className="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-purple-500 focus:outline-none font-semibold resize-none"
                       rows={3}
                     ></textarea>
@@ -510,7 +510,7 @@ const InboundEngine: React.FC = () => {
                     <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Route to User</label>
                     <select
                       value={widgetBuilder.routingUserId}
-                      onChange={(e) => setWidgetBuilder(prev => ({ ...prev, routingUserId: e.target.amount }))}
+                      onChange={(e) => setWidgetBuilder(prev => ({ ...prev, routingUserId: e.target.value }))}
                       className="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-purple-500 focus:outline-none font-semibold"
                     >
                       <option value="">Select user...</option>
@@ -662,7 +662,7 @@ const InboundEngine: React.FC = () => {
                       type="text"
                       placeholder="My Calculator"
                       value={calcBuilder.name}
-                      onChange={(e) => setCalcBuilder(prev => ({ ...prev, name: e.target.amount }))}
+                      onChange={(e) => setCalcBuilder(prev => ({ ...prev, name: e.target.value }))}
                       className="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none font-semibold"
                     />
                   </div>
@@ -671,7 +671,7 @@ const InboundEngine: React.FC = () => {
                     <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Calculator Type</label>
                     <select
                       value={calcBuilder.type}
-                      onChange={(e) => setCalcBuilder(prev => ({ ...prev, type: e.target.amount as 'ROI' | 'Repayment' | 'SolarYield' }))}
+                      onChange={(e) => setCalcBuilder(prev => ({ ...prev, type: e.target.value as 'ROI' | 'Repayment' | 'SolarYield' }))}
                       className="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none font-semibold"
                     >
                       <option value="ROI">ROI Calculator</option>
@@ -686,7 +686,7 @@ const InboundEngine: React.FC = () => {
                       type="number"
                       placeholder="0"
                       value={calcBuilder.baseRate}
-                      onChange={(e) => setCalcBuilder(prev => ({ ...prev, baseRate: parseFloat(e.target.amount) || 0 }))}
+                      onChange={(e) => setCalcBuilder(prev => ({ ...prev, baseRate: parseFloat(e.target.value) || 0 }))}
                       className="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-emerald-500 focus:outline-none font-semibold"
                     />
                   </div>

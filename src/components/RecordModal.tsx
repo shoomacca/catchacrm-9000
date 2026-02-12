@@ -310,7 +310,7 @@ const RecordModal: React.FC = () => {
                   id={field.id}
                   name={field.id}
                   checked={fieldValue === true}
-                  onChange={(e) => handleChange({ target: { name: field.id, value: e.target.checked } } as any)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange({ target: { name: field.id, value: e.target.checked } } as any)}
                   className="w-5 h-5 rounded border-slate-300"
                 />
                 <label htmlFor={field.id} className="text-xs font-bold text-slate-700">
@@ -448,11 +448,11 @@ const RecordModal: React.FC = () => {
             <div className="col-span-2 pt-4 border-t border-slate-100">
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Address</h3>
             </div>
-            <div className="col-span-2"><Field label="Street" name="address.street" value={formData.address?.street || ''} onChange={(e) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, street: e.target.value } }))} /></div>
-            <Field label="Suburb" name="address.suburb" value={formData.address?.suburb || ''} onChange={(e) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, suburb: e.target.value } }))} />
-            <Field label="State" name="address.state" value={formData.address?.state || ''} onChange={(e) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, state: e.target.value } }))} />
-            <Field label="Postcode" name="address.postcode" value={formData.address?.postcode || ''} onChange={(e) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, postcode: e.target.value } }))} />
-            <Field label="Country" name="address.country" value={formData.address?.country || ''} onChange={(e) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, country: e.target.value } }))} />
+            <div className="col-span-2"><Field label="Street" name="address.street" value={formData.address?.street || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, street: e.target.value } }))} /></div>
+            <Field label="Suburb" name="address.suburb" value={formData.address?.suburb || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, suburb: e.target.value } }))} />
+            <Field label="State" name="address.state" value={formData.address?.state || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, state: e.target.value } }))} />
+            <Field label="Postcode" name="address.postcode" value={formData.address?.postcode || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, postcode: e.target.value } }))} />
+            <Field label="Country" name="address.country" value={formData.address?.country || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, country: e.target.value } }))} />
             <Field label="Avatar URL" name="avatar" value={formData.avatar || ''} onChange={handleChange} placeholder="https://..." />
             {renderCustomFieldsForEntity('accounts')}
           </>
@@ -475,7 +475,7 @@ const RecordModal: React.FC = () => {
             </div>
             <Field label="Referral Code" name="referralCode" value={formData.referralCode || ''} onChange={handleChange} placeholder="AUTO-GENERATED" />
             <div className="flex items-center gap-2">
-              <input type="checkbox" name="isAffiliate" checked={formData.isAffiliate || false} onChange={(e) => setFormData((prev: any) => ({ ...prev, isAffiliate: e.target.checked }))} className="w-4 h-4" />
+              <input type="checkbox" name="isAffiliate" checked={formData.isAffiliate || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev: any) => ({ ...prev, isAffiliate: e.target.checked }))} className="w-4 h-4" />
               <label className="text-xs font-black text-slate-900">Is Affiliate</label>
             </div>
             {formData.isAffiliate && (
@@ -488,11 +488,11 @@ const RecordModal: React.FC = () => {
             <div className="col-span-2 pt-4 border-t border-slate-100">
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Address</h3>
             </div>
-            <div className="col-span-2"><Field label="Street" name="address.street" value={formData.address?.street || ''} onChange={(e) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, street: e.target.value } }))} /></div>
-            <Field label="Suburb" name="address.suburb" value={formData.address?.suburb || ''} onChange={(e) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, suburb: e.target.value } }))} />
-            <Field label="State" name="address.state" value={formData.address?.state || ''} onChange={(e) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, state: e.target.value } }))} />
-            <Field label="Postcode" name="address.postcode" value={formData.address?.postcode || ''} onChange={(e) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, postcode: e.target.value } }))} />
-            <Field label="Country" name="address.country" value={formData.address?.country || ''} onChange={(e) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, country: e.target.value } }))} />
+            <div className="col-span-2"><Field label="Street" name="address.street" value={formData.address?.street || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, street: e.target.value } }))} /></div>
+            <Field label="Suburb" name="address.suburb" value={formData.address?.suburb || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, suburb: e.target.value } }))} />
+            <Field label="State" name="address.state" value={formData.address?.state || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, state: e.target.value } }))} />
+            <Field label="Postcode" name="address.postcode" value={formData.address?.postcode || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, postcode: e.target.value } }))} />
+            <Field label="Country" name="address.country" value={formData.address?.country || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, country: e.target.value } }))} />
             <Field label="Avatar URL" name="avatar" value={formData.avatar || ''} onChange={handleChange} placeholder="https://..." />
             {renderCustomFieldsForEntity('contacts')}
           </>
@@ -599,7 +599,7 @@ const RecordModal: React.FC = () => {
               <select
                 className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:outline-none"
                 value={startTimeOnly}
-                onChange={(e) => handleStartTimeChange(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleStartTimeChange(e.target.value)}
               >
                 {timeOptions.map(opt => (
                   <option key={`start-${opt.value}`} value={opt.value}>{opt.label}</option>
@@ -611,7 +611,7 @@ const RecordModal: React.FC = () => {
               <select
                 className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:outline-none"
                 value={endTimeOnly}
-                onChange={(e) => handleEndTimeChange(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleEndTimeChange(e.target.value)}
               >
                 {timeOptions.map(opt => (
                   <option key={`end-${opt.value}`} value={opt.value}>{opt.label}</option>
@@ -950,7 +950,7 @@ const RecordModal: React.FC = () => {
                   <option value="Cancelled">Cancelled</option>
                 </Select>
                 <div className="flex items-center gap-2">
-                  <input type="checkbox" name="autoGenerateInvoice" checked={formData.autoGenerateInvoice || false} onChange={(e) => setFormData((prev: any) => ({ ...prev, autoGenerateInvoice: e.target.checked }))} className="w-4 h-4" />
+                  <input type="checkbox" name="autoGenerateInvoice" checked={formData.autoGenerateInvoice || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev: any) => ({ ...prev, autoGenerateInvoice: e.target.checked }))} className="w-4 h-4" />
                   <label className="text-xs font-black text-slate-900">Auto-generate invoices</label>
                 </div>
               </>
@@ -1080,7 +1080,7 @@ const RecordModal: React.FC = () => {
                               min="1"
                               className="w-14 bg-white border border-slate-200 rounded-lg p-1.5 text-center text-xs font-black"
                               value={item.qty}
-                              onChange={(e) => {
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                 const next = [...currentLineItems];
                                 next[i] = { ...next[i], qty: parseInt(e.target.value) || 1 };
                                 setFormData((prev: any) => ({ ...prev, [modal.type === 'invoices' ? 'lineItems' : 'items']: next }));
@@ -1317,7 +1317,7 @@ const RecordModal: React.FC = () => {
                       type="number"
                       className="w-12 bg-white border border-slate-200 rounded-lg p-1 text-center text-xs font-black"
                       value={item.qty}
-                      onChange={(e) => {
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                         const next = [...quoteLineItems];
                         next[i] = { ...next[i], qty: parseInt(e.target.value) || 1 };
                         setFormData((prev: any) => ({ ...prev, lineItems: next }));
@@ -1641,7 +1641,7 @@ const RecordModal: React.FC = () => {
             <div className="col-span-2"><Field label="Widget Name" name="name" value={formData.name || ''} onChange={handleChange} required /></div>
             <Field label="Bubble Color" name="bubbleColor" type="color" value={formData.bubbleColor || '#3B82F6'} onChange={handleChange} />
             <div className="flex items-center gap-2">
-              <input type="checkbox" name="isActive" checked={formData.isActive || false} onChange={(e) => setFormData((prev: any) => ({ ...prev, isActive: e.target.checked }))} className="w-4 h-4" />
+              <input type="checkbox" name="isActive" checked={formData.isActive || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev: any) => ({ ...prev, isActive: e.target.checked }))} className="w-4 h-4" />
               <label className="text-xs font-black text-slate-900">Is Active</label>
             </div>
             <Select label="Route To User" name="routingUserId" value={formData.routingUserId || ''} onChange={handleChange} required>
@@ -1665,7 +1665,7 @@ const RecordModal: React.FC = () => {
             </Select>
             <Field label="Base Rate" name="baseRate" type="number" step="0.01" value={formData.baseRate || ''} onChange={handleChange} />
             <div className="flex items-center gap-2">
-              <input type="checkbox" name="isActive" checked={formData.isActive || false} onChange={(e) => setFormData((prev: any) => ({ ...prev, isActive: e.target.checked }))} className="w-4 h-4" />
+              <input type="checkbox" name="isActive" checked={formData.isActive || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev: any) => ({ ...prev, isActive: e.target.checked }))} className="w-4 h-4" />
               <label className="text-xs font-black text-slate-900">Is Active</label>
             </div>
           </>
@@ -1683,7 +1683,7 @@ const RecordModal: React.FC = () => {
             </Select>
             <Field label="Execution Count" name="executionCount" type="number" value={formData.executionCount || 0} onChange={handleChange} />
             <div className="flex items-center gap-2">
-              <input type="checkbox" name="isActive" checked={formData.isActive || false} onChange={(e) => setFormData((prev: any) => ({ ...prev, isActive: e.target.checked }))} className="w-4 h-4" />
+              <input type="checkbox" name="isActive" checked={formData.isActive || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev: any) => ({ ...prev, isActive: e.target.checked }))} className="w-4 h-4" />
               <label className="text-xs font-black text-slate-900">Is Active</label>
             </div>
             <div className="col-span-2">
@@ -1710,7 +1710,7 @@ const RecordModal: React.FC = () => {
             </Select>
             <Field label="Trigger Event" name="triggerEvent" value={formData.triggerEvent || ''} onChange={handleChange} required />
             <div className="flex items-center gap-2">
-              <input type="checkbox" name="isActive" checked={formData.isActive || false} onChange={(e) => setFormData((prev: any) => ({ ...prev, isActive: e.target.checked }))} className="w-4 h-4" />
+              <input type="checkbox" name="isActive" checked={formData.isActive || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev: any) => ({ ...prev, isActive: e.target.checked }))} className="w-4 h-4" />
               <label className="text-xs font-black text-slate-900">Is Active</label>
             </div>
             <Field label="Success Count" name="successCount" type="number" value={formData.successCount || 0} onChange={handleChange} />
@@ -1735,7 +1735,7 @@ const RecordModal: React.FC = () => {
             </Select>
             <Field label="Version" name="version" type="number" value={formData.version || 1} onChange={handleChange} />
             <div className="flex items-center gap-2">
-              <input type="checkbox" name="isActive" checked={formData.isActive || false} onChange={(e) => setFormData((prev: any) => ({ ...prev, isActive: e.target.checked }))} className="w-4 h-4" />
+              <input type="checkbox" name="isActive" checked={formData.isActive || false} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev: any) => ({ ...prev, isActive: e.target.checked }))} className="w-4 h-4" />
               <label className="text-xs font-black text-slate-900">Is Active</label>
             </div>
             <div className="col-span-2">
@@ -1816,7 +1816,7 @@ const RecordModal: React.FC = () => {
                         id={field.id}
                         name={field.id}
                         checked={fieldValue === true}
-                        onChange={(e) => handleChange({ target: { name: field.id, value: e.target.checked } } as any)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange({ target: { name: field.id, value: e.target.checked } } as any)}
                         className="w-5 h-5 rounded border-slate-300"
                       />
                       <label htmlFor={field.id} className="text-xs font-bold text-slate-700">

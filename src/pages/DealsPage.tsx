@@ -35,8 +35,8 @@ const DealsPage: React.FC = () => {
     const wonDeals = deals.filter(d => d.stage === 'Closed Won');
     const lostDeals = deals.filter(d => d.stage === 'Closed Lost');
 
-    const totalPipeline = openDeals.reduce((sum, d) => sum + (d.amount || d.amount || 0), 0);
-    const wonValue = wonDeals.reduce((sum, d) => sum + (d.amount || d.amount || 0), 0);
+    const totalPipeline = openDeals.reduce((sum, d) => sum + (d.amount || 0), 0);
+    const wonValue = wonDeals.reduce((sum, d) => sum + (d.amount || 0), 0);
     const avgDealSize = openDeals.length > 0 ? totalPipeline / openDeals.length : 0;
     const winRate = (wonDeals.length + lostDeals.length) > 0
       ? (wonDeals.length / (wonDeals.length + lostDeals.length)) * 100 : 0;
@@ -55,7 +55,7 @@ const DealsPage: React.FC = () => {
     const openDeals = deals.filter(d => d.stage !== 'Closed Won' && d.stage !== 'Closed Lost');
 
     // Sort by value for biggest
-    const sortedByValue = [...openDeals].sort((a, b) => (b.amount || b.amount || 0) - (a.amount || a.amount || 0));
+    const sortedByValue = [...openDeals].sort((a, b) => (b.amount || 0) - (a.amount || 0));
 
     // Sort by created date for oldest/newest
     const sortedByDate = [...openDeals].sort((a, b) =>
@@ -70,8 +70,8 @@ const DealsPage: React.FC = () => {
     });
 
     // High value deals (top 20% by value)
-    const valueThreshold = sortedByValue.length > 0 ? (sortedByValue[0]?.amount || sortedByValue[0]?.amount || 0) * 0.5 : 0;
-    const highValue = openDeals.filter(d => (d.amount || d.amount || 0) >= valueThreshold);
+    const valueThreshold = sortedByValue.length > 0 ? (sortedByValue[0]?.amount || 0) * 0.5 : 0;
+    const highValue = openDeals.filter(d => (d.amount || 0) >= valueThreshold);
 
     return {
       biggest: sortedByValue[0],
@@ -104,7 +104,7 @@ const DealsPage: React.FC = () => {
 
     // Sort
     filtered.sort((a, b) => {
-      if (sortBy === 'value') return (b.amount || b.amount || 0) - (a.amount || a.amount || 0);
+      if (sortBy === 'value') return (b.amount || 0) - (a.amount || 0);
       if (sortBy === 'date') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       return a.name.localeCompare(b.name);
     });
@@ -282,7 +282,7 @@ const DealsPage: React.FC = () => {
               <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Biggest Deal</span>
             </div>
             <p className="text-lg font-black truncate">{insights.biggest.name}</p>
-            <p className="text-2xl font-black mt-1">${((insights.biggest.amount || insights.biggest.amount || 0) / 1000).toFixed(0)}k</p>
+            <p className="text-2xl font-black mt-1">${((insights.biggest.amount || 0) / 1000).toFixed(0)}k</p>
           </div>
         )}
         {insights.oldest && (
@@ -308,7 +308,7 @@ const DealsPage: React.FC = () => {
               <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Newest Deal</span>
             </div>
             <p className="text-lg font-black truncate">{insights.newest.name}</p>
-            <p className="text-sm font-bold opacity-80 mt-1">${((insights.newest.amount || insights.newest.amount || 0) / 1000).toFixed(0)}k</p>
+            <p className="text-sm font-bold opacity-80 mt-1">${((insights.newest.amount || 0) / 1000).toFixed(0)}k</p>
           </div>
         )}
         <div className="bg-white border border-slate-200 rounded-2xl p-5">
@@ -342,12 +342,12 @@ const DealsPage: React.FC = () => {
             placeholder="Search deals..."
             className="w-full pl-12 pr-6 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.amount)}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <select
           value={stageFilter}
-          onChange={(e) => setStageFilter(e.target.amount)}
+          onChange={(e) => setStageFilter(e.target.value)}
           className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none cursor-pointer"
         >
           <option value="all">All Stages</option>
@@ -355,7 +355,7 @@ const DealsPage: React.FC = () => {
         </select>
         <select
           value={sortBy}
-          onChange={(e) => setSortBy(e.target.amount as any)}
+          onChange={(e) => setSortBy(e.target.value as any)}
           className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none cursor-pointer"
         >
           <option value="value">Sort by Value</option>
@@ -369,7 +369,7 @@ const DealsPage: React.FC = () => {
         <div className="flex gap-4 overflow-x-auto pb-6 min-h-[600px]">
           {stages.filter(s => s.label !== 'Closed Lost').map((stage) => {
             const stageDeals = getDealsByStage(stage.label);
-            const stageValue = stageDeals.reduce((sum, d) => sum + (d.amount || d.amount || 0), 0);
+            const stageValue = stageDeals.reduce((sum, d) => sum + (d.amount || 0), 0);
 
             return (
               <div
@@ -426,7 +426,7 @@ const DealsPage: React.FC = () => {
                         </p>
                         <div className="flex items-center justify-between pt-3 border-t border-slate-50">
                           <span className="text-base font-black text-blue-600">
-                            ${((deal.amount || deal.amount || 0) / 1000).toFixed(0)}k
+                            ${((deal.amount || 0) / 1000).toFixed(0)}k
                           </span>
                           {deal.expectedCloseDate && (
                             <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
@@ -515,7 +515,7 @@ const DealsPage: React.FC = () => {
                 {/* Value */}
                 <div className="mb-4">
                   <p className="text-2xl font-black text-blue-600">
-                    ${((deal.amount || deal.amount || 0)).toLocaleString()}
+                    ${((deal.amount || 0)).toLocaleString()}
                   </p>
                 </div>
 
@@ -612,7 +612,7 @@ const DealsPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm font-black text-slate-900">${((deal.amount || deal.amount || 0)).toLocaleString()}</p>
+                      <p className="text-sm font-black text-slate-900">${((deal.amount || 0)).toLocaleString()}</p>
                     </td>
                     <td className="px-6 py-4">
                       {(() => {

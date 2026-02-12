@@ -632,7 +632,7 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                           <input
                             type="checkbox"
                             checked={entity.swmsSigned || false}
-                            onChange={(e) => updateJobWorkflow(entity.id, { swmsSigned: e.target.checked, swmsSignedAt: e.target.checked ? new Date().toISOString() : undefined })}
+                            onChange={(e) => updateJobWorkflow(entity.id, { swmsSigned: e.target.checked })}
                             className="w-5 h-5 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500"
                           />
                           <span className="text-sm font-medium text-slate-700 group-hover:text-emerald-600 transition-colors">
@@ -723,7 +723,6 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                           onCapture={(sig) => {
                             updateJobWorkflow(entity.id, {
                               completionSignature: sig,
-                              completedAt: new Date().toISOString(),
                               status: 'Completed'
                             });
                           }}
@@ -1082,7 +1081,7 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                           <div className="px-6 pb-6 pt-0 border-t border-purple-100 animate-slide-up">
                             <div className="flex items-center gap-2 py-3 text-[10px] text-slate-500">
                               <span className="font-bold">To:</span> {email.metadata?.to || entity.email}
-                              {email.metadata?.cc && <><span className="mx-2">•</span><span className="font-bold">CC:</span> {email.metadata.cc}</>}
+                              {email.metadata?.cc && <><span className="mx-2">•</span><span className="font-bold">CC:</span> {email.metadata?.cc}</>}
                               <span className="mx-2">•</span>
                               <span className="font-bold">From:</span> {users.find(u => u.id === email.createdBy)?.name || 'System'}
                             </div>
@@ -1091,11 +1090,11 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                                 {email.content}
                               </p>
                             </div>
-                            {email.metadata?.attachments?.length > 0 && (
+                            {(email.metadata?.attachments?.length ?? 0) > 0 && (
                               <div className="flex items-center gap-2 mt-4 p-3 bg-white/50 rounded-xl border border-purple-100">
                                 <Paperclip size={14} className="text-slate-400" />
                                 <p className="text-[10px] font-bold text-slate-500">
-                                  {email.metadata.attachments.length} attachment(s)
+                                  {email.metadata?.attachments?.length} attachment(s)
                                 </p>
                               </div>
                             )}
@@ -1692,7 +1691,7 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
               <div className="bg-slate-50/50 border border-slate-100 p-6 rounded-[30px]">
                 <textarea
                   value={noteText}
-                  onChange={(e) => setNoteText(e.target.amount)}
+                  onChange={(e) => setNoteText(e.target.value)}
                   placeholder="Add a note..."
                   className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   rows={3}

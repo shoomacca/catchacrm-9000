@@ -78,7 +78,7 @@ const BlueprintListPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {blueprints.map(blueprint => {
             const isActive = blueprint.id === activeIndustry;
-            const blueprintData = INDUSTRY_BLUEPRINTS.find(b => b.id === blueprint.id);
+            const blueprintData = Object.values(INDUSTRY_BLUEPRINTS).find(b => b.id === blueprint.id);
             const entityCount = blueprintData?.customEntities?.length || 0;
 
             return (
