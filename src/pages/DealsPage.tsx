@@ -23,11 +23,11 @@ const DealsPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'value' | 'date' | 'name'>('value');
 
   const stages = settings.dealStages || [
-    { label: 'Discovery', color: '#3B82F6' },
-    { label: 'Proposal', color: '#8B5CF6' },
-    { label: 'Negotiation', color: '#F59E0B' },
-    { label: 'Closed Won', color: '#10B981' },
-    { label: 'Closed Lost', color: '#EF4444' }
+    { label: 'Discovery', color: 'bg-blue-500' },
+    { label: 'Proposal', color: 'bg-violet-500' },
+    { label: 'Negotiation', color: 'bg-amber-500' },
+    { label: 'Closed Won', color: 'bg-emerald-500' },
+    { label: 'Closed Lost', color: 'bg-red-500' }
   ];
 
   // Calculate stats
@@ -159,7 +159,7 @@ const DealsPage: React.FC = () => {
 
   const getStageColor = (stageName: string) => {
     const stage = stages.find(s => s.label === stageName);
-    return stage?.color || '#64748B';
+    return stage?.color || 'bg-slate-500';
   };
 
   return (
@@ -385,7 +385,7 @@ const DealsPage: React.FC = () => {
                 <div className="p-4 border-b border-slate-100">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stage.color }} />
+                      <div className={`w-3 h-3 rounded-full ${stage.color}`} />
                       <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">{stage.label}</h3>
                     </div>
                     <span className="text-[10px] font-bold text-slate-400">{stageDeals.length}</span>

@@ -74,7 +74,6 @@ class PayPalService {
           });
         },
         onApprove: (data: any, actions: any) => {
-          console.log('[PayPal] Subscription approved:', data);
           onApprove(data);
         },
         onError: (error: any) => {
@@ -118,7 +117,6 @@ class PayPalService {
         },
         onApprove: async (data: any, actions: any) => {
           const order = await actions.order.capture();
-          console.log('[PayPal] Payment approved:', order);
           onApprove(order);
         },
         onError: (error: any) => {

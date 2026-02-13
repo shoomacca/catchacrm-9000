@@ -219,8 +219,6 @@ export async function loadOrgSettings(
   defaults: CRMSettings
 ): Promise<CRMSettings> {
   try {
-    console.log(`📥 Loading settings from Supabase for org: ${orgId}`);
-
     // Load company settings
     const { data: companyData, error: companyError } = await supabase
       .from('company_settings')
@@ -246,12 +244,6 @@ export async function loadOrgSettings(
     // Merge with defaults
     const merged = mergeSettings(companyData, crmData, defaults);
 
-    if (!companyData && !crmData) {
-      console.log('⚠️ No settings found in Supabase, using defaults');
-    } else {
-      console.log('✅ Settings loaded from Supabase');
-    }
-
     return merged;
   } catch (error) {
     console.error('Fatal error loading settings from Supabase:', error);
@@ -270,8 +262,6 @@ export async function saveOrgSettings(
   settings: CRMSettings
 ): Promise<void> {
   try {
-    console.log(`💾 Saving settings to Supabase for org: ${orgId}`);
-
     const { company, crm } = splitSettings(settings);
 
     // Upsert company settings
@@ -307,8 +297,6 @@ export async function saveOrgSettings(
       console.error('Error saving crm_settings:', crmError);
       throw crmError;
     }
-
-    console.log('✅ Settings saved to Supabase successfully');
   } catch (error) {
     console.error('Fatal error saving settings to Supabase:', error);
     throw error;
@@ -329,8 +317,6 @@ export async function saveSettingsSection(
   data: Record<string, any>
 ): Promise<void> {
   try {
-    console.log(`💾 Saving settings section '${section}' to Supabase for org: ${orgId}`);
-
     // Determine which table this section belongs to
     const companyFields = ['organization', 'localization', 'branding'];
     const isCompanyField = companyFields.includes(section);
@@ -356,8 +342,6 @@ export async function saveSettingsSection(
       console.error(`Error saving ${section} to ${tableName}:`, error);
       throw error;
     }
-
-    console.log(`✅ Settings section '${section}' saved to ${tableName}`);
   } catch (error) {
     console.error(`Fatal error saving settings section '${section}':`, error);
     throw error;

@@ -24,9 +24,7 @@ export async function onLeadCreated(lead: any, webhook: Webhook) {
 
   const { success, log } = await triggerWebhook(webhook, payload);
 
-  if (success) {
-    console.log('Webhook delivered successfully:', log);
-  } else {
+  if (!success) {
     console.error('Webhook delivery failed:', log?.error_message);
   }
 }
@@ -69,13 +67,6 @@ export async function configureWebhookAuth(webhookId: string) {
 export async function getWebhookHistory(webhookId: string) {
   const logs = await getWebhookLogs(webhookId, 50);
 
-  console.log(`Webhook has ${logs.length} delivery attempts`);
-
-  const successful = logs.filter(log => log.success).length;
-  const failed = logs.filter(log => !log.success).length;
-
-  console.log(`Success rate: ${successful}/${logs.length} (${((successful / logs.length) * 100).toFixed(1)}%)`);
-
   return logs;
 }
 
@@ -91,8 +82,6 @@ export async function triggerWebhooksForEvent(
     wh => wh.isActive && wh.triggerEvent === eventType
   );
 
-  console.log(`Triggering ${activeWebhooks.length} webhooks for event: ${eventType}`);
-
   const results = await Promise.allSettled(
     activeWebhooks.map(webhook =>
       triggerWebhook(webhook, {
@@ -102,11 +91,6 @@ export async function triggerWebhooksForEvent(
       })
     )
   );
-
-  const succeeded = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
-  const failed = results.length - succeeded;
-
-  console.log(`Webhook results: ${succeeded} succeeded, ${failed} failed`);
 
   return results;
 }

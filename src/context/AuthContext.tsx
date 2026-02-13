@@ -55,7 +55,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // M02A: Mock mode - skip Supabase auth during UI development
     if (!supabase) {
-      console.log('ℹ️ Auth running in mock mode');
       setLoading(false);
       return;
     }
@@ -106,7 +105,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
-      console.log('ℹ️ Mock mode: Sign in skipped');
       return { error: null };
     }
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -127,7 +125,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, metadata?: any) => {
     if (!supabase) {
-      console.log('ℹ️ Mock mode: Sign up skipped');
       return { error: null };
     }
     const { data, error } = await supabase.auth.signUp({
@@ -167,7 +164,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('catchacrm_demo_start');
 
     if (!supabase) {
-      console.log('ℹ️ Mock mode: Sign out completed (demo mode cleared)');
       return;
     }
     await supabase.auth.signOut();
@@ -175,7 +171,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     if (!supabase) {
-      console.log('ℹ️ Mock mode: Password reset skipped');
       return { error: null };
     }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {

@@ -17,11 +17,6 @@ if (supabaseUrl && supabaseAnonKey) {
       autoRefreshToken: true,
     },
   });
-  console.log('✓ Supabase client initialized');
-} else {
-  console.log('ℹ️ Running in mock mode - Supabase not configured');
-  console.log('   Using CRMContext + localStorage for all data operations');
-  console.log('   (This is expected during M02A - UI completion phase)');
 }
 
 export const supabase = supabaseClient as SupabaseClient;

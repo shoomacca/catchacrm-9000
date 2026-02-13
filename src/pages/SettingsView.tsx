@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useCRM } from '../context/CRMContext';
 import { supabase } from '../lib/supabase';
 import { getCurrentOrgId } from '../services/supabaseData';
@@ -492,7 +493,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                   </div>
                 ) : (
                   <div className="flex items-center gap-4 pl-16">
-                    <button onClick={() => alert('Google OAuth flow coming in next session. This will redirect to Google sign-in.')} className="px-5 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
+                    <button onClick={() => toast('Coming soon')} className="px-5 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 opacity-50 cursor-not-allowed transition-all flex items-center gap-2">
                       <ExternalLink size={12} /> Connect Google
                     </button>
                     <button onClick={() => setActiveTab('INTEGRATIONS')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 flex items-center gap-1">
@@ -1455,7 +1456,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                     </label>
                   </div>
                   <div className="flex gap-3 pt-2">
-                    <button onClick={() => alert('Sync triggered. Real-time sync coming in next session.')} className="px-5 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
+                    <button onClick={() => toast('Coming soon')} className="px-5 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 opacity-50 cursor-not-allowed transition-all flex items-center gap-2">
                       <RefreshCw size={14} /> Sync Now
                     </button>
                     <button onClick={async () => {
@@ -2123,9 +2124,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                       updateNested('activeIndustry', industry.id);
                       // Activate blueprint - stores custom entities in Supabase
                       const success = await activateBlueprint(industry.id);
-                      if (success) {
-                        console.log(`✅ Activated ${industry.name} blueprint`);
-                      } else {
+                      if (!success) {
                         console.error(`❌ Failed to activate ${industry.name} blueprint`);
                       }
                     }}

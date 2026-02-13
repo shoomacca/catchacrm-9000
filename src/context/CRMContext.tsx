@@ -707,7 +707,6 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // If demo mode, load seed data
       if (isDemoMode) {
-        console.log('🎭 Demo mode detected, loading seed data...');
         seedInitialData(false);
         setDataSource('localStorage');
         return;
@@ -716,13 +715,11 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Try Supabase first if available
       if (supabase) {
         try {
-          console.log('🔌 Checking Supabase connection...');
           const { count, error } = await supabase
             .from('organizations')
             .select('*', { count: 'exact', head: true });
 
           if (!error && count !== null) {
-            console.log('✅ Supabase connected, loading data...');
             setIsSupabaseConnected(true);
 
             const crmData = await loadAllCRMData();
@@ -806,7 +803,6 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             // Load custom objects (blueprint entities) from Supabase
             try {
               const customObjs = await fetchCustomObjects();
-              console.log(`✅ Loaded ${customObjs.length} custom objects from Supabase`);
               setCustomObjectsFromDB(customObjs);
             } catch (customObjError) {
               console.error('⚠️ Could not load custom objects from Supabase:', customObjError);
@@ -826,7 +822,6 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 if (!existingRules || existingRules.length === 0) {
                   const { insertDefaultDuplicateRules } = await import('../services/duplicateDetection');
                   await insertDefaultDuplicateRules(orgId);
-                  console.log('✅ Initialized default duplicate detection rules');
                 }
               }
             } catch (duplicateRulesError) {
@@ -841,11 +836,6 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
             setDataSource('supabase');
 
-            if (crmData.accounts.length === 0 && crmData.leads.length === 0) {
-              console.log('✅ Loaded from Supabase: Empty organization (new user)');
-            } else {
-              console.log(`✅ Loaded from Supabase: ${crmData.accounts.length} accounts, ${crmData.leads.length} leads, ${crmData.deals.length} deals`);
-            }
             return;
           }
         } catch (err: any) {
@@ -924,7 +914,6 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (!checkIsDemoMode()) {
         const orgId = await getCurrentOrgId();
         await saveOrgSettings(orgId, DEFAULT_SETTINGS);
-        console.log('✅ Default settings saved to Supabase');
       }
     } catch (error) {
       console.error('⚠️ Failed to save default settings to Supabase:', error);
@@ -945,7 +934,6 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     try {
-      console.log('🔄 Resetting demo data in Supabase...');
       const result = await resetDemoOrganization();
 
       if (result.success) {
@@ -1000,7 +988,6 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // Procurement
         setRfqs(crmData.rfqs);
         setSupplierQuotes(crmData.supplierQuotes);
-        console.log('✅ Demo reset complete');
       }
 
       return result;
@@ -1516,7 +1503,6 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (!checkIsDemoMode()) {
             const orgId = await getCurrentOrgId();
             await saveOrgSettings(orgId, updated);
-            console.log('✅ Settings saved to Supabase');
           }
         } catch (error) {
           console.error('⚠️ Failed to save settings to Supabase:', error);
@@ -2576,7 +2562,6 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Store custom entities in Supabase
       if (blueprint.customEntities && blueprint.customEntities.length > 0) {
         const result = await upsertCustomObjectsFromBlueprint(blueprint.customEntities);
-        console.log(`✅ Activated blueprint ${industryType}: ${result.count} custom entities stored`);
 
         // Refresh custom objects from DB
         const customObjs = await fetchCustomObjects();

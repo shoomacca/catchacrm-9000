@@ -258,8 +258,6 @@ export async function ensureUserOrganization(userId: string, metadata: {
       .single();
 
     if (existingOrgUser?.org_id) {
-      console.log('User already has organization:', existingOrgUser.org_id);
-
       // Ensure org_id is in user metadata for faster access
       const { data: { user } } = await supabase.auth.getUser();
       if (user && !user.user_metadata?.org_id) {
@@ -373,7 +371,6 @@ export async function ensureUserOrganization(userId: string, metadata: {
       console.error('Error updating user metadata:', metadataError);
     }
 
-    console.log('Organization setup complete:', newOrgId);
     return { orgId: newOrgId, success: true, message: 'Organization created successfully' };
   } catch (err) {
     console.error('Error in ensureUserOrganization:', err);
@@ -470,8 +467,6 @@ export interface CRMData {
 }
 
 export async function loadAllCRMData(): Promise<CRMData> {
-  console.log('Loading CRM data from Supabase...');
-
   // Fetch all data in parallel for performance
   const [
     accounts,
@@ -598,8 +593,6 @@ export async function loadAllCRMData(): Promise<CRMData> {
     fetchAll<SmsMessage>('sms_messages'),
     fetchAll<PaymentTransaction>('payment_transactions')
   ]);
-
-  console.log(`Loaded: ${accounts.length} accounts, ${contacts.length} contacts, ${leads.length} leads, ${deals.length} deals, ${reviews.length} reviews, ${referralRewards.length} referrals, ${companyIntegrations.length} company integrations, ${userIntegrations.length} user integrations`);
 
   return {
     accounts,
