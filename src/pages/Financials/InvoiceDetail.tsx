@@ -9,6 +9,7 @@ import { useCRM } from '../../context/CRMContext';
 import PaymentModal from '../../components/PaymentModal';
 import { supabase } from '../../lib/supabase';
 import { getCurrentOrgId } from '../../services/supabaseData';
+import { generateInvoicePDF } from '../../utils/invoicePdf';
 
 const InvoiceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -118,67 +119,14 @@ const InvoiceDetail: React.FC = () => {
           </button>
           <button
             onClick={() => {
-              // Generate printable view and trigger browser's save as PDF
-              const printWindow = window.open('', '_blank');
-              if (printWindow) {
-                printWindow.document.write(`
-                  <html>
-                    <head>
-                      <title>Invoice ${invoice.invoiceNumber}</title>
-                      <style>
-                        body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
-                        .header { display: flex; justify-content: space-between; margin-bottom: 40px; }
-                        .invoice-number { font-size: 24px; font-weight: bold; color: #1e3a8a; }
-                        .status { padding: 8px 16px; border-radius: 8px; font-weight: bold; }
-                        .status-paid { background: #dcfce7; color: #166534; }
-                        .status-sent { background: #dbeafe; color: #1e40af; }
-                        .status-overdue { background: #fee2e2; color: #991b1b; }
-                        .status-draft { background: #f1f5f9; color: #64748b; }
-                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-                        th { background: #f8fafc; font-size: 11px; text-transform: uppercase; color: #64748b; }
-                        .total-row { font-size: 18px; font-weight: bold; }
-                        .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; }
-                      </style>
-                    </head>
-                    <body>
-                      <div class="header">
-                        <div>
-                          <div class="invoice-number">${invoice.invoiceNumber}</div>
-                          <div>Issue Date: ${new Date(invoice.issueDate).toLocaleDateString()}</div>
-                          <div>Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}</div>
-                        </div>
-                        <div class="status status-${invoice.status.toLowerCase()}">${invoice.status}</div>
-                      </div>
-                      <div><strong>Bill To:</strong> ${account?.name || 'N/A'}</div>
-                      <table>
-                        <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Tax</th><th>Total</th></tr></thead>
-                        <tbody>
-                          ${invoice.lineItems.map(item => `
-                            <tr>
-                              <td>${item.description}</td>
-                              <td>${item.qty}</td>
-                              <td>$${item.unitPrice.toFixed(2)}</td>
-                              <td>${item.taxRate}%</td>
-                              <td>$${item.lineTotal.toFixed(2)}</td>
-                            </tr>
-                          `).join('')}
-                        </tbody>
-                      </table>
-                      <div class="footer">
-                        <div>Subtotal: $${invoice.subtotal.toFixed(2)}</div>
-                        <div>Tax: $${invoice.taxTotal.toFixed(2)}</div>
-                        <div class="total-row">Total: $${invoice.total.toFixed(2)}</div>
-                      </div>
-                      <script>window.print(); window.onafterprint = function() { window.close(); };</script>
-                    </body>
-                  </html>
-                `);
-                printWindow.document.close();
+              if (orgDetails) {
+                generateInvoicePDF(invoice, account, orgDetails);
+              } else {
+                alert('Loading organization details... Please try again in a moment.');
               }
             }}
             className="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-blue-600 transition-all"
-            title="Download as PDF (Print to PDF)"
+            title="Download PDF"
           >
             <Download size={18} />
           </button>
