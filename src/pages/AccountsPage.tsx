@@ -9,6 +9,7 @@ import {
   Zap, CheckCircle2, ArrowUpRight, Globe, MapPin,
   Award, TrendingDown, Crown, Download
 } from 'lucide-react';
+import EmptyState from '../components/EmptyState';
 import { exportAccounts } from '../utils/csvExport';
 
 type ViewMode = 'grid' | 'list';
@@ -633,10 +634,11 @@ const AccountsPage: React.FC = () => {
           </table>
 
           {filteredAccounts.length === 0 && (
-            <div className="py-16 text-center">
-              <Building2 size={40} className="mx-auto text-slate-200 mb-4" />
-              <p className="text-sm font-bold text-slate-400">No accounts found</p>
-            </div>
+            <EmptyState
+              icon={<Building2 size={28} className="text-slate-400" />}
+              title="No accounts found"
+              description="Try adjusting your filters or create a new account."
+            />
           )}
         </div>
       )}

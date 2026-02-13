@@ -8,6 +8,7 @@ import {
   Flame, Thermometer, Snowflake, ArrowRight, RefreshCcw,
   Building2, User, Zap, CheckCircle2, XCircle, Download, Upload
 } from 'lucide-react';
+import EmptyState from '../components/EmptyState';
 import { exportLeads, triggerCSVImport } from '../utils/csvExport';
 import BulkActionsBar from '../components/BulkActionsBar';
 
@@ -688,10 +689,11 @@ const LeadsPage: React.FC = () => {
           </table>
 
           {filteredLeads.length === 0 && (
-            <div className="py-16 text-center">
-              <Target size={40} className="mx-auto text-slate-200 mb-4" />
-              <p className="text-sm font-bold text-slate-400">No leads found</p>
-            </div>
+            <EmptyState
+              icon={<Target size={28} className="text-slate-400" />}
+              title="No leads found"
+              description="Try adjusting your filters or create a new lead."
+            />
           )}
         </div>
       )}

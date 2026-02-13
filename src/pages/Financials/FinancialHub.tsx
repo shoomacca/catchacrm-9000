@@ -38,7 +38,7 @@ const StatusRow = ({ label, value, color }: { label: string; value: string | num
 const FinancialHub: React.FC = () => {
   const {
     invoices, quotes, subscriptions, accounts, openModal,
-    bankTransactions, expenses, financialStats
+    bankTransactions, expenses, financialStats, dataSource
   } = useCRM();
   const navigate = useNavigate();
   const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null);
@@ -139,6 +139,14 @@ const FinancialHub: React.FC = () => {
   const recentInvoices = [...invoices]
     .sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime())
     .slice(0, 5);
+
+  if (dataSource === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto animate-slide-up pb-20">

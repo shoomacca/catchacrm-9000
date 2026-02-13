@@ -451,16 +451,19 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                       {['light', 'dark'].map(theme => (
                         <button
                           key={theme}
-                          onClick={() => updateNested('branding.theme', theme)}
+                          onClick={() => theme !== 'dark' && updateNested('branding.theme', theme)}
+                          disabled={theme === 'dark'}
                           className={`flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                            localSettings.branding?.theme === theme
-                              ? 'bg-blue-600 text-white shadow-lg'
-                              : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+                            theme === 'dark'
+                              ? 'bg-slate-50 text-slate-300 cursor-not-allowed'
+                              : localSettings.branding?.theme === theme
+                                ? 'bg-blue-600 text-white shadow-lg'
+                                : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
                           }`}
                         >
                           {theme === 'dark' && <Moon size={14} className="inline mr-2" />}
                           {theme === 'light' && <Sun size={14} className="inline mr-2" />}
-                          {theme}
+                          {theme}{theme === 'dark' ? ' (coming soon)' : ''}
                         </button>
                       ))}
                     </div>

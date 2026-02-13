@@ -43,7 +43,7 @@ const StatusRow = ({ label, value, color }: { label: string; value: string | num
 const SalesDashboard: React.FC = () => {
   const navigate = useNavigate();
   const {
-    salesStats, leads, deals, invoices, quotes, subscriptions, expenses, settings
+    salesStats, leads, deals, invoices, quotes, subscriptions, expenses, settings, dataSource
   } = useCRM();
 
   const financialStats = useMemo(() => {
@@ -114,6 +114,14 @@ const SalesDashboard: React.FC = () => {
     { name: 'Negotiation', value: deals.filter(d => d.stage === 'Negotiation').length },
     { name: 'Won', value: deals.filter(d => d.stage === 'Closed Won').length },
   ];
+
+  if (dataSource === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto pb-20">

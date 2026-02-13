@@ -9,7 +9,7 @@ import {
   IndustryTemplate, LayoutSection, CustomFieldDef, Role, Team, CrewConfig, Pipeline, LeadScoringRule, TaxRate, LedgerMapping,
   JobTemplate, ZoneConfig, Warehouse, FieldSecurityRule, PermissionMatrix, IndustryBlueprint,
   TacticalQueueItem, WarehouseLocation, DispatchAlert, RFQ, SupplierQuote, EmailTemplate, SMSTemplate,
-  KBCategory, KBArticle, Currency, CompanyIntegration, UserIntegration, OrgEmailAccount, SmsNumber, SmsMessage
+  KBCategory, KBArticle, Currency, CompanyIntegration, UserIntegration, OrgEmailAccount, SmsNumber, SmsMessage, PaymentTransaction
 } from '../types';
 import { generateDemoData } from '../utils/seedData';
 import { INDUSTRY_BLUEPRINTS, getActiveBlueprint } from '../utils/industryBlueprints';
@@ -30,6 +30,7 @@ import {
 import { getTableName } from '../utils/tableMapping';
 import { loadOrgSettings, saveOrgSettings } from '../services/settingsService';
 import { checkForDuplicates, logDuplicateMatch, DuplicateMatch } from '../services/duplicateDetection';
+import toast from 'react-hot-toast';
 
 interface GlobalSearchResult {
   id: string;
@@ -92,6 +93,7 @@ interface CRMContextType {
   orgEmailAccounts: OrgEmailAccount[];
   smsNumbers: SmsNumber[];
   smsMessages: SmsMessage[];
+  paymentTransactions: PaymentTransaction[];
   settings: CRMSettings;
   currentUserId: string;
   currentUser: User | undefined;
@@ -654,6 +656,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [orgEmailAccounts, setOrgEmailAccounts] = useState<OrgEmailAccount[]>([]);
   const [smsNumbers, setSmsNumbers] = useState<SmsNumber[]>([]);
   const [smsMessages, setSmsMessages] = useState<SmsMessage[]>([]);
+  const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>([]);
   const [settings, setSettings] = useState<CRMSettings>(DEFAULT_SETTINGS);
   const [currentUserId, setCurrentUserIdState] = useState<string>('');
   const [customObjectsFromDB, setCustomObjectsFromDB] = useState<any[]>([]); // Custom objects loaded from Supabase
@@ -786,6 +789,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               setOrgEmailAccounts(crmData.orgEmailAccounts);
               setSmsNumbers(crmData.smsNumbers);
               setSmsMessages(crmData.smsMessages);
+              setPaymentTransactions(crmData.paymentTransactions);
 
             // Load settings from Supabase
             try {
@@ -1116,7 +1120,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       tacticalQueue: setTacticalQueue, warehouseLocations: setWarehouseLocations,
       dispatchAlerts: setDispatchAlerts, rfqs: setRfqs, supplierQuotes: setSupplierQuotes,
       companyIntegrations: setCompanyIntegrations, userIntegrations: setUserIntegrations,
-      orgEmailAccounts: setOrgEmailAccounts, smsNumbers: setSmsNumbers, smsMessages: setSmsMessages
+      orgEmailAccounts: setOrgEmailAccounts, smsNumbers: setSmsNumbers, smsMessages: setSmsMessages, paymentTransactions: setPaymentTransactions
     };
     if (!setters[type]) return;
 
@@ -1260,6 +1264,10 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     closeModal();
+
+    // Toast feedback
+    const label = type.charAt(0).toUpperCase() + type.slice(1, -1);
+    toast.success(isUpdate ? `${label} updated` : `${label} created`);
   };
 
   // Thin wrappers around upsertRecord for pages that expect updateRecord/addRecord
@@ -1293,7 +1301,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       tacticalQueue: setTacticalQueue, warehouseLocations: setWarehouseLocations,
       dispatchAlerts: setDispatchAlerts, rfqs: setRfqs, supplierQuotes: setSupplierQuotes,
       companyIntegrations: setCompanyIntegrations, userIntegrations: setUserIntegrations,
-      orgEmailAccounts: setOrgEmailAccounts, smsNumbers: setSmsNumbers, smsMessages: setSmsMessages
+      orgEmailAccounts: setOrgEmailAccounts, smsNumbers: setSmsNumbers, smsMessages: setSmsMessages, paymentTransactions: setPaymentTransactions
     };
     if (!setters[type]) return false;
 
@@ -1331,6 +1339,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
+    const label = type.charAt(0).toUpperCase() + type.slice(1, -1);
+    toast.success(`${label} deleted`);
     return true;
   };
 
@@ -2587,7 +2597,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       leads, deals, accounts, contacts, tasks, campaigns, tickets, invoices, quotes, products, services, subscriptions, conversations, chatMessages, emailTemplates, smsTemplates, kbCategories, kbArticles,
       roles, currencies, documents, communications, auditLogs, calendarEvents, notifications, users, crews, jobs, zones, equipment, inventoryItems, purchaseOrders, bankTransactions, expenses, reviews, referralRewards, inboundForms, chatWidgets, calculators, automationWorkflows, webhooks, industryTemplates,
       tacticalQueue, warehouseLocations, dispatchAlerts, rfqs, supplierQuotes,
-      companyIntegrations, userIntegrations, orgEmailAccounts, smsNumbers, smsMessages,
+      companyIntegrations, userIntegrations, orgEmailAccounts, smsNumbers, smsMessages, paymentTransactions,
       settings, currentUserId, currentUser,
       searchQuery, setSearchQuery, setCurrentUserId: (id) => { setCurrentUserIdState(id); saveToDisk({ currentUserId: id }); }, 
       restoreDefaultSettings, resetDemoData, hardReset, resetSupabaseDemo, dataSource, isSupabaseConnected,

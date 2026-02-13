@@ -31,7 +31,7 @@ const MySchedule: React.FC = () => {
   const navigate = useNavigate();
   const {
     tasks, leads, deals, contacts, accounts, communications, tickets,
-    calendarEvents, users, openModal, toggleTask
+    calendarEvents, users, openModal, toggleTask, dataSource
   } = useCRM();
 
   const [viewMode, setViewMode] = useState<ViewMode>('today');
@@ -462,6 +462,14 @@ const MySchedule: React.FC = () => {
         openModal('tasks');
     }
   };
+
+  if (dataSource === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-slide-up max-w-[1600px] mx-auto pb-20">

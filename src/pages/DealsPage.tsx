@@ -7,6 +7,7 @@ import {
   Star, Filter, Search, MoreHorizontal, ArrowUp, ArrowDown,
   Award, Hourglass, Zap, X, GripVertical, Download
 } from 'lucide-react';
+import EmptyState from '../components/EmptyState';
 import { exportDeals } from '../utils/csvExport';
 
 type ViewMode = 'pipeline' | 'cards' | 'list';
@@ -556,9 +557,12 @@ const DealsPage: React.FC = () => {
       )}
 
       {filteredDeals.length === 0 && viewMode === 'cards' && (
-        <div className="bg-white border border-slate-200 rounded-[35px] py-16 text-center">
-          <Briefcase size={40} className="mx-auto text-slate-200 mb-4" />
-          <p className="text-sm font-bold text-slate-400">No deals found</p>
+        <div className="bg-white border border-slate-200 rounded-[35px]">
+          <EmptyState
+            icon={<Briefcase size={28} className="text-slate-400" />}
+            title="No deals found"
+            description="Try adjusting your filters or create a new deal."
+          />
         </div>
       )}
 
@@ -655,10 +659,11 @@ const DealsPage: React.FC = () => {
           </table>
 
           {filteredDeals.length === 0 && (
-            <div className="py-16 text-center">
-              <Briefcase size={40} className="mx-auto text-slate-200 mb-4" />
-              <p className="text-sm font-bold text-slate-400">No deals found</p>
-            </div>
+            <EmptyState
+              icon={<Briefcase size={28} className="text-slate-400" />}
+              title="No deals found"
+              description="Try adjusting your filters or create a new deal."
+            />
           )}
         </div>
       )}

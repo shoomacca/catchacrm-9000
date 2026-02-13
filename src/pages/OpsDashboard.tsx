@@ -12,7 +12,7 @@ const OpsDashboard: React.FC = () => {
   const navigate = useNavigate();
   const {
     opsStats, tasks, tickets, jobs, crews, zones, equipment,
-    openModal, toggleTask
+    openModal, toggleTask, dataSource
   } = useCRM();
 
   // Field Service Stats
@@ -76,6 +76,14 @@ const OpsDashboard: React.FC = () => {
       .slice(0, 5),
     [jobs]
   );
+
+  if (dataSource === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-slide-up pb-20">

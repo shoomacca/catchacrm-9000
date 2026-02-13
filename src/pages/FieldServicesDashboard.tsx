@@ -13,7 +13,7 @@ type SortField = 'date' | 'priority' | 'zone';
 type SortDirection = 'asc' | 'desc';
 
 const FieldServicesDashboard: React.FC = () => {
-  const { jobs, crews, zones, equipment, users, settings } = useCRM();
+  const { jobs, crews, zones, equipment, users, settings, dataSource } = useCRM();
 
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -221,6 +221,14 @@ const FieldServicesDashboard: React.FC = () => {
       <ArrowDown size={12} className="text-blue-600" />
     );
   };
+
+  if (dataSource === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-slide-up max-w-[1400px] mx-auto pb-20">

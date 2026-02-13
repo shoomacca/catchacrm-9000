@@ -8,6 +8,7 @@ import {
   Activity, RefreshCcw, Briefcase, UserCheck, UserX,
   Zap, CheckCircle2, ArrowUpRight, Globe, MapPin, Download
 } from 'lucide-react';
+import EmptyState from '../components/EmptyState';
 import { exportContacts } from '../utils/csvExport';
 
 type ViewMode = 'grid' | 'list';
@@ -509,10 +510,11 @@ const ContactsPage: React.FC = () => {
           </table>
 
           {filteredContacts.length === 0 && (
-            <div className="py-16 text-center">
-              <Users size={40} className="mx-auto text-slate-200 mb-4" />
-              <p className="text-sm font-bold text-slate-400">No contacts found</p>
-            </div>
+            <EmptyState
+              icon={<Users size={28} className="text-slate-400" />}
+              title="No contacts found"
+              description="Try adjusting your filters or create a new contact."
+            />
           )}
         </div>
       )}

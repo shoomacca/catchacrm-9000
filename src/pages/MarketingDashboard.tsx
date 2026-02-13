@@ -41,7 +41,7 @@ const MarketingDashboard: React.FC = () => {
   const navigate = useNavigate();
   const {
     marketingStats, openModal, campaigns, leads,
-    reviews, referralRewards, inboundForms, chatWidgets, calculators
+    reviews, referralRewards, inboundForms, chatWidgets, calculators, dataSource
   } = useCRM();
 
   const marketingModuleStats = useMemo(() => {
@@ -96,6 +96,14 @@ const MarketingDashboard: React.FC = () => {
     name,
     leads
   })).sort((a, b) => b.leads - a.leads);
+
+  if (dataSource === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto animate-slide-up pb-10">

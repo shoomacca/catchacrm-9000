@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { Routes, Route, Link, useLocation, Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
   Users, Briefcase, Target, CheckSquare,
@@ -926,6 +927,15 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <CRMProvider>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: { borderRadius: '16px', fontWeight: 700, fontSize: '13px' },
+            success: { iconTheme: { primary: '#3B82F6', secondary: '#fff' } },
+            error: { iconTheme: { primary: '#EF4444', secondary: '#fff' } },
+          }}
+        />
         <Routes>
           {/* Public Routes */}
           <Route
