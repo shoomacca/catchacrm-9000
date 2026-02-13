@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCRM } from '../context/CRMContext';
 import {
   Briefcase,
   Users,
@@ -59,34 +61,79 @@ interface PartItem {
 }
 
 const JobMarketplacePage: React.FC = () => {
+  const navigate = useNavigate();
+  const { accounts, jobs, products, inventoryItems, openModal } = useCRM();
+
   const [activeTab, setActiveTab] = useState<MarketplaceTab>('contractors');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
-  // Mock Contractors Data
-  const contractors: Contractor[] = useMemo(() => [
-    { id: 'CON-001', name: 'John Smith Electrical', specialty: 'Electrician', rating: 4.9, completedJobs: 127, hourlyRate: 95, location: 'Sydney, NSW', verified: true, available: true },
-    { id: 'CON-002', name: 'Pro Plumbing Services', specialty: 'Plumber', rating: 4.8, completedJobs: 203, hourlyRate: 110, location: 'Melbourne, VIC', verified: true, available: true },
-    { id: 'CON-003', name: 'Advanced HVAC Solutions', specialty: 'HVAC Technician', rating: 4.7, completedJobs: 89, hourlyRate: 105, location: 'Brisbane, QLD', verified: true, available: false },
-    { id: 'CON-004', name: 'Master Carpenters Co', specialty: 'Carpenter', rating: 5.0, completedJobs: 156, hourlyRate: 85, location: 'Perth, WA', verified: true, available: true },
-  ], []);
+  // Real Contractors Data from Accounts
+  const contractors: Contractor[] = useMemo(() => {
+    return accounts
+      .filter(a => a.accountType === 'Vendor' || a.accountType === 'Partner')
+      .map(a => ({
+        id: a.id,
+        name: a.name,
+        specialty: a.industry || 'General Services',
+        rating: 4.5, // TODO: Add rating field to Account type
+        completedJobs: 0, // TODO: Calculate from completed jobs linked to this account
+        hourlyRate: 95, // TODO: Add rate field to Account type
+        location: a.address ? `${a.address.suburb || 'Unknown'}, ${a.address.state || ''}`.trim() : 'Location not set',
+        verified: true,
+        available: true
+      }));
+  }, [accounts]);
 
-  // Mock Customer Jobs Data
-  const customerJobs: CustomerJob[] = useMemo(() => [
-    { id: 'CJ-001', title: 'Office Electrical Rewiring', customerName: 'Acme Corp', location: 'Sydney CBD', budget: 8500, urgency: 'High', category: 'Electrical', postedDate: '2026-02-07', bids: 3 },
-    { id: 'CJ-002', title: 'Restaurant Kitchen Plumbing', customerName: 'Italian Bistro', location: 'Melbourne', budget: 12000, urgency: 'Urgent', category: 'Plumbing', postedDate: '2026-02-08', bids: 5 },
-    { id: 'CJ-003', title: 'Warehouse HVAC Installation', customerName: 'Logistics Plus', location: 'Brisbane', budget: 25000, urgency: 'Medium', category: 'HVAC', postedDate: '2026-02-06', bids: 2 },
-    { id: 'CJ-004', title: 'Home Renovation Carpentry', customerName: 'John Doe', location: 'Perth', budget: 15000, urgency: 'Low', category: 'Carpentry', postedDate: '2026-02-05', bids: 7 },
-  ], []);
+  // Real Customer Jobs Data from Jobs
+  const customerJobs: CustomerJob[] = useMemo(() => {
+    return jobs
+      .filter(j => j.status === 'Scheduled' || j.status === 'InProgress' || !j.status)
+      .map(j => {
+        const account = accounts.find(a => a.id === j.accountId);
+        const priority = j.priority || 3;
+        const urgency = priority === 1 ? 'Urgent' : priority === 2 ? 'High' : priority === 3 ? 'Medium' : 'Low';
 
-  // Mock Parts Catalog Data
-  const partsCatalog: PartItem[] = useMemo(() => [
-    { id: 'PART-001', name: 'Industrial Circuit Breaker', sku: 'CB-200A', supplier: 'ElectroSupply Co', price: 245, stock: 47, category: 'Electrical', image: '' },
-    { id: 'PART-002', name: 'Copper Pipe 15mm x 3m', sku: 'CP-15-3', supplier: 'Plumb Wholesale', price: 32, stock: 156, category: 'Plumbing', image: '' },
-    { id: 'PART-003', name: 'HVAC Compressor Unit', sku: 'HV-COMP-500', supplier: 'CoolAir Parts', price: 1850, stock: 12, category: 'HVAC', image: '' },
-    { id: 'PART-004', name: 'Oak Hardwood Flooring 1m²', sku: 'WOOD-OAK-1', supplier: 'Timber Masters', price: 95, stock: 89, category: 'Carpentry', image: '' },
-    { id: 'PART-005', name: 'LED Downlight 12W', sku: 'LED-DL-12', supplier: 'ElectroSupply Co', price: 18, stock: 0, category: 'Electrical', image: '' },
-  ], []);
+        return {
+          id: j.id,
+          title: j.subject || j.name || 'Untitled Job',
+          customerName: account?.name || 'Unknown Customer',
+          location: j.location || account?.address?.suburb || 'Location not set',
+          budget: j.estimatedValue || 0,
+          urgency: urgency as 'Low' | 'Medium' | 'High' | 'Urgent',
+          category: j.type || 'General',
+          postedDate: j.createdAt || new Date().toISOString(),
+          bids: 0 // TODO: Add bids tracking to Job type
+        };
+      });
+  }, [jobs, accounts]);
+
+  // Real Parts Catalog Data from Products + Inventory Items
+  const partsCatalog: PartItem[] = useMemo(() => {
+    const productItems = products.map(p => ({
+      id: p.id,
+      name: p.name,
+      sku: p.sku || `PROD-${p.id.slice(0, 8)}`,
+      supplier: 'Product Catalog',
+      price: p.unitPrice || 0,
+      stock: 999, // Products don't track stock directly
+      category: p.category || 'General',
+      image: ''
+    }));
+
+    const inventoryParts = inventoryItems.map(i => ({
+      id: i.id,
+      name: i.name,
+      sku: i.sku,
+      supplier: 'Warehouse Stock',
+      price: i.unitPrice || 0,
+      stock: i.warehouseQty || 0,
+      category: i.category || 'General',
+      image: ''
+    }));
+
+    return [...productItems, ...inventoryParts];
+  }, [products, inventoryItems]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -155,11 +202,25 @@ const JobMarketplacePage: React.FC = () => {
           <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">Job Marketplace</h1>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-wider hover:border-slate-300 hover:shadow-md transition-all">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-wider hover:border-slate-300 hover:shadow-md transition-all"
+          >
             <Download size={16} />
             Export
           </button>
-          <button className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all">
+          <button
+            onClick={() => {
+              if (activeTab === 'contractors') {
+                openModal('accounts', undefined, { accountType: 'Vendor' });
+              } else if (activeTab === 'customer-jobs') {
+                openModal('jobs');
+              } else {
+                openModal('products');
+              }
+            }}
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
+          >
             <Plus size={16} />
             {activeTab === 'contractors' ? 'Add Contractor' : activeTab === 'customer-jobs' ? 'Post Job' : 'Add Part'}
           </button>
@@ -292,10 +353,16 @@ const JobMarketplacePage: React.FC = () => {
               </div>
 
               <div className="flex gap-2">
-                <button className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all">
+                <button
+                  onClick={() => navigate(`/accounts/${contractor.id}`)}
+                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
+                >
                   Contact
                 </button>
-                <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-wider hover:border-slate-300 hover:shadow-md transition-all">
+                <button
+                  onClick={() => navigate(`/accounts/${contractor.id}`)}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-wider hover:border-slate-300 hover:shadow-md transition-all"
+                >
                   View
                 </button>
               </div>
@@ -356,10 +423,16 @@ const JobMarketplacePage: React.FC = () => {
               </div>
 
               <div className="flex gap-2 mt-4">
-                <button className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all">
+                <button
+                  onClick={() => openModal('quotes', undefined, { jobId: job.id })}
+                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
+                >
                   Place Bid
                 </button>
-                <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-wider hover:border-slate-300 hover:shadow-md transition-all">
+                <button
+                  onClick={() => navigate(`/jobs/${job.id}`)}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-wider hover:border-slate-300 hover:shadow-md transition-all"
+                >
                   View Details
                 </button>
               </div>
@@ -414,13 +487,27 @@ const JobMarketplacePage: React.FC = () => {
 
               <button
                 disabled={part.stock === 0}
+                onClick={() => {
+                  if (part.stock > 0) {
+                    // Navigate to product detail page instead of cart
+                    const isProduct = products.some(p => p.id === part.id);
+                    const isInventory = inventoryItems.some(i => i.id === part.id);
+
+                    if (isProduct) {
+                      navigate(`/products/${part.id}`);
+                    } else if (isInventory) {
+                      navigate(`/inventory`);
+                    }
+                  }
+                }}
+                title={part.stock === 0 ? 'Out of Stock' : 'View product details'}
                 className={`w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
                   part.stock === 0
                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                     : 'bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5'
                 }`}
               >
-                {part.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                {part.stock === 0 ? 'Out of Stock' : 'View Details'}
               </button>
             </div>
           ))}
