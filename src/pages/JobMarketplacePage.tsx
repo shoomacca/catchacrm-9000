@@ -76,14 +76,14 @@ const JobMarketplacePage: React.FC = () => {
         id: a.id,
         name: a.name,
         specialty: a.industry || 'General Services',
-        rating: 4.5, // TODO: Add rating field to Account type
-        completedJobs: 0, // TODO: Calculate from completed jobs linked to this account
-        hourlyRate: 95, // TODO: Add rate field to Account type
+        rating: (a.customData?.rating as number) || 0,
+        completedJobs: jobs.filter(j => j.accountId === a.id && j.status === 'Completed').length,
+        hourlyRate: (a.customData?.hourly_rate as number) || 0,
         location: a.address ? `${a.address.suburb || 'Unknown'}, ${a.address.state || ''}`.trim() : 'Location not set',
         verified: true,
         available: true
       }));
-  }, [accounts]);
+  }, [accounts, jobs]);
 
   // Real Customer Jobs Data from Jobs
   const customerJobs: CustomerJob[] = useMemo(() => {
@@ -103,7 +103,7 @@ const JobMarketplacePage: React.FC = () => {
           urgency: urgency as 'Low' | 'Medium' | 'High' | 'Urgent',
           category: j.type || 'General',
           postedDate: j.createdAt || new Date().toISOString(),
-          bids: 0 // TODO: Add bids tracking to Job type
+          bids: 0
         };
       });
   }, [jobs, accounts]);

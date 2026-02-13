@@ -349,7 +349,7 @@ const Header = ({ showDebug, setShowDebug }: { showDebug: boolean, setShowDebug:
   };
 
   // Get user display name and initials
-  const userEmail = user?.email || 'demo@example.com';
+  const userEmail = user?.email || '';
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || userEmail.split('@')[0];
   const userInitials = userName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
 

@@ -42,23 +42,10 @@ const createCustomIcon = (color: string, icon: string) => {
   });
 };
 
-// Default demo data for map display
-const defaultMapStaff = [
-  { id: '1', name: 'Thomas Anderson', role: 'Admin', lat: 40.7128, lng: -74.0060, status: 'active' },
-  { id: '2', name: 'Trinity Moss', role: 'Agent', lat: 40.7580, lng: -73.9855, status: 'active' },
-  { id: '3', name: 'Neo Smith', role: 'Tech', lat: 40.7489, lng: -73.9680, status: 'active' },
-  { id: '4', name: 'Morpheus Jones', role: 'Lead', lat: 40.7614, lng: -73.9776, status: 'active' },
-];
-
-const defaultMapJobs = [
-  { id: '1', title: 'HVAC Repair - Downtown', lat: 40.7306, lng: -73.9352, status: 'active', priority: 'high' },
-  { id: '2', title: 'Plumbing Service - Midtown', lat: 40.7549, lng: -73.9840, status: 'active', priority: 'normal' },
-  { id: '3', title: 'Electrical Install - Upper West', lat: 40.7870, lng: -73.9754, status: 'active', priority: 'normal' },
-];
-
-const defaultMapAlerts = [
-  { id: '1', title: 'Emergency Call - Brooklyn', lat: 40.6782, lng: -73.9442, type: 'emergency', severity: 'critical' },
-];
+// Empty fallback data for map display when no real data exists
+const defaultMapStaff: Array<{ id: string; name: string; role: string; lat: number; lng: number; status: string }> = [];
+const defaultMapJobs: Array<{ id: string; title: string; lat: number; lng: number; status: string; priority: string }> = [];
+const defaultMapAlerts: Array<{ id: string; title: string; lat: number; lng: number; type: string; severity: string }> = [];
 
 const DispatchMatrix: React.FC = () => {
   const { jobs, crews, users, dispatchAlerts, upsertRecord } = useCRM();
@@ -74,13 +61,12 @@ const DispatchMatrix: React.FC = () => {
   // Use CRM data or fallback to defaults for map display
   const mapStaff = useMemo(() => {
     if (users.length > 0) {
-      // Map users to map-compatible format with mock coordinates
-      return users.slice(0, 4).map((u, i) => ({
+      return users.slice(0, 4).map((u) => ({
         id: u.id,
         name: u.name,
         role: u.role,
-        lat: defaultMapStaff[i % defaultMapStaff.length].lat,
-        lng: defaultMapStaff[i % defaultMapStaff.length].lng,
+        lat: 0,
+        lng: 0,
         status: 'active' as const
       }));
     }
@@ -90,11 +76,11 @@ const DispatchMatrix: React.FC = () => {
   const mapJobs = useMemo(() => {
     const activeJobs = jobs.filter(j => j.status === 'Scheduled' || j.status === 'InProgress');
     if (activeJobs.length > 0) {
-      return activeJobs.slice(0, 5).map((j, i) => ({
+      return activeJobs.slice(0, 5).map((j) => ({
         id: j.id,
         title: j.subject,
-        lat: defaultMapJobs[i % defaultMapJobs.length].lat,
-        lng: defaultMapJobs[i % defaultMapJobs.length].lng,
+        lat: 0,
+        lng: 0,
         status: 'active' as const,
         priority: j.priority === 'Urgent' || j.priority === 'High' ? 'high' : 'normal'
       }));
@@ -108,8 +94,8 @@ const DispatchMatrix: React.FC = () => {
       return activeAlerts.slice(0, 3).map((a, i) => ({
         id: a.id,
         title: a.title,
-        lat: defaultMapAlerts[i % defaultMapAlerts.length]?.lat || 40.6782,
-        lng: defaultMapAlerts[i % defaultMapAlerts.length]?.lng || -73.9442,
+        lat: 0,
+        lng: 0,
         type: a.type === 'critical' ? 'emergency' : a.type,
         severity: a.type
       }));
