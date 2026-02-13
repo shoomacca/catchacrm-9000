@@ -262,7 +262,7 @@ const CampaignsPage: React.FC = () => {
               <div
                 key={campaign.id}
                 onClick={() => navigate(`/campaigns/${campaign.id}`)}
-                className="bg-white border border-slate-200 p-8 rounded-[35px] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group animate-slide-up"
+                className="bg-white border border-slate-200 p-8 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group animate-slide-up"
                 style={{ animationDelay: `${index * 0.03}s` }}
               >
                 {/* Header */}
@@ -324,7 +324,7 @@ const CampaignsPage: React.FC = () => {
         <div className="bg-white border border-slate-200 rounded-[35px] shadow-sm overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
+              <tr className="bg-slate-50/80 border-b border-slate-200">
                 <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Campaign</th>
                 <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Type</th>
                 <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Status</th>
@@ -336,15 +336,15 @@ const CampaignsPage: React.FC = () => {
                 <th className="px-6 py-4"></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100">
               {filteredCampaigns.map((campaign, index) => {
                 const roi = getCampaignROI(campaign);
                 return (
                   <tr
                     key={campaign.id}
                     onClick={() => navigate(`/campaigns/${campaign.id}`)}
-                    className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors animate-slide-up"
-                    style={{ animationDelay: `${index * 0.02}s` }}
+                    className="hover:bg-slate-50 cursor-pointer transition-colors animate-slide-up"
+                    style={{ animationDelay: `${index * 0.03}s` }}
                   >
                     <td className="px-6 py-4">
                       <div>

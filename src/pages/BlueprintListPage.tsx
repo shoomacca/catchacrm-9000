@@ -85,7 +85,7 @@ const BlueprintListPage: React.FC = () => {
               <button
                 key={blueprint.id}
                 onClick={() => navigate(`/blueprints/${blueprint.id}`)}
-                className={`group relative bg-white rounded-[35px] p-8 transition-all text-left ${
+                className={`group relative bg-white rounded-2xl p-8 transition-all text-left ${
                   isActive
                     ? 'border-2 border-blue-500 shadow-2xl shadow-blue-500/20'
                     : 'border-2 border-slate-100 hover:border-blue-200 hover:shadow-xl'
@@ -139,10 +139,10 @@ const BlueprintListPage: React.FC = () => {
                 </div>
 
                 {/* Hover Effect */}
-                <div className={`absolute inset-0 rounded-[35px] transition-opacity pointer-events-none ${
+                <div className={`absolute inset-0 rounded-2xl transition-opacity pointer-events-none ${
                   isActive ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'
                 }`}>
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-indigo-600/5 rounded-[35px]"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-indigo-600/5 rounded-2xl"></div>
                 </div>
               </button>
             );
@@ -151,7 +151,7 @@ const BlueprintListPage: React.FC = () => {
       </div>
 
       {/* Info Card */}
-      <div className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-[35px] p-8">
+      <div className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-2xl p-8">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center shrink-0">
             <Sparkles size={24} className="text-slate-600" />

@@ -545,7 +545,7 @@ const LeadsPage: React.FC = () => {
         <div className="bg-white border border-slate-200 rounded-[35px] overflow-hidden">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100">
+              <tr className="bg-slate-50/80 border-b border-slate-100">
                 <th className="px-6 py-4 w-12">
                   <input
                     type="checkbox"

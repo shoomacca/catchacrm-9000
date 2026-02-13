@@ -378,7 +378,7 @@ const Header = ({ showDebug, setShowDebug }: { showDebug: boolean, setShowDebug:
         <input
           type="text"
           placeholder="Search records (⌘ F)"
-          className={`w-full pl-10 pr-4 py-2 border rounded-xl focus:outline-none focus:ring-4 transition-all text-sm font-medium ${
+          className={`w-full pl-10 pr-4 py-2 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm font-medium ${
             isDarkMode
               ? 'bg-slate-700/50 border-slate-600 focus:ring-blue-500/20 focus:border-blue-500 text-slate-100 placeholder-slate-400'
               : 'bg-slate-100/50 border-slate-200 focus:ring-blue-500/10 focus:border-blue-500 text-slate-900 placeholder-slate-400'

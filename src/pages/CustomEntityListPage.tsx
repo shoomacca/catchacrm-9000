@@ -89,11 +89,11 @@ const CustomEntityListPage: React.FC = () => {
     }
 
     if (field.type === 'select') {
-      return <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">{value}</span>;
+      return <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-[9px] font-black uppercase tracking-widest">{value}</span>;
     }
 
     if (field.id === 'status') {
-      return <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-bold">{value}</span>;
+      return <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-[9px] font-black uppercase tracking-widest">{value}</span>;
     }
 
     return <span className="text-sm text-slate-700">{String(value)}</span>;
@@ -259,7 +259,7 @@ const CustomEntityListPage: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100">
+                  <tr className="bg-slate-50/80 border-b border-slate-100">
                     {entityDef.fields.slice(0, 6).map(field => (
                       <th key={field.id} className="px-6 py-4 text-left">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -276,7 +276,7 @@ const CustomEntityListPage: React.FC = () => {
                   {finalRecords.map((record: any) => (
                     <tr
                       key={record.id}
-                      className="border-b border-slate-50 hover:bg-blue-50/30 cursor-pointer transition-colors"
+                      className="border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors"
                       onClick={() => navigate(`/custom/${entityType}/${record.id}`)}
                     >
                       {entityDef.fields.slice(0, 6).map(field => (

@@ -82,6 +82,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
   const mapsIntegration = companyIntegrations.find(ci => ci.provider === 'google_maps');
   const currentUserIntegration = userIntegrations.find(ui => ui.user_id === currentUserId);
   const isAdmin = currentUser?.role === 'admin';
+  const [currentOrgId, setCurrentOrgId] = useState<string>('');
+  useEffect(() => { getCurrentOrgId().then(id => setCurrentOrgId(id)).catch(() => {}); }, []);
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -357,7 +359,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                   </div>
                 ) : (
                   <div className="flex items-center gap-4 pl-16">
-                    <button onClick={() => alert('Google OAuth flow coming in next session. This will redirect to Google sign-in.')} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
+                    <button onClick={() => alert('Google OAuth flow coming in next session. This will redirect to Google sign-in.')} className="px-5 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
                       <ExternalLink size={12} /> Connect Google
                     </button>
                     <button onClick={() => setActiveTab('INTEGRATIONS')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 flex items-center gap-1">
@@ -1372,6 +1374,23 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                   { label: 'Webhook Secret', value: localSettings.integrations?.stripe?.webhookSecret || '', onChange: (v: string) => updateNested('integrations.stripe.webhookSecret', v), type: 'password', placeholder: 'whsec_...' },
                 ]}
               />
+              {/* Stripe Webhook URL */}
+              {(localSettings.integrations?.stripe?.enabled) && (
+                <div className="col-span-2 mt-2 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Webhook size={14} className="text-indigo-500" />
+                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Stripe Webhook URL</span>
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <input type="text" readOnly value={`${import.meta.env.VITE_SUPABASE_URL || 'https://YOUR-PROJECT-REF.supabase.co'}/functions/v1/stripe-webhook?org_id=${currentOrgId || 'YOUR_ORG_ID'}`} className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-600" />
+                    <button onClick={() => { navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-webhook?org_id=${currentOrgId}`); }} className="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-bold hover:bg-slate-200 transition-all">Copy</button>
+                  </div>
+                  <p className="text-[10px] text-slate-400 leading-relaxed">
+                    Copy this URL into your Stripe Dashboard → Developers → Webhooks → Add endpoint.<br/>
+                    Events to listen for: <strong>payment_intent.succeeded</strong>, <strong>payment_intent.payment_failed</strong>, <strong>charge.refunded</strong>
+                  </p>
+                </div>
+              )}
               <IntegrationCard
                 name="PayPal"
                 icon={<DollarSign size={24} />}

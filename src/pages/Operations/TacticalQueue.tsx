@@ -381,7 +381,7 @@ const TacticalQueue: React.FC = () => {
                   isExpanded ? 'border-blue-400 ring-2 ring-blue-100' :
                   'border-slate-200'
                 } rounded-[25px] shadow-sm hover:shadow-xl transition-all duration-300 animate-slide-up overflow-hidden`}
-                style={{ animationDelay: `${index * 0.05}s` }}
+                style={{ animationDelay: `${index * 0.03}s` }}
               >
                 {/* Main Content - Clickable Header */}
                 <div

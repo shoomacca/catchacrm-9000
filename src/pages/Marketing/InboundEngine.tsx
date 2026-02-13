@@ -229,7 +229,7 @@ const InboundEngine: React.FC = () => {
           </div>
 
           {inboundForms.map((form, index) => (
-            <div key={form.id} className="bg-white border border-slate-200 p-6 rounded-[25px] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer" style={{ animationDelay: `${index * 0.05}s` }}>
+            <div key={form.id} className="bg-white border border-slate-200 p-6 rounded-[25px] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer" style={{ animationDelay: `${index * 0.03}s` }}>
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <h4 className="text-lg font-black text-slate-900 mb-1">{form.name}</h4>
@@ -409,7 +409,7 @@ const InboundEngine: React.FC = () => {
           </div>
 
           {chatWidgets.map((widget, index) => (
-            <div key={widget.id} className="bg-white border border-slate-200 p-6 rounded-[25px] shadow-sm hover:shadow-xl transition-all animate-slide-up" style={{ animationDelay: `${index * 0.05}s` }}>
+            <div key={widget.id} className="bg-white border border-slate-200 p-6 rounded-[25px] shadow-sm hover:shadow-xl transition-all animate-slide-up" style={{ animationDelay: `${index * 0.03}s` }}>
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
@@ -596,7 +596,7 @@ const InboundEngine: React.FC = () => {
           </div>
 
           {calculators.map((calc, index) => (
-            <div key={calc.id} className="bg-white border border-slate-200 p-6 rounded-[25px] shadow-sm hover:shadow-xl transition-all animate-slide-up" style={{ animationDelay: `${index * 0.05}s` }}>
+            <div key={calc.id} className="bg-white border border-slate-200 p-6 rounded-[25px] shadow-sm hover:shadow-xl transition-all animate-slide-up" style={{ animationDelay: `${index * 0.03}s` }}>
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
