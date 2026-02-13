@@ -16,7 +16,7 @@ import type {
   TacticalQueueItem, WarehouseLocation, DispatchAlert, RFQ, SupplierQuote, EmailTemplate, SMSTemplate,
   KBCategory, KBArticle, Role, Currency, ImportJob, ExportJob, MassOperationJob,
   ImportJobStatus, ExportJobStatus, JobEntityType, WebhookConfig, WebhookLog,
-  CustomObject, CustomEntityDefinition
+  CustomObject, CustomEntityDefinition, CompanyIntegration, UserIntegration, OrgEmailAccount, SmsNumber
 } from '../types';
 
 // Demo org ID - this is the fixed UUID for the demo organization
@@ -81,7 +81,8 @@ type TableName = 'accounts' | 'contacts' | 'leads' | 'deals' | 'tasks' | 'campai
   'currencies' | 'roles' | 'tactical_queue' | 'warehouse_locations' |
   'dispatch_alerts' | 'rfqs' | 'supplier_quotes' | 'email_templates' | 'sms_templates' |
   'kb_categories' | 'kb_articles' | 'import_jobs' | 'export_jobs' | 'mass_operation_jobs' |
-  'webhook_configs' | 'webhook_logs' | 'custom_objects';
+  'webhook_configs' | 'webhook_logs' | 'custom_objects' | 'company_integrations' |
+  'user_integrations' | 'org_email_accounts' | 'sms_numbers';
 
 export async function fetchAll<T>(table: TableName): Promise<T[]> {
   const orgId = await getCurrentOrgId();
@@ -459,6 +460,11 @@ export interface CRMData {
   // Procurement
   rfqs: RFQ[];
   supplierQuotes: SupplierQuote[];
+  // Integrations
+  companyIntegrations: CompanyIntegration[];
+  userIntegrations: UserIntegration[];
+  orgEmailAccounts: OrgEmailAccount[];
+  smsNumbers: SmsNumber[];
 }
 
 export async function loadAllCRMData(): Promise<CRMData> {
@@ -519,7 +525,12 @@ export async function loadAllCRMData(): Promise<CRMData> {
     dispatchAlerts,
     // Procurement
     rfqs,
-    supplierQuotes
+    supplierQuotes,
+    // Integrations
+    companyIntegrations,
+    userIntegrations,
+    orgEmailAccounts,
+    smsNumbers
   ] = await Promise.all([
     fetchAll<Account>('accounts'),
     fetchAll<Contact>('contacts'),
@@ -574,10 +585,15 @@ export async function loadAllCRMData(): Promise<CRMData> {
     fetchAll<DispatchAlert>('dispatch_alerts'),
     // Procurement
     fetchAll<RFQ>('rfqs'),
-    fetchAll<SupplierQuote>('supplier_quotes')
+    fetchAll<SupplierQuote>('supplier_quotes'),
+    // Integrations
+    fetchAll<CompanyIntegration>('company_integrations'),
+    fetchAll<UserIntegration>('user_integrations'),
+    fetchAll<OrgEmailAccount>('org_email_accounts'),
+    fetchAll<SmsNumber>('sms_numbers')
   ]);
 
-  console.log(`Loaded: ${accounts.length} accounts, ${contacts.length} contacts, ${leads.length} leads, ${deals.length} deals, ${reviews.length} reviews, ${referralRewards.length} referrals`);
+  console.log(`Loaded: ${accounts.length} accounts, ${contacts.length} contacts, ${leads.length} leads, ${deals.length} deals, ${reviews.length} reviews, ${referralRewards.length} referrals, ${companyIntegrations.length} company integrations, ${userIntegrations.length} user integrations`);
 
   return {
     accounts,
@@ -633,7 +649,12 @@ export async function loadAllCRMData(): Promise<CRMData> {
     dispatchAlerts,
     // Procurement
     rfqs,
-    supplierQuotes
+    supplierQuotes,
+    // Integrations
+    companyIntegrations,
+    userIntegrations,
+    orgEmailAccounts,
+    smsNumbers
   };
 }
 

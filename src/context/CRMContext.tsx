@@ -9,7 +9,7 @@ import {
   IndustryTemplate, LayoutSection, CustomFieldDef, Role, Team, CrewConfig, Pipeline, LeadScoringRule, TaxRate, LedgerMapping,
   JobTemplate, ZoneConfig, Warehouse, FieldSecurityRule, PermissionMatrix, IndustryBlueprint,
   TacticalQueueItem, WarehouseLocation, DispatchAlert, RFQ, SupplierQuote, EmailTemplate, SMSTemplate,
-  KBCategory, KBArticle, Currency
+  KBCategory, KBArticle, Currency, CompanyIntegration, UserIntegration, OrgEmailAccount, SmsNumber
 } from '../types';
 import { generateDemoData } from '../utils/seedData';
 import { INDUSTRY_BLUEPRINTS, getActiveBlueprint } from '../utils/industryBlueprints';
@@ -87,6 +87,10 @@ interface CRMContextType {
   dispatchAlerts: DispatchAlert[];
   rfqs: RFQ[];
   supplierQuotes: SupplierQuote[];
+  companyIntegrations: CompanyIntegration[];
+  userIntegrations: UserIntegration[];
+  orgEmailAccounts: OrgEmailAccount[];
+  smsNumbers: SmsNumber[];
   settings: CRMSettings;
   currentUserId: string;
   currentUser: User | undefined;
@@ -644,6 +648,10 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [dispatchAlerts, setDispatchAlerts] = useState<DispatchAlert[]>([]);
   const [rfqs, setRfqs] = useState<RFQ[]>([]);
   const [supplierQuotes, setSupplierQuotes] = useState<SupplierQuote[]>([]);
+  const [companyIntegrations, setCompanyIntegrations] = useState<CompanyIntegration[]>([]);
+  const [userIntegrations, setUserIntegrations] = useState<UserIntegration[]>([]);
+  const [orgEmailAccounts, setOrgEmailAccounts] = useState<OrgEmailAccount[]>([]);
+  const [smsNumbers, setSmsNumbers] = useState<SmsNumber[]>([]);
   const [settings, setSettings] = useState<CRMSettings>(DEFAULT_SETTINGS);
   const [currentUserId, setCurrentUserIdState] = useState<string>('');
   const [customObjectsFromDB, setCustomObjectsFromDB] = useState<any[]>([]); // Custom objects loaded from Supabase
@@ -770,6 +778,11 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               // Procurement
               setRfqs(crmData.rfqs);
               setSupplierQuotes(crmData.supplierQuotes);
+              // Integrations
+              setCompanyIntegrations(crmData.companyIntegrations);
+              setUserIntegrations(crmData.userIntegrations);
+              setOrgEmailAccounts(crmData.orgEmailAccounts);
+              setSmsNumbers(crmData.smsNumbers);
 
             // Load settings from Supabase
             try {
@@ -2567,6 +2580,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       leads, deals, accounts, contacts, tasks, campaigns, tickets, invoices, quotes, products, services, subscriptions, conversations, chatMessages, emailTemplates, smsTemplates, kbCategories, kbArticles,
       roles, currencies, documents, communications, auditLogs, calendarEvents, notifications, users, crews, jobs, zones, equipment, inventoryItems, purchaseOrders, bankTransactions, expenses, reviews, referralRewards, inboundForms, chatWidgets, calculators, automationWorkflows, webhooks, industryTemplates,
       tacticalQueue, warehouseLocations, dispatchAlerts, rfqs, supplierQuotes,
+      companyIntegrations, userIntegrations, orgEmailAccounts, smsNumbers,
       settings, currentUserId, currentUser, 
       searchQuery, setSearchQuery, setCurrentUserId: (id) => { setCurrentUserIdState(id); saveToDisk({ currentUserId: id }); }, 
       restoreDefaultSettings, resetDemoData, hardReset, resetSupabaseDemo, dataSource, isSupabaseConnected,

@@ -47,7 +47,11 @@ export type EntityType =
   | 'emailTemplates'
   | 'smsTemplates'
   | 'kbCategories'
-  | 'kbArticles';
+  | 'kbArticles'
+  | 'companyIntegrations'
+  | 'userIntegrations'
+  | 'orgEmailAccounts'
+  | 'smsNumbers';
 
 export type CommunicationOutcome = 'answered' | 'no-answer' | 'voicemail' | 'meeting-booked' | 'converted';
 
@@ -1477,5 +1481,65 @@ export interface MassOperationJob extends CRMBase {
   error_message?: string;
   started_at?: string;
   completed_at?: string;
+  created_by?: string;
+}
+
+// ============================================
+// INTEGRATION TYPES
+// ============================================
+
+export interface CompanyIntegration extends CRMBase {
+  org_id: string;
+  provider: 'stripe' | 'paypal' | 'google_maps' | 'twilio';
+  is_active: boolean;
+  config: Record<string, any>;
+  created_by?: string;
+}
+
+export interface UserIntegration extends CRMBase {
+  org_id: string;
+  user_id: string;
+  provider: 'google';
+  connected_email?: string;
+  access_token?: string;
+  refresh_token?: string;
+  token_expires_at?: string;
+  scopes?: string[];
+  is_active: boolean;
+  last_synced_at?: string;
+  sync_config?: {
+    sync_calendar?: boolean;
+    sync_gmail?: boolean;
+  };
+}
+
+export interface OrgEmailAccount extends CRMBase {
+  org_id: string;
+  email: string;
+  display_name?: string;
+  purpose: 'billing' | 'support' | 'info' | 'operations' | 'marketing';
+  provider: 'google' | 'microsoft';
+  access_token?: string;
+  refresh_token?: string;
+  token_expires_at?: string;
+  scopes?: string[];
+  is_active: boolean;
+  is_default: boolean;
+  calendar_id?: string;
+  last_synced_at?: string;
+  created_by?: string;
+}
+
+export interface SmsNumber extends CRMBase {
+  org_id: string;
+  phone_number: string;
+  display_name?: string;
+  purpose: 'general' | 'marketing' | 'campaigns' | 'support' | 'operations';
+  provider: 'twilio' | 'messagebird' | 'vonage';
+  provider_sid?: string;
+  capabilities?: { sms: boolean; mms: boolean; voice: boolean };
+  is_active: boolean;
+  is_default: boolean;
+  webhook_url?: string;
   created_by?: string;
 }
