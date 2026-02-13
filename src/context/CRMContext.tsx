@@ -9,7 +9,7 @@ import {
   IndustryTemplate, LayoutSection, CustomFieldDef, Role, Team, CrewConfig, Pipeline, LeadScoringRule, TaxRate, LedgerMapping,
   JobTemplate, ZoneConfig, Warehouse, FieldSecurityRule, PermissionMatrix, IndustryBlueprint,
   TacticalQueueItem, WarehouseLocation, DispatchAlert, RFQ, SupplierQuote, EmailTemplate, SMSTemplate,
-  KBCategory, KBArticle, Currency, CompanyIntegration, UserIntegration, OrgEmailAccount, SmsNumber
+  KBCategory, KBArticle, Currency, CompanyIntegration, UserIntegration, OrgEmailAccount, SmsNumber, SmsMessage
 } from '../types';
 import { generateDemoData } from '../utils/seedData';
 import { INDUSTRY_BLUEPRINTS, getActiveBlueprint } from '../utils/industryBlueprints';
@@ -91,6 +91,7 @@ interface CRMContextType {
   userIntegrations: UserIntegration[];
   orgEmailAccounts: OrgEmailAccount[];
   smsNumbers: SmsNumber[];
+  smsMessages: SmsMessage[];
   settings: CRMSettings;
   currentUserId: string;
   currentUser: User | undefined;
@@ -652,6 +653,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [userIntegrations, setUserIntegrations] = useState<UserIntegration[]>([]);
   const [orgEmailAccounts, setOrgEmailAccounts] = useState<OrgEmailAccount[]>([]);
   const [smsNumbers, setSmsNumbers] = useState<SmsNumber[]>([]);
+  const [smsMessages, setSmsMessages] = useState<SmsMessage[]>([]);
   const [settings, setSettings] = useState<CRMSettings>(DEFAULT_SETTINGS);
   const [currentUserId, setCurrentUserIdState] = useState<string>('');
   const [customObjectsFromDB, setCustomObjectsFromDB] = useState<any[]>([]); // Custom objects loaded from Supabase
@@ -783,6 +785,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               setUserIntegrations(crmData.userIntegrations);
               setOrgEmailAccounts(crmData.orgEmailAccounts);
               setSmsNumbers(crmData.smsNumbers);
+              setSmsMessages(crmData.smsMessages);
 
             // Load settings from Supabase
             try {
@@ -1113,7 +1116,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       tacticalQueue: setTacticalQueue, warehouseLocations: setWarehouseLocations,
       dispatchAlerts: setDispatchAlerts, rfqs: setRfqs, supplierQuotes: setSupplierQuotes,
       companyIntegrations: setCompanyIntegrations, userIntegrations: setUserIntegrations,
-      orgEmailAccounts: setOrgEmailAccounts, smsNumbers: setSmsNumbers
+      orgEmailAccounts: setOrgEmailAccounts, smsNumbers: setSmsNumbers, smsMessages: setSmsMessages
     };
     if (!setters[type]) return;
 
@@ -1290,7 +1293,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       tacticalQueue: setTacticalQueue, warehouseLocations: setWarehouseLocations,
       dispatchAlerts: setDispatchAlerts, rfqs: setRfqs, supplierQuotes: setSupplierQuotes,
       companyIntegrations: setCompanyIntegrations, userIntegrations: setUserIntegrations,
-      orgEmailAccounts: setOrgEmailAccounts, smsNumbers: setSmsNumbers
+      orgEmailAccounts: setOrgEmailAccounts, smsNumbers: setSmsNumbers, smsMessages: setSmsMessages
     };
     if (!setters[type]) return false;
 
@@ -2584,8 +2587,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       leads, deals, accounts, contacts, tasks, campaigns, tickets, invoices, quotes, products, services, subscriptions, conversations, chatMessages, emailTemplates, smsTemplates, kbCategories, kbArticles,
       roles, currencies, documents, communications, auditLogs, calendarEvents, notifications, users, crews, jobs, zones, equipment, inventoryItems, purchaseOrders, bankTransactions, expenses, reviews, referralRewards, inboundForms, chatWidgets, calculators, automationWorkflows, webhooks, industryTemplates,
       tacticalQueue, warehouseLocations, dispatchAlerts, rfqs, supplierQuotes,
-      companyIntegrations, userIntegrations, orgEmailAccounts, smsNumbers,
-      settings, currentUserId, currentUser, 
+      companyIntegrations, userIntegrations, orgEmailAccounts, smsNumbers, smsMessages,
+      settings, currentUserId, currentUser,
       searchQuery, setSearchQuery, setCurrentUserId: (id) => { setCurrentUserIdState(id); saveToDisk({ currentUserId: id }); }, 
       restoreDefaultSettings, resetDemoData, hardReset, resetSupabaseDemo, dataSource, isSupabaseConnected,
       addNote, updateStatus, toggleTask: (id) => {

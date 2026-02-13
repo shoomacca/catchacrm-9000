@@ -59,6 +59,7 @@ export const TABLE_MAP: Record<EntityType, string> = {
   userIntegrations: 'user_integrations',
   orgEmailAccounts: 'org_email_accounts',
   smsNumbers: 'sms_numbers',
+  smsMessages: 'sms_messages',
 };
 
 /**

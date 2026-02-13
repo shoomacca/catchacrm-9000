@@ -51,7 +51,8 @@ export type EntityType =
   | 'companyIntegrations'
   | 'userIntegrations'
   | 'orgEmailAccounts'
-  | 'smsNumbers';
+  | 'smsNumbers'
+  | 'smsMessages';
 
 export type CommunicationOutcome = 'answered' | 'no-answer' | 'voicemail' | 'meeting-booked' | 'converted';
 
@@ -1542,4 +1543,24 @@ export interface SmsNumber extends CRMBase {
   is_default: boolean;
   webhook_url?: string;
   created_by?: string;
+}
+
+export interface SmsMessage extends CRMBase {
+  org_id: string;
+  direction: 'inbound' | 'outbound';
+  from_number: string;
+  to_number: string;
+  body: string;
+  status: 'queued' | 'sent' | 'delivered' | 'failed' | 'received';
+  twilio_sid?: string;
+  sms_number_id?: string;
+  contact_id?: string;
+  contact_name?: string;
+  deal_id?: string;
+  ticket_id?: string;
+  campaign_id?: string;
+  error_message?: string;
+  segments?: number;
+  media_urls?: string[];
+  sent_by?: string;
 }
