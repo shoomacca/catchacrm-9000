@@ -60,6 +60,7 @@ export const TABLE_MAP: Record<EntityType, string> = {
   orgEmailAccounts: 'org_email_accounts',
   smsNumbers: 'sms_numbers',
   smsMessages: 'sms_messages',
+  paymentTransactions: 'payment_transactions',
 };
 
 /**

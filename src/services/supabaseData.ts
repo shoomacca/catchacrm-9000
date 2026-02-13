@@ -16,7 +16,7 @@ import type {
   TacticalQueueItem, WarehouseLocation, DispatchAlert, RFQ, SupplierQuote, EmailTemplate, SMSTemplate,
   KBCategory, KBArticle, Role, Currency, ImportJob, ExportJob, MassOperationJob,
   ImportJobStatus, ExportJobStatus, JobEntityType, WebhookConfig, WebhookLog,
-  CustomObject, CustomEntityDefinition, CompanyIntegration, UserIntegration, OrgEmailAccount, SmsNumber, SmsMessage
+  CustomObject, CustomEntityDefinition, CompanyIntegration, UserIntegration, OrgEmailAccount, SmsNumber, SmsMessage, PaymentTransaction
 } from '../types';
 
 // Demo org ID - this is the fixed UUID for the demo organization
@@ -82,7 +82,7 @@ type TableName = 'accounts' | 'contacts' | 'leads' | 'deals' | 'tasks' | 'campai
   'dispatch_alerts' | 'rfqs' | 'supplier_quotes' | 'email_templates' | 'sms_templates' |
   'kb_categories' | 'kb_articles' | 'import_jobs' | 'export_jobs' | 'mass_operation_jobs' |
   'webhook_configs' | 'webhook_logs' | 'custom_objects' | 'company_integrations' |
-  'user_integrations' | 'org_email_accounts' | 'sms_numbers' | 'sms_messages';
+  'user_integrations' | 'org_email_accounts' | 'sms_numbers' | 'sms_messages' | 'payment_transactions';
 
 export async function fetchAll<T>(table: TableName): Promise<T[]> {
   const orgId = await getCurrentOrgId();
@@ -466,6 +466,7 @@ export interface CRMData {
   orgEmailAccounts: OrgEmailAccount[];
   smsNumbers: SmsNumber[];
   smsMessages: SmsMessage[];
+  paymentTransactions: PaymentTransaction[];
 }
 
 export async function loadAllCRMData(): Promise<CRMData> {
@@ -532,7 +533,8 @@ export async function loadAllCRMData(): Promise<CRMData> {
     userIntegrations,
     orgEmailAccounts,
     smsNumbers,
-    smsMessages
+    smsMessages,
+    paymentTransactions
   ] = await Promise.all([
     fetchAll<Account>('accounts'),
     fetchAll<Contact>('contacts'),
@@ -593,7 +595,8 @@ export async function loadAllCRMData(): Promise<CRMData> {
     fetchAll<UserIntegration>('user_integrations'),
     fetchAll<OrgEmailAccount>('org_email_accounts'),
     fetchAll<SmsNumber>('sms_numbers'),
-    fetchAll<SmsMessage>('sms_messages')
+    fetchAll<SmsMessage>('sms_messages'),
+    fetchAll<PaymentTransaction>('payment_transactions')
   ]);
 
   console.log(`Loaded: ${accounts.length} accounts, ${contacts.length} contacts, ${leads.length} leads, ${deals.length} deals, ${reviews.length} reviews, ${referralRewards.length} referrals, ${companyIntegrations.length} company integrations, ${userIntegrations.length} user integrations`);
@@ -658,7 +661,8 @@ export async function loadAllCRMData(): Promise<CRMData> {
     userIntegrations,
     orgEmailAccounts,
     smsNumbers,
-    smsMessages
+    smsMessages,
+    paymentTransactions
   };
 }
 

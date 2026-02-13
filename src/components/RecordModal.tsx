@@ -3,6 +3,7 @@ import { X, Save, Trash2, Plus, Package, RefreshCcw, User, Megaphone, Calendar, 
 import { useCRM } from '../context/CRMContext';
 import { EntityType, LineItem, Product, Service, CommunicationOutcome } from '../types';
 import { calculateLineItemTotals } from '../utils/formatters';
+import { AddressAutocomplete } from './AddressAutocomplete';
 
 const RecordModal: React.FC = () => {
   const { modal, closeModal, upsertRecord, accounts, campaigns, users, leads, deals, contacts, settings, products, services, currentUser, crews, jobs, zones, equipment, inventoryItems, purchaseOrders, bankTransactions, expenses, invoices, reviews, referralRewards, inboundForms, chatWidgets, calculators, automationWorkflows, webhooks, industryTemplates, tickets, tasks, activeBlueprint, getCustomEntities, upsertCustomEntity, deleteCustomEntity } = useCRM();
@@ -448,7 +449,20 @@ const RecordModal: React.FC = () => {
             <div className="col-span-2 pt-4 border-t border-slate-100">
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Address</h3>
             </div>
-            <div className="col-span-2"><Field label="Street" name="address.street" value={formData.address?.street || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, street: e.target.value } }))} /></div>
+            <div className="col-span-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Street</label>
+              <AddressAutocomplete
+                value={formData.address?.street || ''}
+                onChange={(addr, details) => {
+                  if (details) {
+                    setFormData((prev: any) => ({ ...prev, address: { ...prev.address, street: details.street || addr, suburb: details.city || prev.address?.suburb || '', state: details.state || prev.address?.state || '', postcode: details.postcode || prev.address?.postcode || '', country: details.country || prev.address?.country || '' } }));
+                  } else {
+                    setFormData((prev: any) => ({ ...prev, address: { ...prev.address, street: addr } }));
+                  }
+                }}
+                placeholder="Start typing an address..."
+              />
+            </div>
             <Field label="Suburb" name="address.suburb" value={formData.address?.suburb || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, suburb: e.target.value } }))} />
             <Field label="State" name="address.state" value={formData.address?.state || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, state: e.target.value } }))} />
             <Field label="Postcode" name="address.postcode" value={formData.address?.postcode || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, postcode: e.target.value } }))} />
@@ -488,7 +502,20 @@ const RecordModal: React.FC = () => {
             <div className="col-span-2 pt-4 border-t border-slate-100">
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Address</h3>
             </div>
-            <div className="col-span-2"><Field label="Street" name="address.street" value={formData.address?.street || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, street: e.target.value } }))} /></div>
+            <div className="col-span-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Street</label>
+              <AddressAutocomplete
+                value={formData.address?.street || ''}
+                onChange={(addr, details) => {
+                  if (details) {
+                    setFormData((prev: any) => ({ ...prev, address: { ...prev.address, street: details.street || addr, suburb: details.city || prev.address?.suburb || '', state: details.state || prev.address?.state || '', postcode: details.postcode || prev.address?.postcode || '', country: details.country || prev.address?.country || '' } }));
+                  } else {
+                    setFormData((prev: any) => ({ ...prev, address: { ...prev.address, street: addr } }));
+                  }
+                }}
+                placeholder="Start typing an address..."
+              />
+            </div>
             <Field label="Suburb" name="address.suburb" value={formData.address?.suburb || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, suburb: e.target.value } }))} />
             <Field label="State" name="address.state" value={formData.address?.state || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, state: e.target.value } }))} />
             <Field label="Postcode" name="address.postcode" value={formData.address?.postcode || ''} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData((prev: any) => ({ ...prev, address: { ...prev.address, postcode: e.target.value } }))} />
