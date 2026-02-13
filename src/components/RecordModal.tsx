@@ -4,6 +4,8 @@ import { useCRM } from '../context/CRMContext';
 import { EntityType, LineItem, Product, Service, CommunicationOutcome } from '../types';
 import { calculateLineItemTotals } from '../utils/formatters';
 import { AddressAutocomplete } from './AddressAutocomplete';
+import { supabase } from '../lib/supabase';
+import { getCurrentOrgId } from '../services/supabaseData';
 
 const RecordModal: React.FC = () => {
   const { modal, closeModal, upsertRecord, accounts, campaigns, users, leads, deals, contacts, settings, products, services, currentUser, crews, jobs, zones, equipment, inventoryItems, purchaseOrders, bankTransactions, expenses, invoices, reviews, referralRewards, inboundForms, chatWidgets, calculators, automationWorkflows, webhooks, industryTemplates, tickets, tasks, activeBlueprint, getCustomEntities, upsertCustomEntity, deleteCustomEntity } = useCRM();
@@ -14,18 +16,52 @@ const RecordModal: React.FC = () => {
       if (modal.initialData) {
         setFormData({ ...modal.initialData });
       } else {
-        const defaults: any = {
-          ownerId: currentUser?.id,
-          assigneeId: currentUser?.id,
-          createdAt: new Date().toISOString()
-        };
-        if (modal.type === 'invoices') {
-          defaults.lineItems = [];
-          defaults.status = 'Draft';
-          defaults.invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
-          defaults.issueDate = new Date().toISOString().split('T')[0];
-          defaults.dueDate = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
-        }
+        const initializeDefaults = async () => {
+          const defaults: any = {
+            ownerId: currentUser?.id,
+            assigneeId: currentUser?.id,
+            createdAt: new Date().toISOString()
+          };
+          if (modal.type === 'invoices') {
+            // Fetch organization details for auto-numbering
+            try {
+              const orgId = await getCurrentOrgId();
+              const { data: org } = await supabase
+                .from('organizations')
+                .select('invoice_prefix, invoice_next_number, default_tax_rate, default_payment_terms')
+                .eq('id', orgId)
+                .single();
+
+              const prefix = org?.invoice_prefix || 'INV';
+              const nextNumber = org?.invoice_next_number || 1;
+              const taxRate = org?.default_tax_rate || 10.00;
+              const paymentTerms = org?.default_payment_terms || 30;
+
+              defaults.lineItems = [];
+              defaults.status = 'Draft';
+              defaults.invoiceNumber = `${prefix}-${String(nextNumber).padStart(4, '0')}`;
+              defaults.issueDate = new Date().toISOString().split('T')[0];
+              defaults.invoiceDate = new Date().toISOString().split('T')[0];
+              defaults.dueDate = new Date(Date.now() + paymentTerms * 86400000).toISOString().split('T')[0];
+              defaults.subtotal = 0;
+              defaults.taxTotal = 0;
+              defaults.total = 0;
+              defaults.paymentStatus = 'unpaid';
+            } catch (error) {
+              console.error('Error fetching organization details:', error);
+              // Fallback to basic defaults
+              defaults.lineItems = [];
+              defaults.status = 'Draft';
+              defaults.invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
+              defaults.issueDate = new Date().toISOString().split('T')[0];
+              defaults.invoiceDate = new Date().toISOString().split('T')[0];
+              defaults.dueDate = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+              defaults.subtotal = 0;
+              defaults.taxTotal = 0;
+              defaults.total = 0;
+              defaults.paymentStatus = 'unpaid';
+            }
+          }
         if (modal.type === 'subscriptions') {
           defaults.items = [];
           defaults.status = 'Active';
@@ -112,22 +148,25 @@ const RecordModal: React.FC = () => {
         }
 
         // Check if this is a custom entity and set defaults for select fields
-        const customEntity = activeBlueprint.customEntities?.find(e => e.id === modal.type);
-        if (customEntity) {
-          customEntity.fields.forEach(field => {
-            if (field.type === 'select' && field.options && field.options.length > 0) {
-              defaults[field.id] = field.defaultValue || field.options[0];
-            } else if (field.type === 'checkbox') {
-              defaults[field.id] = field.defaultValue || false;
-            } else if (field.type === 'number') {
-              defaults[field.id] = field.defaultValue || 0;
-            } else if (field.defaultValue) {
-              defaults[field.id] = field.defaultValue;
-            }
-          });
-        }
+          const customEntity = activeBlueprint.customEntities?.find(e => e.id === modal.type);
+          if (customEntity) {
+            customEntity.fields.forEach(field => {
+              if (field.type === 'select' && field.options && field.options.length > 0) {
+                defaults[field.id] = field.defaultValue || field.options[0];
+              } else if (field.type === 'checkbox') {
+                defaults[field.id] = field.defaultValue || false;
+              } else if (field.type === 'number') {
+                defaults[field.id] = field.defaultValue || 0;
+              } else if (field.defaultValue) {
+                defaults[field.id] = field.defaultValue;
+              }
+            });
+          }
 
-        setFormData(defaults);
+          setFormData(defaults);
+        };
+
+        initializeDefaults();
       }
     }
   }, [modal.isOpen, modal.initialData, modal.type, currentUser, settings, activeBlueprint]);
@@ -169,7 +208,7 @@ const RecordModal: React.FC = () => {
     };
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!modal.type) return;
 
@@ -196,6 +235,28 @@ const RecordModal: React.FC = () => {
       // Use Tax Engine for calculations
       const totals = calculateLineItemTotals(formData.lineItems || [], settings, formData.taxRateId);
       upsertRecord(modal.type, { ...formData, subtotal: totals.subtotal, taxTotal: totals.taxTotal, total: totals.total });
+
+      // Increment invoice_next_number for new invoices
+      if (modal.type === 'invoices' && !modal.initialData) {
+        try {
+          const orgId = await getCurrentOrgId();
+          // Fetch current number, increment, and update
+          const { data: org } = await supabase
+            .from('organizations')
+            .select('invoice_next_number')
+            .eq('id', orgId)
+            .single();
+
+          if (org) {
+            await supabase
+              .from('organizations')
+              .update({ invoice_next_number: (org.invoice_next_number || 1) + 1 })
+              .eq('id', orgId);
+          }
+        } catch (error) {
+          console.error('Error incrementing invoice number:', error);
+        }
+      }
     } else {
       upsertRecord(modal.type, formData);
     }

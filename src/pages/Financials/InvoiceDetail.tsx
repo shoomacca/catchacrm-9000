@@ -1,23 +1,51 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ChevronLeft, Building2, Mail, Phone, DollarSign, Calendar, FileText,
   Download, Send, CheckCircle2, XCircle, Clock, Edit3, Trash2, Printer,
-  CreditCard, Package
+  CreditCard, Package, MapPin
 } from 'lucide-react';
 import { useCRM } from '../../context/CRMContext';
 import PaymentModal from '../../components/PaymentModal';
+import { supabase } from '../../lib/supabase';
+import { getCurrentOrgId } from '../../services/supabaseData';
 
 const InvoiceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { invoices, accounts, deals, quotes, products, services, openModal, deleteRecord, recordPayment } = useCRM();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [orgDetails, setOrgDetails] = useState<any>(null);
 
   const invoice = useMemo(() => invoices.find(inv => inv.id === id), [invoices, id]);
   const account = useMemo(() => accounts.find(a => a.id === invoice?.accountId), [accounts, invoice]);
   const deal = useMemo(() => deals.find(d => d.id === invoice?.dealId), [deals, invoice]);
   const quote = useMemo(() => quotes.find(q => q.id === invoice?.quoteId), [quotes, invoice]);
+
+  // Load organization details
+  useEffect(() => {
+    const loadOrgDetails = async () => {
+      try {
+        const orgId = await getCurrentOrgId();
+        const { data: org } = await supabase
+          .from('organizations')
+          .select('*')
+          .eq('id', orgId)
+          .single();
+
+        if (org) {
+          setOrgDetails(org);
+        }
+      } catch (error) {
+        console.error('Error loading organization details:', error);
+      }
+    };
+
+    loadOrgDetails();
+  }, []);
+
+  // Calculate if invoice is overdue
+  const isOverdue = invoice && invoice.status !== 'Paid' && new Date(invoice.dueDate) < new Date();
 
   if (!invoice) {
     return (
