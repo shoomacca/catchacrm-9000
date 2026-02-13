@@ -393,6 +393,10 @@ export interface Job extends CRMBase {
   bom?: BOMItem[];
   notes?: string;
   invoiceId?: string;
+  // Marketplace fields
+  location?: string; // Human-readable location for marketplace display
+  estimatedValue?: number; // Budget/value for marketplace
+  type?: string; // Marketplace category (different from jobType)
 }
 
 export interface Equipment extends CRMBase {

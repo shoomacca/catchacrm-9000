@@ -71,7 +71,7 @@ const JobMarketplacePage: React.FC = () => {
   // Real Contractors Data from Accounts
   const contractors: Contractor[] = useMemo(() => {
     return accounts
-      .filter(a => a.accountType === 'Vendor' || a.accountType === 'Partner')
+      .filter(a => a.type === 'Vendor' || a.type === 'Partner')
       .map(a => ({
         id: a.id,
         name: a.name,
@@ -91,8 +91,8 @@ const JobMarketplacePage: React.FC = () => {
       .filter(j => j.status === 'Scheduled' || j.status === 'InProgress' || !j.status)
       .map(j => {
         const account = accounts.find(a => a.id === j.accountId);
-        const priority = j.priority || 3;
-        const urgency = priority === 1 ? 'Urgent' : priority === 2 ? 'High' : priority === 3 ? 'Medium' : 'Low';
+        const priority = j.priority || '3';
+        const urgency = priority === '1' ? 'Urgent' : priority === '2' ? 'High' : priority === '3' ? 'Medium' : 'Low';
 
         return {
           id: j.id,
@@ -212,7 +212,7 @@ const JobMarketplacePage: React.FC = () => {
           <button
             onClick={() => {
               if (activeTab === 'contractors') {
-                openModal('accounts', undefined, { accountType: 'Vendor' });
+                openModal('accounts', { type: 'Vendor' });
               } else if (activeTab === 'customer-jobs') {
                 openModal('jobs');
               } else {
@@ -424,7 +424,7 @@ const JobMarketplacePage: React.FC = () => {
 
               <div className="flex gap-2 mt-4">
                 <button
-                  onClick={() => openModal('quotes', undefined, { jobId: job.id })}
+                  onClick={() => openModal('quotes', { jobId: job.id })}
                   className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
                 >
                   Place Bid
