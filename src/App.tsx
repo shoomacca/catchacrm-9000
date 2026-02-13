@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Link, useLocation, Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
   Users, Briefcase, Target, CheckSquare,
@@ -10,57 +10,62 @@ import {
   Zap, Webhook, FileText, Mail, BarChart3, PenTool, Layers, Cog, Link2, FolderOpen, CalendarCheck, User
 } from 'lucide-react';
 
-import SalesDashboard from './pages/SalesDashboard';
-import OpsDashboard from './pages/OpsDashboard';
-import MarketingDashboard from './pages/MarketingDashboard';
-import FieldServicesDashboard from './pages/FieldServicesDashboard';
-import ListView from './pages/ListView';
-import EntityDetail from './pages/EntityDetail';
-// TaskManagement removed - consolidated into MySchedule
-import SupportTickets from './pages/SupportTickets';
-import CalendarView from './pages/CalendarView';
-import FinancialHub from './pages/Financials/FinancialHub';
-import InvoicesList from './pages/Financials/InvoicesList';
-import InvoiceDetail from './pages/Financials/InvoiceDetail';
-import QuotesList from './pages/Financials/QuotesList';
-import QuoteDetail from './pages/Financials/QuoteDetail';
-import ProductDetail from './pages/ProductDetail';
-import ServiceDetail from './pages/ServiceDetail';
-import PurchaseLedger from './pages/Financials/PurchaseLedger';
-import SubscriptionsList from './pages/Financials/SubscriptionsList';
-import ItemsCatalog from './pages/Financials/ItemsCatalog';
-import BankFeed from './pages/Financials/BankFeed';
-import ExpensesList from './pages/Financials/ExpensesList';
-import TacticalQueue from './pages/Operations/TacticalQueue';
-import DispatchMatrix from './pages/Logistics/DispatchMatrix';
-import InboundEngine from './pages/Marketing/InboundEngine';
-import ReferralEngine from './pages/Marketing/ReferralEngine';
-import ReputationManager from './pages/Marketing/ReputationManager';
-import TeamChat from './pages/TeamChat';
-import SettingsView from './pages/SettingsView';
-import Diagnostics from './pages/Diagnostics';
-import CommsHub from './pages/CommsHub';
-import Reports from './pages/Reports';
-import AIWritingTools from './pages/AIWritingTools';
-import BlueprintListPage from './pages/BlueprintListPage';
-import BlueprintDetailPage from './pages/BlueprintDetailPage';
-import MySchedule from './pages/MySchedule';
-import DealsPage from './pages/DealsPage';
-import LeadsPage from './pages/LeadsPage';
-import ContactsPage from './pages/ContactsPage';
-import AccountsPage from './pages/AccountsPage';
-import CampaignsPage from './pages/CampaignsPage';
-import JobsPage from './pages/JobsPage';
-import CrewsPage from './pages/CrewsPage';
-import EquipmentPage from './pages/EquipmentPage';
-import ZonesPage from './pages/ZonesPage';
-import InventoryPage from './pages/InventoryPage';
-import PurchaseOrdersPage from './pages/PurchaseOrdersPage';
-import WarehousePage from './pages/WarehousePage';
-import ProcurementPage from './pages/ProcurementPage';
-import JobMarketplacePage from './pages/JobMarketplacePage';
-import CustomEntityListPage from './pages/CustomEntityListPage';
-import { KnowledgeBase } from './pages/KnowledgeBase';
+// Lazy-loaded page components for code splitting
+const SalesDashboard = lazy(() => import('./pages/SalesDashboard'));
+const OpsDashboard = lazy(() => import('./pages/OpsDashboard'));
+const MarketingDashboard = lazy(() => import('./pages/MarketingDashboard'));
+const FieldServicesDashboard = lazy(() => import('./pages/FieldServicesDashboard'));
+const ListView = lazy(() => import('./pages/ListView'));
+const EntityDetail = lazy(() => import('./pages/EntityDetail'));
+const SupportTickets = lazy(() => import('./pages/SupportTickets'));
+const CalendarView = lazy(() => import('./pages/CalendarView'));
+const FinancialHub = lazy(() => import('./pages/Financials/FinancialHub'));
+const InvoicesList = lazy(() => import('./pages/Financials/InvoicesList'));
+const InvoiceDetail = lazy(() => import('./pages/Financials/InvoiceDetail'));
+const QuotesList = lazy(() => import('./pages/Financials/QuotesList'));
+const QuoteDetail = lazy(() => import('./pages/Financials/QuoteDetail'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const ServiceDetail = lazy(() => import('./pages/ServiceDetail'));
+const PurchaseLedger = lazy(() => import('./pages/Financials/PurchaseLedger'));
+const SubscriptionsList = lazy(() => import('./pages/Financials/SubscriptionsList'));
+const ItemsCatalog = lazy(() => import('./pages/Financials/ItemsCatalog'));
+const BankFeed = lazy(() => import('./pages/Financials/BankFeed'));
+const ExpensesList = lazy(() => import('./pages/Financials/ExpensesList'));
+const TacticalQueue = lazy(() => import('./pages/Operations/TacticalQueue'));
+const DispatchMatrix = lazy(() => import('./pages/Logistics/DispatchMatrix'));
+const InboundEngine = lazy(() => import('./pages/Marketing/InboundEngine'));
+const ReferralEngine = lazy(() => import('./pages/Marketing/ReferralEngine'));
+const ReputationManager = lazy(() => import('./pages/Marketing/ReputationManager'));
+const TeamChat = lazy(() => import('./pages/TeamChat'));
+const SettingsView = lazy(() => import('./pages/SettingsView'));
+const Diagnostics = lazy(() => import('./pages/Diagnostics'));
+const CommsHub = lazy(() => import('./pages/CommsHub'));
+const Reports = lazy(() => import('./pages/Reports'));
+const AIWritingTools = lazy(() => import('./pages/AIWritingTools'));
+const BlueprintListPage = lazy(() => import('./pages/BlueprintListPage'));
+const BlueprintDetailPage = lazy(() => import('./pages/BlueprintDetailPage'));
+const MySchedule = lazy(() => import('./pages/MySchedule'));
+const DealsPage = lazy(() => import('./pages/DealsPage'));
+const LeadsPage = lazy(() => import('./pages/LeadsPage'));
+const ContactsPage = lazy(() => import('./pages/ContactsPage'));
+const AccountsPage = lazy(() => import('./pages/AccountsPage'));
+const CampaignsPage = lazy(() => import('./pages/CampaignsPage'));
+const JobsPage = lazy(() => import('./pages/JobsPage'));
+const CrewsPage = lazy(() => import('./pages/CrewsPage'));
+const EquipmentPage = lazy(() => import('./pages/EquipmentPage'));
+const ZonesPage = lazy(() => import('./pages/ZonesPage'));
+const InventoryPage = lazy(() => import('./pages/InventoryPage'));
+const PurchaseOrdersPage = lazy(() => import('./pages/PurchaseOrdersPage'));
+const WarehousePage = lazy(() => import('./pages/WarehousePage'));
+const ProcurementPage = lazy(() => import('./pages/ProcurementPage'));
+const JobMarketplacePage = lazy(() => import('./pages/JobMarketplacePage'));
+const CustomEntityListPage = lazy(() => import('./pages/CustomEntityListPage'));
+const KnowledgeBase = lazy(() => import('./pages/KnowledgeBase').then(m => ({ default: m.KnowledgeBase })));
+const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
+const Signup = lazy(() => import('./pages/Signup').then(m => ({ default: m.Signup })));
+const DemoMode = lazy(() => import('./pages/DemoMode').then(m => ({ default: m.DemoMode })));
+
+// Non-page imports (keep as regular imports)
 import RecordModal from './components/RecordModal';
 import DuplicateWarningModal from './components/DuplicateWarningModal';
 import DebugPanel from './components/DebugPanel';
@@ -68,9 +73,6 @@ import { ResetDemoButton, DataSourceIndicator } from './components/ResetDemoButt
 import { CRMProvider, useCRM } from './context/CRMContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { Login } from './pages/Login';
-import { Signup } from './pages/Signup';
-import { DemoMode } from './pages/DemoMode';
 
 // Context for managing expandable nav groups - click outside collapses them
 const NavContext = React.createContext<{
@@ -82,6 +84,13 @@ const NavContext = React.createContext<{
   toggleGroup: () => {},
   closeAllGroups: () => {}
 });
+
+// Loading fallback for lazy-loaded pages
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-screen">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  </div>
+);
 
 // New modern fish-hook brand icon
 export const HookIcon = ({ size = 18, className = "", strokeWidth = 3 }: { size?: number, className?: string, strokeWidth?: number }) => (
@@ -757,7 +766,8 @@ const AppContent: React.FC = () => {
           <section className={`flex-1 overflow-y-auto p-8 custom-scrollbar relative ${
             settings.branding?.theme === 'dark' ? 'bg-slate-800/30' : 'bg-slate-50/30'
           }`}>
-            <Routes>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
               <Route path="/" element={<Navigate to="/my-schedule" replace />} />
               <Route path="/my-schedule" element={<MySchedule />} />
               <Route path="/sales" element={<SalesDashboard />} />
@@ -889,7 +899,8 @@ const AppContent: React.FC = () => {
               <Route path="/diagnostics" element={<Diagnostics />} />
 
               <Route path="*" element={<Navigate to="/sales" replace />} />
-            </Routes>
+              </Routes>
+            </Suspense>
             <RecordModal />
             <DuplicateWarningModal
               isOpen={duplicateModal.isOpen}
