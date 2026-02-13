@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useCRM } from '../context/CRMContext';
+import { supabase } from '../lib/supabase';
+import { getCurrentOrgId } from '../services/supabaseData';
 import {
   Settings, Save, Plus, Trash2, Database, Shield, Layout, Target, Briefcase,
   PlusCircle, Settings2, Hash, Type as TextIcon, Calendar, CheckSquare, List,
@@ -13,9 +15,16 @@ import {
   Plug, Phone, Image, Upload, ExternalLink, RefreshCw, Play, Pause,
   Check, X, ChevronDown, Filter, Search, Download, Palette, Sun, Moon
 } from 'lucide-react';
-import { EntityType, CRMSettings, Role, Pipeline, LeadScoringRule, TaxRate } from '../types';
+import { EntityType, CRMSettings, Role, Pipeline, LeadScoringRule, TaxRate, ImportJob, ExportJob, JobEntityType } from '../types';
 import UserModal from '../components/UserModal';
 import { getCurrencyOptions, getCurrencySymbol } from '../utils/currencies';
+import {
+  createExportJob,
+  updateExportJob,
+  createImportJob,
+  updateImportJob,
+  fetchRecentJobs
+} from '../services/supabaseData';
 
 type SettingTab = 'GENERAL' | 'MODULES' | 'USERS_ACCESS' | 'INTEGRATIONS' | 'AUTOMATION' | 'BLUEPRINT' | 'DOMAIN_CONFIG' | 'IMPORT_EXPORT' | 'DIAGNOSTICS';
 type DomainSubTab = 'SALES' | 'FINANCIAL' | 'FIELD' | 'MARKETING';
@@ -25,7 +34,7 @@ interface SettingsViewProps {
 }
 
 const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) => {
-  const { settings, updateSettings, restoreDefaultSettings, resetDemoData, hardReset, users, currentUserId, setCurrentUserId, currentUser, auditLogs, createUser, updateUser, deleteUser, accounts, contacts, leads, deals, tasks, campaigns, tickets, products, services, invoices, jobs } = useCRM();
+  const { settings, updateSettings, restoreDefaultSettings, resetDemoData, hardReset, users, currentUserId, setCurrentUserId, currentUser, auditLogs, createUser, updateUser, deleteUser, accounts, contacts, leads, deals, tasks, campaigns, tickets, products, services, invoices, jobs, activateBlueprint } = useCRM();
   const [localSettings, setLocalSettings] = useState<CRMSettings>(settings);
   const [activeTab, setActiveTab] = useState<SettingTab>(initialTab);
   const [domainSubTab, setDomainSubTab] = useState<DomainSubTab>('SALES');
@@ -35,6 +44,10 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
   const [editingUser, setEditingUser] = useState<any>(null);
   const [selectedRequiredFieldsEntity, setSelectedRequiredFieldsEntity] = useState<EntityType>('leads');
   const [selectedExportEntity, setSelectedExportEntity] = useState<string>('accounts');
+  const [recentJobs, setRecentJobs] = useState<Array<ImportJob | ExportJob>>([]);
+  const [loadingJobs, setLoadingJobs] = useState(false);
+  const [loginHistory, setLoginHistory] = useState<any[]>([]);
+  const [loadingLoginHistory, setLoadingLoginHistory] = useState(false);
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -44,6 +57,83 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
+
+  // Load recent jobs when IMPORT_EXPORT tab is active
+  useEffect(() => {
+    if (activeTab === 'IMPORT_EXPORT') {
+      loadRecentJobs();
+    }
+  }, [activeTab]);
+
+  // Load login history when DIAGNOSTICS tab is active
+  useEffect(() => {
+    if (activeTab === 'DIAGNOSTICS') {
+      loadLoginHistory();
+    }
+  }, [activeTab]);
+
+  const loadRecentJobs = async () => {
+    setLoadingJobs(true);
+    try {
+      const jobs = await fetchRecentJobs(10);
+      setRecentJobs(jobs);
+    } catch (error) {
+      console.error('Error loading recent jobs:', error);
+    } finally {
+      setLoadingJobs(false);
+    }
+  };
+
+  const loadLoginHistory = async () => {
+    if (!supabase) return;
+
+    setLoadingLoginHistory(true);
+    try {
+      const orgId = await getCurrentOrgId();
+
+      // Fetch login history
+      const { data: loginData, error: loginError } = await supabase
+        .from('login_history')
+        .select('*')
+        .eq('org_id', orgId)
+        .order('login_time', { ascending: false })
+        .limit(50);
+
+      if (loginError) {
+        console.error('Error loading login history:', loginError);
+        setLoginHistory([]);
+        return;
+      }
+
+      // Fetch user details for the login records
+      const userIds = [...new Set(loginData?.map(log => log.user_id).filter(Boolean) || [])];
+      if (userIds.length > 0) {
+        const { data: usersData, error: usersError } = await supabase
+          .from('users')
+          .select('id, full_name, email')
+          .in('id', userIds);
+
+        if (!usersError && usersData) {
+          // Map user data to login records
+          const usersMap = new Map(usersData.map(u => [u.id, u]));
+          const enrichedData = loginData?.map(log => ({
+            ...log,
+            users: log.user_id ? usersMap.get(log.user_id) : null
+          }));
+          setLoginHistory(enrichedData || []);
+        } else {
+          setLoginHistory(loginData || []);
+        }
+      } else {
+        setLoginHistory(loginData || []);
+      }
+    } catch (error) {
+      console.error('Error loading login history:', error);
+      setLoginHistory([]);
+    } finally {
+      setLoadingLoginHistory(false);
+    }
+  };
 
   const handleSave = () => {
     updateSettings(localSettings);
@@ -986,9 +1076,16 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 ].map(industry => (
                   <button
                     key={industry.id}
-                    onClick={() => {
+                    onClick={async () => {
                       updateNested('organization.industry', industry.id);
                       updateNested('activeIndustry', industry.id);
+                      // Activate blueprint - stores custom entities in Supabase
+                      const success = await activateBlueprint(industry.id);
+                      if (success) {
+                        console.log(`✅ Activated ${industry.name} blueprint`);
+                      } else {
+                        console.error(`❌ Failed to activate ${industry.name} blueprint`);
+                      }
                     }}
                     className={`p-6 rounded-3xl border-2 transition-all text-left hover:scale-105 ${
                       localSettings.activeIndustry === industry.id
@@ -1555,19 +1652,50 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                         const input = document.createElement('input');
                         input.type = 'file';
                         input.accept = '.csv';
-                        input.onchange = (e) => {
+                        input.onchange = async (e) => {
                           const file = (e.target as HTMLInputElement).files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (event) => {
-                              const text = event.target?.result as string;
-                              const lines = text.split('\\n').filter(line => line.trim());
-                              const headers = lines[0]?.split(',').map(h => h.trim());
-                              const rows = lines.slice(1);
-                              const validRows = rows.filter(row => row.split(',').length === headers?.length);
+                            // Create import job
+                            const job = await createImportJob(
+                              selectedRequiredFieldsEntity as JobEntityType,
+                              file.name,
+                              file.size
+                            );
 
-                              // In demo mode, show parsed data info
-                              alert(`CSV Import Preview:\\n\\nFile: ${file.name}\\nEntity: ${selectedRequiredFieldsEntity}\\nColumns: ${headers?.join(', ')}\\nValid Rows: ${validRows.length}\\n\\nNote: In demo mode, data is not persisted. Connect to Supabase for full import functionality.`);
+                            const reader = new FileReader();
+                            reader.onload = async (event) => {
+                              try {
+                                const text = event.target?.result as string;
+                                const lines = text.split('\\n').filter(line => line.trim());
+                                const headers = lines[0]?.split(',').map(h => h.trim());
+                                const rows = lines.slice(1);
+                                const validRows = rows.filter(row => row.split(',').length === headers?.length);
+
+                                // In demo mode, show parsed data info
+                                alert(`CSV Import Preview:\\n\\nFile: ${file.name}\\nEntity: ${selectedRequiredFieldsEntity}\\nColumns: ${headers?.join(', ')}\\nValid Rows: ${validRows.length}\\n\\nNote: In demo mode, data is not persisted. Connect to Supabase for full import functionality.`);
+
+                                // Update job as completed
+                                if (job) {
+                                  await updateImportJob(job.id, {
+                                    status: 'completed',
+                                    total_rows: rows.length,
+                                    success_rows: validRows.length,
+                                    failed_rows: rows.length - validRows.length
+                                  });
+                                  // Reload job history
+                                  loadRecentJobs();
+                                }
+                              } catch (error) {
+                                // Update job as failed
+                                if (job) {
+                                  await updateImportJob(job.id, {
+                                    status: 'failed',
+                                    error_message: error instanceof Error ? error.message : 'Import failed'
+                                  });
+                                }
+                                console.error('Import error:', error);
+                                alert('Import failed. Please try again.');
+                              }
                             };
                             reader.readAsText(file);
                           }
@@ -1640,7 +1768,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
 
                   <div className="flex gap-3">
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         // Get data based on selected entity
                         const dataMap: Record<string, any[]> = {
                           accounts, contacts, leads, deals, tasks, campaigns, tickets, products, services, invoices, jobs
@@ -1652,31 +1780,58 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                           return;
                         }
 
-                        // Get all unique keys from the data
-                        const allKeys = new Set<string>();
-                        data.forEach(item => Object.keys(item).forEach(key => allKeys.add(key)));
-                        const headers = Array.from(allKeys);
+                        const fileName = `${selectedExportEntity}_export_${new Date().toISOString().split('T')[0]}.csv`;
 
-                        // Convert to CSV
-                        const csvRows = [headers.join(',')];
-                        data.forEach(item => {
-                          const row = headers.map(header => {
-                            const value = item[header];
-                            if (value === null || value === undefined) return '';
-                            if (typeof value === 'object') return JSON.stringify(value).replace(/,/g, ';');
-                            return String(value).replace(/,/g, ';').replace(/\\n/g, ' ');
+                        // Create export job
+                        const job = await createExportJob(selectedExportEntity as JobEntityType, fileName);
+
+                        try {
+                          // Get all unique keys from the data
+                          const allKeys = new Set<string>();
+                          data.forEach(item => Object.keys(item).forEach(key => allKeys.add(key)));
+                          const headers = Array.from(allKeys);
+
+                          // Convert to CSV
+                          const csvRows = [headers.join(',')];
+                          data.forEach(item => {
+                            const row = headers.map(header => {
+                              const value = item[header];
+                              if (value === null || value === undefined) return '';
+                              if (typeof value === 'object') return JSON.stringify(value).replace(/,/g, ';');
+                              return String(value).replace(/,/g, ';').replace(/\\n/g, ' ');
+                            });
+                            csvRows.push(row.join(','));
                           });
-                          csvRows.push(row.join(','));
-                        });
 
-                        const csvContent = csvRows.join('\\n');
-                        const blob = new Blob([csvContent], { type: 'text/csv' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `${selectedExportEntity}_export_${new Date().toISOString().split('T')[0]}.csv`;
-                        a.click();
-                        URL.revokeObjectURL(url);
+                          const csvContent = csvRows.join('\\n');
+                          const blob = new Blob([csvContent], { type: 'text/csv' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = fileName;
+                          a.click();
+                          URL.revokeObjectURL(url);
+
+                          // Update job as completed
+                          if (job) {
+                            await updateExportJob(job.id, {
+                              status: 'completed',
+                              row_count: data.length
+                            });
+                            // Reload job history
+                            loadRecentJobs();
+                          }
+                        } catch (error) {
+                          // Update job as failed
+                          if (job) {
+                            await updateExportJob(job.id, {
+                              status: 'failed',
+                              error_message: error instanceof Error ? error.message : 'Export failed'
+                            });
+                          }
+                          console.error('Export error:', error);
+                          alert('Export failed. Please try again.');
+                        }
                       }}
                       className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-emerald-600 text-white rounded-[24px] text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all active:scale-95"
                     >
@@ -1686,33 +1841,51 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                   </div>
 
                   <div className="bg-slate-50 rounded-xl p-4 space-y-2">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recent Exports</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recent Jobs</p>
+                      <button
+                        onClick={loadRecentJobs}
+                        className="text-[10px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                      >
+                        <RefreshCw size={12} />
+                        Refresh
+                      </button>
+                    </div>
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <FileText size={14} className="text-slate-400" />
-                          <div>
-                            <p className="text-xs font-bold text-slate-900">contacts_export_2026-02-08.csv</p>
-                            <p className="text-[10px] text-slate-500">2 hours ago • 347 rows</p>
-                          </div>
+                      {loadingJobs ? (
+                        <div className="text-center py-4">
+                          <p className="text-xs text-slate-500">Loading...</p>
                         </div>
-                        <button className="text-blue-600 hover:text-blue-700">
-                          <Download size={14} />
-                        </button>
-                      </div>
+                      ) : recentJobs.length === 0 ? (
+                        <div className="text-center py-4">
+                          <p className="text-xs text-slate-500">No import/export jobs yet</p>
+                        </div>
+                      ) : (
+                        recentJobs.map((job) => {
+                          const isImport = 'total_rows' in job;
+                          const isExport = 'row_count' in job;
+                          const rowCount = isExport ? (job as ExportJob).row_count : (job as ImportJob).success_rows;
+                          const statusColor = job.status === 'completed' ? 'text-green-600' : job.status === 'failed' ? 'text-red-600' : 'text-yellow-600';
+                          const timeAgo = new Date(job.createdAt).toLocaleString();
 
-                      <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <FileText size={14} className="text-slate-400" />
-                          <div>
-                            <p className="text-xs font-bold text-slate-900">leads_export_2026-02-07.csv</p>
-                            <p className="text-[10px] text-slate-500">1 day ago • 128 rows</p>
-                          </div>
-                        </div>
-                        <button className="text-blue-600 hover:text-blue-700">
-                          <Download size={14} />
-                        </button>
-                      </div>
+                          return (
+                            <div key={job.id} className="flex items-center justify-between p-2 bg-white rounded-lg">
+                              <div className="flex items-center gap-3">
+                                {isImport ? <Upload size={14} className="text-blue-500" /> : <Download size={14} className="text-green-500" />}
+                                <div>
+                                  <p className="text-xs font-bold text-slate-900">{job.file_name}</p>
+                                  <p className="text-[10px] text-slate-500">
+                                    {timeAgo} • {job.entity_type} • {rowCount || 0} rows
+                                  </p>
+                                </div>
+                              </div>
+                              <div className={`text-[10px] font-bold ${statusColor} uppercase`}>
+                                {job.status}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1770,6 +1943,74 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
               <p className="text-sm text-slate-600">Monitor system health, view audit logs, and perform maintenance</p>
             </div>
 
+            {/* Login History Viewer */}
+            <SettingsCard title="Login History" icon={Key}>
+              <div className="space-y-6">
+                {/* Refresh Button */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={loadLoginHistory}
+                    disabled={loadingLoginHistory}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                  >
+                    <RefreshCw size={14} className={loadingLoginHistory ? 'animate-spin' : ''} />
+                    Refresh
+                  </button>
+                </div>
+
+                {/* Login History Entries */}
+                <div className="max-h-96 overflow-y-auto space-y-2">
+                  {loadingLoginHistory ? (
+                    <div className="text-center py-12">
+                      <RefreshCw size={32} className="mx-auto text-slate-300 mb-3 animate-spin" />
+                      <p className="text-sm font-bold text-slate-400">Loading login history...</p>
+                    </div>
+                  ) : loginHistory.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Key size={32} className="mx-auto text-slate-300 mb-3" />
+                      <p className="text-sm font-bold text-slate-400">No login history found</p>
+                    </div>
+                  ) : (
+                    loginHistory.map(log => (
+                      <div key={log.id} className={`flex items-center gap-4 p-4 rounded-xl ${log.status === 'success' ? 'bg-emerald-50 border border-emerald-100' : 'bg-rose-50 border border-rose-100'}`}>
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-sm ${log.status === 'success' ? 'bg-emerald-500' : 'bg-rose-500'}`}>
+                          {log.status === 'success' ? <Check size={14} className="text-white" /> : <X size={14} className="text-white" />}
+                        </div>
+                        <div className="flex-1 grid grid-cols-4 gap-4">
+                          <div>
+                            <p className="text-xs font-bold text-slate-900">{log.users?.full_name || 'Unknown'}</p>
+                            <p className="text-[10px] text-slate-400">{log.users?.email || 'No email'}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Device</p>
+                            <p className="text-xs font-bold text-slate-900">{log.device_type}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Platform</p>
+                            <p className="text-xs font-bold text-slate-900">{log.browser} / {log.platform}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Time</p>
+                            <p className="text-xs font-bold text-slate-900">{new Date(log.login_time).toLocaleString()}</p>
+                          </div>
+                        </div>
+                        {log.status === 'failed' && log.failure_reason && (
+                          <div className="px-3 py-1 bg-rose-100 rounded-lg">
+                            <p className="text-[10px] text-rose-600 font-bold">{log.failure_reason}</p>
+                          </div>
+                        )}
+                        {log.ip_address && (
+                          <div className="px-3 py-1 bg-slate-100 rounded-lg">
+                            <p className="text-[10px] text-slate-600 font-mono">{log.ip_address}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </SettingsCard>
+
             {/* Audit Log Viewer */}
             <SettingsCard title="Audit Log" icon={Activity}>
               <div className="space-y-6">
@@ -1784,7 +2025,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                     <option value="leads">Leads</option>
                     <option value="deals">Deals</option>
                     <option value="accounts">Accounts</option>
-                    <option value="contacts">Contacts</option>
                     <option value="invoices">Invoices</option>
                   </select>
                   <input

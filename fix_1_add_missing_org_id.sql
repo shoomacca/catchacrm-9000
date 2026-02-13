@@ -1,0 +1,51 @@
+-- ============================================
+-- FIX #1: Add Missing org_id Columns
+-- ============================================
+-- Date: 2026-02-12
+-- Purpose: Add org_id column to tables that are missing it
+-- Impact: Only affects ORPHANED table (quote_line_items)
+--
+-- IMPORTANT: This script is for ORPHANED tables only.
+-- All USED tables already have org_id columns.
+--
+-- Review DATABASE_AUDIT.md before running.
+-- ============================================
+
+-- ============================================
+-- USED TABLES - NO ACTION NEEDED
+-- ============================================
+-- All 48 USED tables already have org_id columns:
+-- ✅ accounts, contacts, leads, deals, tasks, tickets, campaigns
+-- ✅ users, calendar_events, invoices, quotes, products, services
+-- ✅ subscriptions, payments, communications, conversations
+-- ✅ chat_messages, chat_widgets, documents, notifications
+-- ✅ ticket_messages, crews, jobs, zones, equipment
+-- ✅ inventory_items, warehouses, warehouse_locations
+-- ✅ dispatch_alerts, tactical_queue, bank_transactions
+-- ✅ expenses, purchase_orders, currencies, reviews
+-- ✅ referral_rewards, inbound_forms, calculators
+-- ✅ automation_workflows, webhooks, industry_templates
+-- ✅ rfqs, supplier_quotes, audit_log, roles
+-- ✅ organizations (root table, doesn't need org_id)
+-- ✅ organization_users (has org_id)
+
+-- ============================================
+-- ORPHANED TABLES MISSING org_id
+-- ============================================
+
+-- quote_line_items - NOT USED IN CODE (orphaned)
+-- This table exists in Supabase but is never referenced in the codebase.
+-- RECOMMENDATION: DROP this table instead of adding org_id (see fix_3_drop_orphaned_tables.sql)
+--
+-- IF YOU WANT TO KEEP IT (not recommended):
+-- ALTER TABLE quote_line_items ADD COLUMN org_id uuid REFERENCES organizations(id);
+-- UPDATE quote_line_items SET org_id = '00000000-0000-0000-0000-000000000001' WHERE org_id IS NULL; -- Set to demo org
+-- ALTER TABLE quote_line_items ALTER COLUMN org_id SET NOT NULL;
+
+-- ============================================
+-- SUMMARY
+-- ============================================
+-- ✅ NO ACTION REQUIRED
+-- All USED tables already have org_id columns.
+-- The only table missing org_id (quote_line_items) is ORPHANED
+-- and should be dropped via fix_3_drop_orphaned_tables.sql.

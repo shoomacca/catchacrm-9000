@@ -43,7 +43,11 @@ export type EntityType =
   | 'warehouseLocations'
   | 'dispatchAlerts'
   | 'rfqs'
-  | 'supplierQuotes';
+  | 'supplierQuotes'
+  | 'emailTemplates'
+  | 'smsTemplates'
+  | 'kbCategories'
+  | 'kbArticles';
 
 export type CommunicationOutcome = 'answered' | 'no-answer' | 'voicemail' | 'meeting-booked' | 'converted';
 
@@ -564,6 +568,39 @@ export interface Webhook extends CRMBase {
   failureCount: number;
 }
 
+export interface WebhookConfig extends CRMBase {
+  org_id: string;
+  webhook_id: string;
+  auth_type?: 'none' | 'basic' | 'bearer' | 'api_key';
+  auth_username?: string;
+  auth_password?: string;
+  auth_token?: string;
+  auth_api_key?: string;
+  auth_api_key_header?: string;
+  custom_headers?: Record<string, string>;
+  timeout_ms?: number;
+  retry_enabled?: boolean;
+  retry_count?: number;
+  retry_delay_ms?: number;
+  verify_ssl?: boolean;
+}
+
+export interface WebhookLog extends CRMBase {
+  org_id: string;
+  webhook_id: string;
+  request_url: string;
+  request_method: string;
+  request_headers?: Record<string, string>;
+  request_body?: any;
+  response_status?: number;
+  response_body?: any;
+  response_time_ms?: number;
+  success: boolean;
+  error_message?: string;
+  triggered_at: string;
+  retry_count?: number;
+}
+
 export interface CustomFieldDef {
   id: string;
   label: string;
@@ -743,10 +780,60 @@ export interface Document extends CRMBase {
   tags?: string[];
 }
 
+export interface EmailTemplate extends CRMBase {
+  name: string;
+  description?: string;
+  subject: string;
+  bodyHtml?: string;
+  bodyText?: string;
+  category?: string;
+  folder?: string;
+  fromName?: string;
+  fromEmail?: string;
+  replyTo?: string;
+  attachments?: any[];
+  isActive?: boolean;
+  usageCount?: number;
+  lastUsedAt?: string;
+}
+
+export interface SMSTemplate extends CRMBase {
+  name: string;
+  description?: string;
+  content: string;
+  category?: string;
+  isActive?: boolean;
+  usageCount?: number;
+  lastUsedAt?: string;
+}
+
+export interface KBCategory extends CRMBase {
+  name: string;
+  description?: string;
+  parentCategoryId?: string;
+  sortOrder?: number;
+  isPublic?: boolean;
+  isActive?: boolean;
+}
+
+export interface KBArticle extends CRMBase {
+  title: string;
+  content: string;
+  summary?: string;
+  categoryId?: string;
+  authorId?: string;
+  keywords?: string[];
+  status?: 'draft' | 'published';
+  publishedAt?: string;
+  isPublic?: boolean;
+  viewCount?: number;
+  helpfulCount?: number;
+  notHelpfulCount?: number;
+}
+
 // === Role & Permission Types ===
 
-export interface Role {
-  id: string;
+export interface Role extends CRMBase {
   name: string;
   label?: string;
   description: string;
@@ -757,9 +844,6 @@ export interface Role {
   canViewAllData?: boolean;
   canModifyAllData?: boolean;
   portalType?: 'internal' | 'customer' | 'partner';
-  createdAt?: string;
-  updatedAt?: string;
-  createdBy?: string;
 }
 
 export interface PermissionMatrix {
@@ -1190,6 +1274,22 @@ export interface CustomEntityDefinition {
   hasWorkflow?: boolean;
 }
 
+// Custom Object (Supabase table representation)
+export interface CustomObject extends CRMBase {
+  org_id: string;
+  entity_type: string; // e.g., "properties", "showings", "installations"
+  name: string; // singular name, e.g., "Property"
+  name_plural: string; // plural name, e.g., "Properties"
+  icon?: string; // emoji icon
+  fields_schema: CustomFieldDefinition[]; // JSONB array of field definitions
+  relation_to?: string[]; // array of entity types this relates to
+  has_timeline?: boolean;
+  has_documents?: boolean;
+  has_workflow?: boolean;
+  is_active?: boolean;
+  updated_by?: string;
+}
+
 // === Operations & Logistics Types ===
 
 export interface TacticalQueueNote {
@@ -1324,4 +1424,54 @@ export interface AuditReport {
   };
   failures: AuditFailure[];
   timestamp: string;
+}
+
+// ============================================
+// IMPORT/EXPORT JOB TRACKING
+// ============================================
+
+export type ImportJobStatus = 'pending' | 'running' | 'completed' | 'failed';
+export type ExportJobStatus = 'pending' | 'running' | 'completed' | 'failed';
+export type JobEntityType = 'leads' | 'deals' | 'accounts' | 'contacts' | 'tasks' |
+  'campaigns' | 'tickets' | 'products' | 'services' | 'invoices' | 'jobs';
+
+export interface ImportJob extends CRMBase {
+  org_id: string;
+  entity_type: JobEntityType;
+  file_name: string;
+  file_size?: number;
+  status: ImportJobStatus;
+  total_rows?: number;
+  success_rows?: number;
+  failed_rows?: number;
+  error_message?: string;
+  started_at?: string;
+  completed_at?: string;
+  created_by?: string;
+}
+
+export interface ExportJob extends CRMBase {
+  org_id: string;
+  entity_type: JobEntityType;
+  file_name: string;
+  status: ExportJobStatus;
+  row_count?: number;
+  error_message?: string;
+  started_at?: string;
+  completed_at?: string;
+  created_by?: string;
+}
+
+export interface MassOperationJob extends CRMBase {
+  org_id: string;
+  operation_type: 'delete' | 'update' | 'merge';
+  entity_type: JobEntityType;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  total_records?: number;
+  processed_records?: number;
+  failed_records?: number;
+  error_message?: string;
+  started_at?: string;
+  completed_at?: string;
+  created_by?: string;
 }

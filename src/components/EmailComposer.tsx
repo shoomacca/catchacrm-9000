@@ -20,7 +20,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   recipientName,
   recipientEmail
 }) => {
-  const { upsertRecord, currentUser } = useCRM();
+  const { upsertRecord, currentUser, emailTemplates } = useCRM();
   const [to, setTo] = useState(recipientEmail || '');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
@@ -30,42 +30,65 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   const [showBcc, setShowBcc] = useState(false);
   const [attachments, setAttachments] = useState<string[]>([]);
 
-  const emailTemplates = [
-    {
-      name: 'Welcome',
-      subject: 'Welcome to {Company}!',
-      body: 'Hi {Name},\n\nThank you for your interest in our services. We\'re excited to work with you!\n\nBest regards,\n{YourName}'
-    },
-    {
-      name: 'Follow Up',
-      subject: 'Following up on our conversation',
-      body: 'Hi {Name},\n\nI wanted to follow up on our recent conversation about your project needs.\n\nWould you be available for a quick call this week?\n\nBest regards,\n{YourName}'
-    },
-    {
-      name: 'Quote Sent',
-      subject: 'Quote #{QuoteNumber} for your review',
-      body: 'Hi {Name},\n\nPlease find attached your quote for the {Service} project.\n\nThis quote is valid for 30 days. Please let me know if you have any questions!\n\nBest regards,\n{YourName}'
-    },
-    {
-      name: 'Invoice Sent',
-      subject: 'Invoice #{InvoiceNumber} - Payment Due',
-      body: 'Hi {Name},\n\nPlease find attached invoice #{InvoiceNumber} for recent services.\n\nPayment is due within 30 days. You can pay via bank transfer or credit card.\n\nThank you for your business!\n\nBest regards,\n{YourName}'
-    },
-    {
-      name: 'Thank You',
-      subject: 'Thank you for your business!',
-      body: 'Hi {Name},\n\nThank you for choosing {Company}. It was a pleasure working with you!\n\nIf you need anything else, please don\'t hesitate to reach out.\n\nBest regards,\n{YourName}'
-    }
-  ];
+  // Seed default templates if none exist
+  React.useEffect(() => {
+    if (emailTemplates.length === 0 && isOpen) {
+      const defaultTemplates = [
+        {
+          name: 'Welcome',
+          subject: 'Welcome to {Company}!',
+          bodyText: 'Hi {Name},\n\nThank you for your interest in our services. We\'re excited to work with you!\n\nBest regards,\n{YourName}',
+          category: 'General',
+          isActive: true
+        },
+        {
+          name: 'Follow Up',
+          subject: 'Following up on our conversation',
+          bodyText: 'Hi {Name},\n\nI wanted to follow up on our recent conversation about your project needs.\n\nWould you be available for a quick call this week?\n\nBest regards,\n{YourName}',
+          category: 'Sales',
+          isActive: true
+        },
+        {
+          name: 'Quote Sent',
+          subject: 'Quote #{QuoteNumber} for your review',
+          bodyText: 'Hi {Name},\n\nPlease find attached your quote for the {Service} project.\n\nThis quote is valid for 30 days. Please let me know if you have any questions!\n\nBest regards,\n{YourName}',
+          category: 'Sales',
+          isActive: true
+        },
+        {
+          name: 'Invoice Sent',
+          subject: 'Invoice #{InvoiceNumber} - Payment Due',
+          bodyText: 'Hi {Name},\n\nPlease find attached invoice #{InvoiceNumber} for recent services.\n\nPayment is due within 30 days. You can pay via bank transfer or credit card.\n\nThank you for your business!\n\nBest regards,\n{YourName}',
+          category: 'Finance',
+          isActive: true
+        },
+        {
+          name: 'Thank You',
+          subject: 'Thank you for your business!',
+          bodyText: 'Hi {Name},\n\nThank you for choosing {Company}. It was a pleasure working with you!\n\nIf you need anything else, please don\'t hesitate to reach out.\n\nBest regards,\n{YourName}',
+          category: 'General',
+          isActive: true
+        }
+      ];
 
-  const applyTemplate = (template: typeof emailTemplates[0]) => {
-    let sub = template.subject
+      // Insert default templates
+      defaultTemplates.forEach(template => {
+        upsertRecord('emailTemplates', template);
+      });
+    }
+  }, [emailTemplates.length, isOpen, upsertRecord]);
+
+  // Filter active templates
+  const activeTemplates = emailTemplates.filter(t => t.isActive !== false);
+
+  const applyTemplate = (template: typeof activeTemplates[0]) => {
+    let sub = (template.subject || '')
       .replace('{Company}', 'CatchaCRM')
       .replace('{Name}', recipientName)
       .replace('{QuoteNumber}', 'Q-001')
       .replace('{InvoiceNumber}', 'INV-001');
 
-    let bod = template.body
+    let bod = (template.bodyText || template.bodyHtml || '')
       .replace('{Company}', 'CatchaCRM')
       .replace('{Name}', recipientName)
       .replace('{YourName}', currentUser?.name || 'Team')
@@ -75,6 +98,15 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
 
     setSubject(sub);
     setBody(bod);
+
+    // Update usage count
+    if (template.id) {
+      upsertRecord('emailTemplates', {
+        id: template.id,
+        usageCount: (template.usageCount || 0) + 1,
+        lastUsedAt: new Date().toISOString()
+      });
+    }
   };
 
   const handleSend = () => {
@@ -140,9 +172,9 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
                 Quick Templates
               </label>
               <div className="flex flex-wrap gap-2">
-                {emailTemplates.map((template, idx) => (
+                {activeTemplates.map((template, idx) => (
                   <button
-                    key={idx}
+                    key={template.id || idx}
                     onClick={() => applyTemplate(template)}
                     className="px-4 py-2 bg-purple-50 text-purple-700 border border-purple-200 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-purple-100 transition-all"
                   >

@@ -20,39 +20,98 @@ export const SMSComposer: React.FC<SMSComposerProps> = ({
   recipientName,
   recipientPhone
 }) => {
-  const { upsertRecord, currentUser } = useCRM();
+  const { upsertRecord, deleteRecord, currentUser, smsTemplates } = useCRM();
   const [to, setTo] = useState(recipientPhone || '');
   const [message, setMessage] = useState('');
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const [templateName, setTemplateName] = useState('');
 
-  const smsTemplates = [
-    {
-      name: 'Quick Intro',
-      message: 'Hi {Name}, this is {YourName} from CatchaCRM. Thanks for your interest! When would be a good time to chat?'
-    },
-    {
-      name: 'Follow Up',
-      message: 'Hi {Name}, just following up on our recent conversation. Let me know if you have any questions!'
-    },
-    {
-      name: 'Appointment',
-      message: 'Hi {Name}, just confirming our appointment scheduled for [DATE/TIME]. Please reply to confirm.'
-    },
-    {
-      name: 'Thank You',
-      message: 'Hi {Name}, thank you for your business! We appreciate you choosing us. Feel free to reach out if you need anything.'
-    },
-    {
-      name: 'Quote Ready',
-      message: 'Hi {Name}, your quote is ready! Check your email for details or reply here if you have questions.'
+  // Seed default templates if none exist
+  React.useEffect(() => {
+    if (smsTemplates.length === 0 && isOpen) {
+      const defaultTemplates = [
+        {
+          name: 'Quick Intro',
+          content: 'Hi {Name}, this is {YourName} from CatchaCRM. Thanks for your interest! When would be a good time to chat?',
+          category: 'Sales',
+          isActive: true
+        },
+        {
+          name: 'Follow Up',
+          content: 'Hi {Name}, just following up on our recent conversation. Let me know if you have any questions!',
+          category: 'Sales',
+          isActive: true
+        },
+        {
+          name: 'Appointment',
+          content: 'Hi {Name}, just confirming our appointment scheduled for [DATE/TIME]. Please reply to confirm.',
+          category: 'General',
+          isActive: true
+        },
+        {
+          name: 'Thank You',
+          content: 'Hi {Name}, thank you for your business! We appreciate you choosing us. Feel free to reach out if you need anything.',
+          category: 'General',
+          isActive: true
+        },
+        {
+          name: 'Quote Ready',
+          content: 'Hi {Name}, your quote is ready! Check your email for details or reply here if you have questions.',
+          category: 'Sales',
+          isActive: true
+        }
+      ];
+
+      // Insert default templates
+      defaultTemplates.forEach(template => {
+        upsertRecord('smsTemplates', template);
+      });
     }
-  ];
+  }, [smsTemplates.length, isOpen, upsertRecord]);
 
-  const applyTemplate = (template: typeof smsTemplates[0]) => {
-    let msg = template.message
+  // Filter active templates
+  const activeTemplates = smsTemplates.filter(t => t.isActive !== false);
+
+  const applyTemplate = (template: typeof activeTemplates[0]) => {
+    let msg = (template.content || '')
       .replace('{Name}', recipientName.split(' ')[0])
       .replace('{YourName}', currentUser?.name.split(' ')[0] || 'Team');
 
     setMessage(msg);
+
+    // Update usage count
+    if (template.id) {
+      upsertRecord('smsTemplates', {
+        id: template.id,
+        usageCount: (template.usageCount || 0) + 1,
+        lastUsedAt: new Date().toISOString()
+      });
+    }
+  };
+
+  const saveAsTemplate = () => {
+    if (!templateName.trim() || !message.trim()) {
+      alert('Please enter a template name and message');
+      return;
+    }
+
+    upsertRecord('smsTemplates', {
+      name: templateName,
+      content: message,
+      category: 'Custom',
+      isActive: true,
+      usageCount: 0
+    });
+
+    setTemplateName('');
+    setShowSaveTemplate(false);
+    alert('Template saved successfully!');
+  };
+
+  const deleteTemplate = (templateId: string) => {
+    if (window.confirm('Delete this template?')) {
+      deleteRecord('smsTemplates', templateId);
+    }
   };
 
   const handleSend = () => {
@@ -128,14 +187,23 @@ export const SMSComposer: React.FC<SMSComposerProps> = ({
                 Quick Templates
               </label>
               <div className="flex flex-wrap gap-2">
-                {smsTemplates.map((template, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => applyTemplate(template)}
-                    className="px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-emerald-100 transition-all"
-                  >
-                    {template.name}
-                  </button>
+                {activeTemplates.map((template, idx) => (
+                  <div key={template.id || idx} className="relative group">
+                    <button
+                      onClick={() => applyTemplate(template)}
+                      className="px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-emerald-100 transition-all"
+                    >
+                      {template.name}
+                    </button>
+                    {template.category === 'Custom' && (
+                      <button
+                        onClick={() => deleteTemplate(template.id)}
+                        className="absolute -top-2 -right-2 w-5 h-5 bg-rose-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -203,6 +271,47 @@ export const SMSComposer: React.FC<SMSComposerProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* Save as Template */}
+            {!showSaveTemplate && message && (
+              <div>
+                <button
+                  onClick={() => setShowSaveTemplate(true)}
+                  className="w-full px-4 py-3 bg-slate-50 text-slate-700 border border-slate-200 rounded-2xl text-xs font-bold hover:bg-slate-100 transition-all"
+                >
+                  💾 Save as Template
+                </button>
+              </div>
+            )}
+
+            {showSaveTemplate && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">
+                  Template Name
+                </label>
+                <input
+                  type="text"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  placeholder="e.g., Invoice Reminder"
+                  className="w-full px-4 py-2 bg-white border border-emerald-300 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-emerald-500 transition-all mb-3"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={saveAsTemplate}
+                    className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => { setShowSaveTemplate(false); setTemplateName(''); }}
+                    className="px-4 py-2 bg-white text-slate-600 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Mock Mode Notice */}
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">

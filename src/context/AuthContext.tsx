@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Session, User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { ensureUserOrganization } from '../services/supabaseData';
+import { ensureUserOrganization, getCurrentOrgId } from '../services/supabaseData';
 
 interface AuthContextType {
   user: User | null;
@@ -15,6 +15,36 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Helper to log login attempts
+async function logLoginAttempt(userId: string | null, orgId: string | null, success: boolean, failureReason?: string) {
+  if (!supabase) return;
+
+  try {
+    const userAgent = navigator.userAgent;
+    const browser = userAgent.includes('Chrome') ? 'Chrome' :
+                   userAgent.includes('Firefox') ? 'Firefox' :
+                   userAgent.includes('Safari') ? 'Safari' : 'Other';
+    const platform = userAgent.includes('Windows') ? 'Windows' :
+                    userAgent.includes('Mac') ? 'macOS' :
+                    userAgent.includes('Linux') ? 'Linux' : 'Other';
+    const deviceType = /Mobile|Android|iPhone|iPad/.test(userAgent) ? 'mobile' : 'desktop';
+
+    await supabase.from('login_history').insert({
+      user_id: userId,
+      org_id: orgId,
+      login_time: new Date().toISOString(),
+      browser,
+      platform,
+      device_type: deviceType,
+      status: success ? 'success' : 'failed',
+      failure_reason: failureReason
+    });
+  } catch (error) {
+    console.error('Failed to log login attempt:', error);
+    // Don't throw - logging failures shouldn't block auth
+  }
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -79,10 +109,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('ℹ️ Mock mode: Sign in skipped');
       return { error: null };
     }
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    // Log login attempt
+    if (data?.user) {
+      const orgId = data.user.user_metadata?.org_id || await getCurrentOrgId();
+      await logLoginAttempt(data.user.id, orgId, !error, error?.message);
+    } else if (error) {
+      await logLoginAttempt(null, null, false, error.message);
+    }
+
     return { error };
   };
 
@@ -111,7 +150,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (result.orgId) {
         // Update local state with org_id
         setOrgId(result.orgId);
+        // Log successful signup
+        await logLoginAttempt(data.user.id, result.orgId, true);
       }
+    } else if (error) {
+      // Log failed signup
+      await logLoginAttempt(null, null, false, error.message);
     }
 
     return { error };

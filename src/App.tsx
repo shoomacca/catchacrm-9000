@@ -14,13 +14,11 @@ import SalesDashboard from './pages/SalesDashboard';
 import OpsDashboard from './pages/OpsDashboard';
 import MarketingDashboard from './pages/MarketingDashboard';
 import FieldServicesDashboard from './pages/FieldServicesDashboard';
-import LogisticsDashboard from './pages/LogisticsDashboard';
 import ListView from './pages/ListView';
 import EntityDetail from './pages/EntityDetail';
 // TaskManagement removed - consolidated into MySchedule
 import SupportTickets from './pages/SupportTickets';
 import CalendarView from './pages/CalendarView';
-import AIImageSuite from './pages/AIImageSuite';
 import FinancialHub from './pages/Financials/FinancialHub';
 import InvoicesList from './pages/Financials/InvoicesList';
 import InvoiceDetail from './pages/Financials/InvoiceDetail';
@@ -62,7 +60,9 @@ import WarehousePage from './pages/WarehousePage';
 import ProcurementPage from './pages/ProcurementPage';
 import JobMarketplacePage from './pages/JobMarketplacePage';
 import CustomEntityListPage from './pages/CustomEntityListPage';
+import { KnowledgeBase } from './pages/KnowledgeBase';
 import RecordModal from './components/RecordModal';
+import DuplicateWarningModal from './components/DuplicateWarningModal';
 import DebugPanel from './components/DebugPanel';
 import { ResetDemoButton, DataSourceIndicator } from './components/ResetDemoButton';
 import { CRMProvider, useCRM } from './context/CRMContext';
@@ -547,7 +547,7 @@ const AppContent: React.FC = () => {
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
   const sidebarRef = useRef<HTMLElement>(null);
   const location = useLocation();
-  const { settings, activeBlueprint } = useCRM(); // Access settings for feature flag gates
+  const { settings, activeBlueprint, duplicateModal, handleCreateAnyway, handleViewDuplicate, closeDuplicateModal } = useCRM(); // Access settings for feature flag gates
 
   const toggleGroup = (id: string) => {
     setOpenGroups(prev => {
@@ -764,8 +764,6 @@ const AppContent: React.FC = () => {
               <Route path="/ops" element={<OpsDashboard />} />
               <Route path="/marketing" element={<MarketingDashboard />} />
               <Route path="/field-services" element={<FieldServicesDashboard />} />
-              <Route path="/logistics-hub" element={<LogisticsDashboard />} />
-              <Route path="/ai-suite" element={<AIImageSuite />} />
 
               <Route path="/financials" element={<FinancialHub />} />
 
@@ -805,6 +803,7 @@ const AppContent: React.FC = () => {
               <Route path="/ops/support-inbox" element={<SupportTickets />} />
               <Route path="/ops/comms-hub" element={<CommsHub />} />
               <Route path="/ops/reports" element={<Reports />} />
+              <Route path="/ops/knowledge-base" element={<KnowledgeBase />} />
               <Route path="/tickets" element={<Navigate to="/ops/support-inbox" replace />} />
               <Route path="/tickets/:id" element={<EntityDetail type="tickets" />} />
 
@@ -892,6 +891,14 @@ const AppContent: React.FC = () => {
               <Route path="*" element={<Navigate to="/sales" replace />} />
             </Routes>
             <RecordModal />
+            <DuplicateWarningModal
+              isOpen={duplicateModal.isOpen}
+              entityType={duplicateModal.entityType!}
+              matches={duplicateModal.matches}
+              onCreateAnyway={handleCreateAnyway}
+              onViewDuplicate={handleViewDuplicate}
+              onCancel={closeDuplicateModal}
+            />
             {showDebug && <DebugPanel onClose={() => setShowDebug(false)} />}
           </section>
         </main>

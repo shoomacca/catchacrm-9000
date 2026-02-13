@@ -8,7 +8,8 @@ import {
   AutomationWorkflow, Webhook, WorkflowTriggerType, WorkflowNodeType, WorkflowActionType, WorkflowTrigger, WorkflowNode,
   IndustryTemplate, LayoutSection, CustomFieldDef, Role, Team, CrewConfig, Pipeline, LeadScoringRule, TaxRate, LedgerMapping,
   JobTemplate, ZoneConfig, Warehouse, FieldSecurityRule, PermissionMatrix, IndustryBlueprint,
-  TacticalQueueItem, WarehouseLocation, DispatchAlert, RFQ, SupplierQuote
+  TacticalQueueItem, WarehouseLocation, DispatchAlert, RFQ, SupplierQuote, EmailTemplate, SMSTemplate,
+  KBCategory, KBArticle, Currency
 } from '../types';
 import { generateDemoData } from '../utils/seedData';
 import { INDUSTRY_BLUEPRINTS, getActiveBlueprint } from '../utils/industryBlueprints';
@@ -20,9 +21,15 @@ import {
   resetDemoOrganization,
   insertRecord as supabaseInsert,
   updateRecord as supabaseUpdate,
-  deleteRecord as supabaseDelete
+  deleteRecord as supabaseDelete,
+  getCurrentOrgId,
+  fetchCustomObjects,
+  upsertCustomObjectsFromBlueprint,
+  deactivateCustomObject
 } from '../services/supabaseData';
 import { getTableName } from '../utils/tableMapping';
+import { loadOrgSettings, saveOrgSettings } from '../services/settingsService';
+import { checkForDuplicates, logDuplicateMatch, DuplicateMatch } from '../services/duplicateDetection';
 
 interface GlobalSearchResult {
   id: string;
@@ -50,6 +57,12 @@ interface CRMContextType {
   calendarEvents: CalendarEvent[];
   conversations: Conversation[];
   chatMessages: ChatMessage[];
+  emailTemplates: EmailTemplate[];
+  smsTemplates: SMSTemplate[];
+  kbCategories: KBCategory[];
+  kbArticles: KBArticle[];
+  roles: Role[];
+  currencies: Currency[];
   auditLogs: AuditLog[];
   notifications: Notification[];
   users: User[];
@@ -169,6 +182,7 @@ interface CRMContextType {
   getCustomEntities: (entityName: string) => any[];
   upsertCustomEntity: (entityName: string, data: any) => void;
   deleteCustomEntity: (entityName: string, id: string) => boolean;
+  activateBlueprint: (industryType: string) => Promise<boolean>;
 
   // Helpers
   getCommunicationsForEntity: (type: EntityType, id: string) => Communication[];
@@ -184,6 +198,16 @@ interface CRMContextType {
   };
   openModal: (type: EntityType, initialData?: any) => void;
   closeModal: () => void;
+  duplicateModal: {
+    isOpen: boolean;
+    entityType: EntityType | null;
+    matches: DuplicateMatch[];
+    pendingData: any | null;
+    ruleId: string | undefined;
+  };
+  closeDuplicateModal: () => void;
+  handleCreateAnyway: () => void;
+  handleViewDuplicate: (duplicateId: string) => void;
   globalSearchResults: GlobalSearchResult[];
 
   // Dashboard Rollups
@@ -283,10 +307,10 @@ const DEFAULT_SETTINGS: CRMSettings = {
 
   // === USERS & ACCESS ===
   roles: [
-    { id: 'ROLE-ADMIN', name: 'Administrator', description: 'Full system access', isSystem: true, color: '#3B82F6' },
-    { id: 'ROLE-MANAGER', name: 'Manager', description: 'Team oversight and approvals', isSystem: true, color: '#8B5CF6' },
-    { id: 'ROLE-USER', name: 'User', description: 'Standard access', isSystem: true, color: '#64748B' },
-    { id: 'ROLE-FIELD', name: 'Field Tech', description: 'Mobile app access', isSystem: false, color: '#10B981' },
+    { id: 'ROLE-ADMIN', name: 'Administrator', description: 'Full system access', isSystem: true, color: '#3B82F6', createdAt: '', updatedAt: '', createdBy: '' },
+    { id: 'ROLE-MANAGER', name: 'Manager', description: 'Team oversight and approvals', isSystem: true, color: '#8B5CF6', createdAt: '', updatedAt: '', createdBy: '' },
+    { id: 'ROLE-USER', name: 'User', description: 'Standard access', isSystem: true, color: '#64748B', createdAt: '', updatedAt: '', createdBy: '' },
+    { id: 'ROLE-FIELD', name: 'Field Tech', description: 'Mobile app access', isSystem: false, color: '#10B981', createdAt: '', updatedAt: '', createdBy: '' },
   ],
   permissions: {
     'ROLE-ADMIN': {
@@ -590,6 +614,12 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
+  const [smsTemplates, setSmsTemplates] = useState<SMSTemplate[]>([]);
+  const [kbCategories, setKbCategories] = useState<KBCategory[]>([]);
+  const [kbArticles, setKbArticles] = useState<KBArticle[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -616,12 +646,20 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [supplierQuotes, setSupplierQuotes] = useState<SupplierQuote[]>([]);
   const [settings, setSettings] = useState<CRMSettings>(DEFAULT_SETTINGS);
   const [currentUserId, setCurrentUserIdState] = useState<string>('');
+  const [customObjectsFromDB, setCustomObjectsFromDB] = useState<any[]>([]); // Custom objects loaded from Supabase
 
   // Data source tracking: 'supabase' | 'localStorage' | 'loading'
   const [dataSource, setDataSource] = useState<'supabase' | 'localStorage' | 'loading'>('loading');
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
 
   const [modal, setModal] = useState<CRMContextType['modal']>({ isOpen: false, type: null, initialData: null });
+  const [duplicateModal, setDuplicateModal] = useState<CRMContextType['duplicateModal']>({
+    isOpen: false,
+    entityType: null,
+    matches: [],
+    pendingData: null,
+    ruleId: undefined
+  });
 
   const currentUser = useMemo(() => users.find(u => u.id === currentUserId), [users, currentUserId]);
 
@@ -654,6 +692,14 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const initializeData = async () => {
       const isDemoMode = checkIsDemoMode();
 
+      // If demo mode, load seed data
+      if (isDemoMode) {
+        console.log('🎭 Demo mode detected, loading seed data...');
+        seedInitialData(false);
+        setDataSource('localStorage');
+        return;
+      }
+
       // Try Supabase first if available
       if (supabase) {
         try {
@@ -668,8 +714,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
             const crmData = await loadAllCRMData();
 
-            // Check if we got data
-            if (crmData.accounts.length > 0 || crmData.leads.length > 0) {
+            // Always load data from Supabase (even if empty)
+            // For new users, this will be empty arrays which is correct
               setAccounts(crmData.accounts);
               setContacts(crmData.contacts);
               setLeads(crmData.leads);
@@ -706,7 +752,14 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               // Communication module
               setConversations(crmData.conversations);
               setChatMessages(crmData.chatMessages);
+              setEmailTemplates(crmData.emailTemplates);
+              setSmsTemplates(crmData.smsTemplates);
+              // Knowledge Base
+              setKbCategories(crmData.kbCategories);
+              setKbArticles(crmData.kbArticles);
               // System
+              setRoles(crmData.roles);
+              setCurrencies(crmData.currencies);
               setNotifications(crmData.notifications);
               setDocuments(crmData.documents);
               setAuditLogs(crmData.auditLogs);
@@ -718,20 +771,72 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               setRfqs(crmData.rfqs);
               setSupplierQuotes(crmData.supplierQuotes);
 
-              // Set current user to first admin user
-              const adminUser = crmData.users.find(u => u.role === 'admin');
-              if (adminUser) {
-                setCurrentUserIdState(adminUser.id);
-              }
-
-              setDataSource('supabase');
-              console.log(`✅ Loaded from Supabase: ${crmData.accounts.length} accounts, ${crmData.leads.length} leads, ${crmData.deals.length} deals`);
-              return;
+            // Load settings from Supabase
+            try {
+              const orgId = await getCurrentOrgId();
+              const loadedSettings = await loadOrgSettings(orgId, DEFAULT_SETTINGS);
+              setSettings(loadedSettings);
+              // Cache settings in localStorage
+              saveToDisk({ settings: loadedSettings });
+            } catch (settingsError) {
+              console.error('⚠️ Could not load settings from Supabase, using defaults:', settingsError);
+              setSettings(DEFAULT_SETTINGS);
             }
+
+            // Load custom objects (blueprint entities) from Supabase
+            try {
+              const customObjs = await fetchCustomObjects();
+              console.log(`✅ Loaded ${customObjs.length} custom objects from Supabase`);
+              setCustomObjectsFromDB(customObjs);
+            } catch (customObjError) {
+              console.error('⚠️ Could not load custom objects from Supabase:', customObjError);
+              setCustomObjectsFromDB([]);
+            }
+
+            // Initialize default duplicate detection rules if they don't exist
+            try {
+              const orgId = await getCurrentOrgId();
+              if (orgId) {
+                const { data: existingRules } = await supabase
+                  .from('duplicate_rules')
+                  .select('id')
+                  .eq('org_id', orgId)
+                  .limit(1);
+
+                if (!existingRules || existingRules.length === 0) {
+                  const { insertDefaultDuplicateRules } = await import('../services/duplicateDetection');
+                  await insertDefaultDuplicateRules(orgId);
+                  console.log('✅ Initialized default duplicate detection rules');
+                }
+              }
+            } catch (duplicateRulesError) {
+              console.error('⚠️ Could not initialize duplicate rules:', duplicateRulesError);
+            }
+
+            // Set current user to first admin user
+            const adminUser = crmData.users.find(u => u.role === 'admin');
+            if (adminUser) {
+              setCurrentUserIdState(adminUser.id);
+            }
+
+            setDataSource('supabase');
+
+            if (crmData.accounts.length === 0 && crmData.leads.length === 0) {
+              console.log('✅ Loaded from Supabase: Empty organization (new user)');
+            } else {
+              console.log(`✅ Loaded from Supabase: ${crmData.accounts.length} accounts, ${crmData.leads.length} leads, ${crmData.deals.length} deals`);
+            }
+            return;
           }
-        } catch (err) {
-          console.error('❌ Supabase connection failed:', err);
-          setDataSource('supabase'); // Still mark as supabase mode, just with connection error
+        } catch (err: any) {
+          console.error('❌ Supabase error:', err);
+
+          // If user has no organization, show helpful error
+          if (err?.message?.includes('no organization')) {
+            console.error('❌ User has no organization. This should not happen - signup flow should create one.');
+          }
+
+          setDataSource('supabase');
         }
       }
 
@@ -742,6 +847,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     initializeData();
   }, []);
+
 
   const saveToDisk = (newState: any) => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -789,9 +895,20 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     saveToDisk({ ...data, settings: currentSettings });
   };
 
-  const restoreDefaultSettings = () => {
+  const restoreDefaultSettings = async () => {
     setSettings(DEFAULT_SETTINGS);
     saveToDisk({ settings: DEFAULT_SETTINGS });
+
+    // Save defaults to Supabase too
+    try {
+      if (!checkIsDemoMode()) {
+        const orgId = await getCurrentOrgId();
+        await saveOrgSettings(orgId, DEFAULT_SETTINGS);
+        console.log('✅ Default settings saved to Supabase');
+      }
+    } catch (error) {
+      console.error('⚠️ Failed to save default settings to Supabase:', error);
+    }
   };
 
   const resetDemoData = () => seedInitialData(false);
@@ -839,6 +956,12 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setCalendarEvents(crmData.calendarEvents);
         setConversations(crmData.conversations);
         setChatMessages(crmData.chatMessages);
+        setEmailTemplates(crmData.emailTemplates);
+        setSmsTemplates(crmData.smsTemplates);
+        setKbCategories(crmData.kbCategories);
+        setKbArticles(crmData.kbArticles);
+        setRoles(crmData.roles);
+        setCurrencies(crmData.currencies);
         setDocuments(crmData.documents);
         setAuditLogs(crmData.auditLogs);
         setNotifications(crmData.notifications);
@@ -870,14 +993,97 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const openModal = (type: EntityType, initialData: any = null) => setModal({ isOpen: true, type, initialData });
   const closeModal = () => setModal({ isOpen: false, type: null, initialData: null });
 
+  const closeDuplicateModal = () => {
+    setDuplicateModal({
+      isOpen: false,
+      entityType: null,
+      matches: [],
+      pendingData: null,
+      ruleId: undefined
+    });
+  };
+
+  const handleCreateAnyway = async () => {
+    const { entityType, pendingData, matches, ruleId } = duplicateModal;
+
+    if (!entityType || !pendingData) {
+      closeDuplicateModal();
+      return;
+    }
+
+    // Log the user's decision to create anyway
+    if (matches.length > 0 && isSupabaseConnected) {
+      for (const match of matches) {
+        await logDuplicateMatch(
+          entityType,
+          pendingData.id || 'pending',
+          match.id,
+          match.matchedOn,
+          ruleId,
+          'create_anyway'
+        );
+      }
+    }
+
+    // Close duplicate modal
+    closeDuplicateModal();
+
+    // Create the record anyway (skip duplicate check this time)
+    await upsertRecord(entityType, pendingData, true);
+  };
+
+  const handleViewDuplicate = (duplicateId: string) => {
+    const { entityType } = duplicateModal;
+
+    // Close duplicate modal
+    closeDuplicateModal();
+
+    // Navigate to the duplicate record (open it in the modal)
+    if (entityType) {
+      // Find the duplicate record in the appropriate array
+      const recordArrays: Record<string, any[]> = {
+        leads, contacts, accounts, deals, tasks, tickets
+      };
+
+      const recordArray = recordArrays[entityType];
+      const duplicateRecord = recordArray?.find((r: any) => r.id === duplicateId);
+
+      if (duplicateRecord) {
+        openModal(entityType, duplicateRecord);
+      }
+    }
+  };
+
   /**
    * Root Cause Patch 2: Polymorphic Relation Normalization
    * We normalize relatedToType to lowercase during write to ensure cross-module selector consistency.
    * This prevents casing mismatches during filtering (e.g. 'Leads' vs 'leads').
    */
-  const upsertRecord = (type: EntityType, data: any) => {
+  const upsertRecord = async (type: EntityType, data: any, skipDuplicateCheck: boolean = false) => {
     const timestamp = new Date().toISOString();
     const recordId = data.id || `${type.toUpperCase().slice(0, 1)}-${Date.now()}`;
+    const isUpdate = !!data.id;
+
+    // Check for duplicates on new records for leads, contacts, and accounts
+    if (!isUpdate && !skipDuplicateCheck && ['leads', 'contacts', 'accounts'].includes(type) && isSupabaseConnected) {
+      try {
+        const duplicateCheck = await checkForDuplicates(type, data);
+        if (duplicateCheck.hasDuplicates && duplicateCheck.matches.length > 0) {
+          // Show duplicate warning modal
+          setDuplicateModal({
+            isOpen: true,
+            entityType: type,
+            matches: duplicateCheck.matches,
+            pendingData: data,
+            ruleId: duplicateCheck.ruleId
+          });
+          return; // Don't create the record yet
+        }
+      } catch (err) {
+        console.error('Error checking for duplicates:', err);
+        // Continue with creation if duplicate check fails
+      }
+    }
     const setters: any = {
       leads: setLeads, deals: setDeals, accounts: setAccounts, contacts: setContacts,
       tasks: setTasks, tickets: setTickets, campaigns: setCampaigns,
@@ -1267,10 +1473,27 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return results.slice(0, 25); // Cap total results at 25
   }, [searchQuery, permittedLeads, permittedDeals, accounts, contacts, tasks, tickets, jobs, invoices, quotes, campaigns]);
 
-  const updateSettings = (newSettings: Partial<CRMSettings>) => {
+  const updateSettings = async (newSettings: Partial<CRMSettings>) => {
     setSettings(prev => {
       const updated = { ...prev, ...newSettings };
+
+      // Save to localStorage (cache)
       saveToDisk({ settings: updated });
+
+      // Save to Supabase (source of truth) - async, don't block UI
+      (async () => {
+        try {
+          if (!checkIsDemoMode()) {
+            const orgId = await getCurrentOrgId();
+            await saveOrgSettings(orgId, updated);
+            console.log('✅ Settings saved to Supabase');
+          }
+        } catch (error) {
+          console.error('⚠️ Failed to save settings to Supabase:', error);
+          // Settings are still saved to localStorage, so UI will persist changes locally
+        }
+      })();
+
       return updated;
     });
   };
@@ -2217,8 +2440,41 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // === INDUSTRY BLUEPRINT SYSTEM ===
 
-  // Get active blueprint
-  const activeBlueprint = useMemo(() => getActiveBlueprint(settings), [settings]);
+  // Get active blueprint - merge hardcoded blueprint with custom objects from Supabase
+  const activeBlueprint = useMemo(() => {
+    const baseBlueprint = getActiveBlueprint(settings);
+
+    // Convert custom objects from DB to CustomEntityDefinition format
+    const customEntitiesFromDB = customObjectsFromDB.map(obj => ({
+      id: obj.entity_type,
+      name: obj.name,
+      namePlural: obj.name_plural,
+      icon: obj.icon || '📦',
+      fields: obj.fields_schema || [],
+      relationTo: obj.relation_to || [],
+      hasTimeline: obj.has_timeline || false,
+      hasDocuments: obj.has_documents || false,
+      hasWorkflow: obj.has_workflow || false,
+    }));
+
+    // Merge: custom objects from DB override hardcoded ones with same id
+    const mergedCustomEntities = [...(baseBlueprint.customEntities || [])];
+    customEntitiesFromDB.forEach(dbEntity => {
+      const existingIndex = mergedCustomEntities.findIndex(e => e.id === dbEntity.id);
+      if (existingIndex >= 0) {
+        // Replace existing
+        mergedCustomEntities[existingIndex] = dbEntity;
+      } else {
+        // Add new
+        mergedCustomEntities.push(dbEntity);
+      }
+    });
+
+    return {
+      ...baseBlueprint,
+      customEntities: mergedCustomEntities,
+    };
+  }, [settings, customObjectsFromDB]);
 
   // Get custom entities for a specific entity type
   const getCustomEntities = (entityName: string): any[] => {
@@ -2278,10 +2534,38 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return true;
   };
 
+  // Activate a blueprint - stores custom entities in Supabase
+  const activateBlueprint = async (industryType: string): Promise<boolean> => {
+    try {
+      const blueprint = INDUSTRY_BLUEPRINTS[industryType as keyof typeof INDUSTRY_BLUEPRINTS];
+      if (!blueprint) {
+        console.error(`Blueprint ${industryType} not found`);
+        return false;
+      }
+
+      // Store custom entities in Supabase
+      if (blueprint.customEntities && blueprint.customEntities.length > 0) {
+        const result = await upsertCustomObjectsFromBlueprint(blueprint.customEntities);
+        console.log(`✅ Activated blueprint ${industryType}: ${result.count} custom entities stored`);
+
+        // Refresh custom objects from DB
+        const customObjs = await fetchCustomObjects();
+        setCustomObjectsFromDB(customObjs);
+
+        return result.success;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error activating blueprint:', error);
+      return false;
+    }
+  };
+
   return (
     <CRMContext.Provider value={{
-      leads, deals, accounts, contacts, tasks, campaigns, tickets, invoices, quotes, products, services, subscriptions, conversations, chatMessages,
-      documents, communications, auditLogs, calendarEvents, notifications, users, crews, jobs, zones, equipment, inventoryItems, purchaseOrders, bankTransactions, expenses, reviews, referralRewards, inboundForms, chatWidgets, calculators, automationWorkflows, webhooks, industryTemplates,
+      leads, deals, accounts, contacts, tasks, campaigns, tickets, invoices, quotes, products, services, subscriptions, conversations, chatMessages, emailTemplates, smsTemplates, kbCategories, kbArticles,
+      roles, currencies, documents, communications, auditLogs, calendarEvents, notifications, users, crews, jobs, zones, equipment, inventoryItems, purchaseOrders, bankTransactions, expenses, reviews, referralRewards, inboundForms, chatWidgets, calculators, automationWorkflows, webhooks, industryTemplates,
       tacticalQueue, warehouseLocations, dispatchAlerts, rfqs, supplierQuotes,
       settings, currentUserId, currentUser, 
       searchQuery, setSearchQuery, setCurrentUserId: (id) => { setCurrentUserIdState(id); saveToDisk({ currentUserId: id }); }, 
@@ -2295,7 +2579,9 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }, convertLead, convertQuoteToInvoice, markNotificationRead, updateSettings,
       upsertRecord, updateRecord, addRecord, deleteRecord, addTicketMessage, getCommunicationsForEntity, getAccountRevenueStats, canAccessRecord, hasPermission,
       sendChatMessage, startConversation, convertLeadToDeal, acceptQuote, closeDealAsWon, recordPayment, createUser, updateUser, deleteUser, updateJobWorkflow, pickBOMItem, reconcileTransaction, getReconciliationSuggestions,
-      modal, openModal, closeModal, globalSearchResults,
+      modal, openModal, closeModal,
+      duplicateModal, closeDuplicateModal, handleCreateAnyway, handleViewDuplicate,
+      globalSearchResults,
       salesStats, financialStats,
       marketingStats: {
         totalLeads: permittedLeads.length,
@@ -2312,7 +2598,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         overdueTasksCount: tasks.filter(t => t.status !== 'Completed' && new Date(t.dueDate) < new Date()).length,
         trends: { activeTickets: -2, efficiency: 10 }
       },
-      activeBlueprint, getCustomEntities, upsertCustomEntity, deleteCustomEntity
+      activeBlueprint, getCustomEntities, upsertCustomEntity, deleteCustomEntity, activateBlueprint
     }}>
       {children}
     </CRMContext.Provider>
