@@ -1111,7 +1111,9 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       automationWorkflows: setAutomationWorkflows, webhooks: setWebhooks,
       industryTemplates: setIndustryTemplates,
       tacticalQueue: setTacticalQueue, warehouseLocations: setWarehouseLocations,
-      dispatchAlerts: setDispatchAlerts, rfqs: setRfqs, supplierQuotes: setSupplierQuotes
+      dispatchAlerts: setDispatchAlerts, rfqs: setRfqs, supplierQuotes: setSupplierQuotes,
+      companyIntegrations: setCompanyIntegrations, userIntegrations: setUserIntegrations,
+      orgEmailAccounts: setOrgEmailAccounts, smsNumbers: setSmsNumbers
     };
     if (!setters[type]) return;
 
@@ -1286,7 +1288,9 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       automationWorkflows: setAutomationWorkflows, webhooks: setWebhooks,
       industryTemplates: setIndustryTemplates,
       tacticalQueue: setTacticalQueue, warehouseLocations: setWarehouseLocations,
-      dispatchAlerts: setDispatchAlerts, rfqs: setRfqs, supplierQuotes: setSupplierQuotes
+      dispatchAlerts: setDispatchAlerts, rfqs: setRfqs, supplierQuotes: setSupplierQuotes,
+      companyIntegrations: setCompanyIntegrations, userIntegrations: setUserIntegrations,
+      orgEmailAccounts: setOrgEmailAccounts, smsNumbers: setSmsNumbers
     };
     if (!setters[type]) return false;
 

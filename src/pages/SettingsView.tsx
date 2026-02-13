@@ -15,7 +15,7 @@ import {
   Plug, Phone, Image, Upload, ExternalLink, RefreshCw, Play, Pause,
   Check, X, ChevronDown, Filter, Search, Download, Palette, Sun, Moon
 } from 'lucide-react';
-import { EntityType, CRMSettings, Role, Pipeline, LeadScoringRule, TaxRate, ImportJob, ExportJob, JobEntityType } from '../types';
+import { EntityType, CRMSettings, Role, Pipeline, LeadScoringRule, TaxRate, ImportJob, ExportJob, JobEntityType, CompanyIntegration, UserIntegration, OrgEmailAccount, SmsNumber } from '../types';
 import UserModal from '../components/UserModal';
 import { getCurrencyOptions, getCurrencySymbol } from '../utils/currencies';
 import {
@@ -34,7 +34,7 @@ interface SettingsViewProps {
 }
 
 const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) => {
-  const { settings, updateSettings, restoreDefaultSettings, resetDemoData, hardReset, users, currentUserId, setCurrentUserId, currentUser, auditLogs, createUser, updateUser, deleteUser, accounts, contacts, leads, deals, tasks, campaigns, tickets, products, services, invoices, jobs, activateBlueprint } = useCRM();
+  const { settings, updateSettings, restoreDefaultSettings, resetDemoData, hardReset, users, currentUserId, setCurrentUserId, currentUser, auditLogs, createUser, updateUser, deleteUser, accounts, contacts, leads, deals, tasks, campaigns, tickets, products, services, invoices, jobs, activateBlueprint, companyIntegrations, userIntegrations, orgEmailAccounts, smsNumbers, upsertRecord, deleteRecord } = useCRM();
   const [localSettings, setLocalSettings] = useState<CRMSettings>(settings);
   const [activeTab, setActiveTab] = useState<SettingTab>(initialTab);
   const [domainSubTab, setDomainSubTab] = useState<DomainSubTab>('SALES');
@@ -48,6 +48,26 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [loginHistory, setLoginHistory] = useState<any[]>([]);
   const [loadingLoginHistory, setLoadingLoginHistory] = useState(false);
+
+  // Integration modals & state
+  const [showEmailAccountModal, setShowEmailAccountModal] = useState(false);
+  const [editingEmailAccount, setEditingEmailAccount] = useState<OrgEmailAccount | null>(null);
+  const [showSmsNumberModal, setShowSmsNumberModal] = useState(false);
+  const [editingSmsNumber, setEditingSmsNumber] = useState<SmsNumber | null>(null);
+  const [showUserIntegrationModal, setShowUserIntegrationModal] = useState(false);
+  const [managingUserIntegration, setManagingUserIntegration] = useState<any>(null);
+
+  // Email account form
+  const [emailForm, setEmailForm] = useState({ email: '', display_name: '', purpose: 'billing' as OrgEmailAccount['purpose'], provider: 'google' as OrgEmailAccount['provider'], calendar_id: '' });
+  // SMS number form
+  const [smsForm, setSmsForm] = useState({ phone_number: '', display_name: '', purpose: 'general' as SmsNumber['purpose'], is_default: false });
+  // Twilio credentials form (stored in company_integrations)
+  const twilioIntegration = companyIntegrations.find(ci => ci.provider === 'twilio');
+  const stripeIntegration = companyIntegrations.find(ci => ci.provider === 'stripe');
+  const paypalIntegration = companyIntegrations.find(ci => ci.provider === 'paypal');
+  const mapsIntegration = companyIntegrations.find(ci => ci.provider === 'google_maps');
+  const currentUserIntegration = userIntegrations.find(ui => ui.user_id === currentUserId);
+  const isAdmin = currentUser?.role === 'admin';
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -265,6 +285,51 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
         {/* =========== GENERAL TAB =========== */}
         {activeTab === 'GENERAL' && (
           <div className="space-y-8">
+            {/* ====== MY ACCOUNT: Google Workspace Connection ====== */}
+            <div className="p-8 rounded-[45px] bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
+              <h3 className="text-xl font-black text-slate-900 mb-1">My Account</h3>
+              <p className="text-xs text-slate-500 mb-6">Your personal integrations and connected services</p>
+              <div className="p-6 bg-white rounded-[30px] border border-slate-200 shadow-sm">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${currentUserIntegration?.is_active ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                    <Globe size={24} />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-black text-slate-900">Google Workspace</h4>
+                    <p className="text-[10px] text-slate-500">Gmail & Calendar sync for your account</p>
+                  </div>
+                  {currentUserIntegration?.is_active ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      <span className="text-xs font-bold text-emerald-700">Connected</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                      <span className="text-xs font-bold text-slate-400">Not Connected</span>
+                    </div>
+                  )}
+                </div>
+                {currentUserIntegration?.is_active ? (
+                  <div className="flex items-center gap-4 pl-16">
+                    <span className="text-xs text-slate-600">Signed in as <span className="font-bold">{currentUserIntegration.connected_email}</span></span>
+                    <button onClick={() => setActiveTab('INTEGRATIONS')} className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                      Manage <ChevronRight size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4 pl-16">
+                    <button onClick={() => alert('Google OAuth flow coming in next session. This will redirect to Google sign-in.')} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
+                      <ExternalLink size={12} /> Connect Google
+                    </button>
+                    <button onClick={() => setActiveTab('INTEGRATIONS')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 flex items-center gap-1">
+                      View Details <ChevronRight size={12} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Organization Profile */}
               <SettingsCard title="Organization Profile" icon={Building2}>
@@ -604,6 +669,31 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                       {u.role === 'admin' ? 'Total Control' : u.role === 'manager' ? 'Unit Lead' : `Reports to ${users.find(m => m.id === u.managerId)?.name || 'None'}`}
                     </p>
 
+                    {/* Google Connection Status */}
+                    {(() => {
+                      const ui = userIntegrations.find(i => i.user_id === u.id && i.provider === 'google');
+                      return (
+                        <div className={`mt-3 flex items-center gap-2 ${currentUserId === u.id ? 'text-blue-100' : ''}`}>
+                          <Globe size={12} className={ui?.is_active ? 'text-emerald-500' : currentUserId === u.id ? 'text-blue-200' : 'text-slate-300'} />
+                          {ui?.is_active ? (
+                            <span className={`text-[10px] font-bold ${currentUserId === u.id ? 'text-emerald-300' : 'text-emerald-600'}`}>Google Connected</span>
+                          ) : (
+                            <>
+                              <span className={`text-[10px] font-bold ${currentUserId === u.id ? 'text-blue-200' : 'text-slate-400'}`}>Google Not Connected</span>
+                              {isAdmin && currentUserId !== u.id && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); alert(`Invite email would be sent to ${u.email} to connect their Google account.`); }}
+                                  className={`ml-auto text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg transition-all ${currentUserId === u.id ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
+                                >
+                                  Invite
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })()}
+
                     {/* Action Buttons */}
                     <div className="mt-6 flex flex-wrap gap-2 opacity-0 group-hover:opacity-100 transition-all">
                       <button
@@ -770,25 +860,291 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
           <div className="space-y-8">
             <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 p-8 rounded-[45px] mb-8">
               <h3 className="text-2xl font-black text-slate-900 mb-2">External Integrations</h3>
-              <p className="text-sm text-slate-600">Connect third-party services and APIs</p>
+              <p className="text-sm text-slate-600">Connect third-party services, email accounts, SMS numbers, and OAuth providers</p>
             </div>
 
-            {/* Payment Gateways */}
-            <h3 className="text-xl font-black text-slate-900 tracking-tight">Payment Gateways</h3>
+            {/* ====== SECTION A: Google Workspace (Per-User) ====== */}
+            <h3 className="text-xl font-black text-slate-900 tracking-tight">Google Workspace (Your Account)</h3>
+            <div className="p-8 rounded-[35px] border border-slate-200 bg-white shadow-sm">
+              <div className="flex items-center gap-4 mb-6">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${currentUserIntegration?.is_active ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                  <Globe size={28} />
+                </div>
+                <div>
+                  <h4 className="text-lg font-black text-slate-900">Google Workspace</h4>
+                  <p className="text-xs text-slate-500">Connect your Google account to sync Gmail and Calendar</p>
+                </div>
+              </div>
+              {currentUserIntegration?.is_active ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                    <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                    <span className="text-sm font-bold text-emerald-800">Connected as {currentUserIntegration.connected_email || 'Unknown'}</span>
+                    {currentUserIntegration.last_synced_at && (
+                      <span className="text-[10px] text-emerald-600 ml-auto">Last synced: {new Date(currentUserIntegration.last_synced_at).toLocaleString()}</span>
+                    )}
+                  </div>
+                  <div className="flex gap-6 px-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={currentUserIntegration.sync_config?.sync_gmail !== false} onChange={(e) => {
+                        upsertRecord('userIntegrations', { ...currentUserIntegration, sync_config: { ...currentUserIntegration.sync_config, sync_gmail: e.target.checked } });
+                      }} className="w-4 h-4 rounded border-slate-300 text-blue-600" />
+                      <span className="text-xs font-bold text-slate-700">Sync Gmail</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={currentUserIntegration.sync_config?.sync_calendar !== false} onChange={(e) => {
+                        upsertRecord('userIntegrations', { ...currentUserIntegration, sync_config: { ...currentUserIntegration.sync_config, sync_calendar: e.target.checked } });
+                      }} className="w-4 h-4 rounded border-slate-300 text-blue-600" />
+                      <span className="text-xs font-bold text-slate-700">Sync Calendar</span>
+                    </label>
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button onClick={() => alert('Sync triggered. Real-time sync coming in next session.')} className="px-5 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
+                      <RefreshCw size={14} /> Sync Now
+                    </button>
+                    <button onClick={() => { if (window.confirm('Disconnect your Google account? This will stop Gmail and Calendar sync.')) { deleteRecord('userIntegrations', currentUserIntegration.id); } }} className="px-5 py-3 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all flex items-center gap-2">
+                      <X size={14} /> Disconnect
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div className="w-3 h-3 rounded-full bg-slate-300" />
+                    <span className="text-sm font-bold text-slate-500">Not Connected</span>
+                  </div>
+                  <button onClick={() => alert('Google OAuth flow coming in next session. This will redirect to Google sign-in to authorize Gmail and Calendar access.')} className="px-6 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
+                    <ExternalLink size={14} /> Connect Google Account
+                  </button>
+                  <div className="px-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Permissions Requested</p>
+                    <ul className="space-y-1 text-xs text-slate-500">
+                      <li className="flex items-center gap-2"><Check size={12} className="text-emerald-500" /> Read and send email (Gmail)</li>
+                      <li className="flex items-center gap-2"><Check size={12} className="text-emerald-500" /> Manage calendar events</li>
+                      <li className="flex items-center gap-2"><Check size={12} className="text-emerald-500" /> View your email address</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ====== SECTION B: Organisation Email Accounts (Admin Only) ====== */}
+            {isAdmin && (<>
+            <h3 className="text-xl font-black text-slate-900 tracking-tight pt-8 border-t border-slate-100">Organisation Email Accounts</h3>
+            <p className="text-xs text-slate-500 -mt-4 mb-2">Connect business email accounts for different functions (billing, support, info, ops, marketing)</p>
+            <div className="bg-white border border-slate-200 rounded-[35px] p-8 shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-100">
+                      <th className="text-left p-3 text-[9px] font-black text-slate-400 uppercase">Purpose</th>
+                      <th className="text-left p-3 text-[9px] font-black text-slate-400 uppercase">Email</th>
+                      <th className="text-left p-3 text-[9px] font-black text-slate-400 uppercase">Display Name</th>
+                      <th className="text-left p-3 text-[9px] font-black text-slate-400 uppercase">Provider</th>
+                      <th className="text-center p-3 text-[9px] font-black text-slate-400 uppercase">Status</th>
+                      <th className="text-right p-3 text-[9px] font-black text-slate-400 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(['billing', 'support', 'info', 'operations', 'marketing'] as const).map(purpose => {
+                      const account = orgEmailAccounts.find(a => a.purpose === purpose);
+                      return (
+                        <tr key={purpose} className="border-b border-slate-50 hover:bg-slate-50/50">
+                          <td className="p-3 font-bold text-slate-900 capitalize">{purpose}</td>
+                          <td className="p-3 text-slate-600">{account?.email || <span className="text-slate-300">&mdash;</span>}</td>
+                          <td className="p-3 text-slate-600">{account?.display_name || <span className="text-slate-300">&mdash;</span>}</td>
+                          <td className="p-3 text-slate-600 capitalize">{account?.provider || <span className="text-slate-300">&mdash;</span>}</td>
+                          <td className="p-3 text-center">
+                            {account?.is_active ? <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500" title="Active" /> : <span className="inline-block w-2.5 h-2.5 rounded-full bg-slate-300" title="Not connected" />}
+                          </td>
+                          <td className="p-3 text-right">
+                            {account ? (
+                              <div className="flex gap-2 justify-end">
+                                <button onClick={() => { setEditingEmailAccount(account); setEmailForm({ email: account.email, display_name: account.display_name || '', purpose: account.purpose, provider: account.provider, calendar_id: account.calendar_id || '' }); setShowEmailAccountModal(true); }} className="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 text-[10px] font-bold transition-all">Edit</button>
+                                <button onClick={() => { if (window.confirm(`Remove ${account.email}?`)) deleteRecord('orgEmailAccounts', account.id); }} className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 text-[10px] font-bold transition-all">Remove</button>
+                              </div>
+                            ) : (
+                              <button onClick={() => { setEditingEmailAccount(null); setEmailForm({ email: '', display_name: '', purpose, provider: 'google', calendar_id: '' }); setShowEmailAccountModal(true); }} className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 text-[10px] font-bold transition-all">Add</button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <button onClick={() => { setEditingEmailAccount(null); setEmailForm({ email: '', display_name: '', purpose: 'billing', provider: 'google', calendar_id: '' }); setShowEmailAccountModal(true); }} className="mt-4 w-full py-4 border-2 border-dashed border-slate-100 rounded-2xl text-[10px] font-black uppercase text-slate-400 hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                <Plus size={14} /> Add Email Account
+              </button>
+            </div>
+
+            {/* Email Account Modal */}
+            {showEmailAccountModal && (
+              <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowEmailAccountModal(false)}>
+                <div className="bg-white rounded-[35px] p-10 w-full max-w-lg shadow-2xl" onClick={e => e.stopPropagation()}>
+                  <h3 className="text-xl font-black text-slate-900 mb-6">{editingEmailAccount ? 'Edit Email Account' : 'Add Email Account'}</h3>
+                  <div className="space-y-5">
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Purpose</label>
+                      <select value={emailForm.purpose} onChange={e => setEmailForm({ ...emailForm, purpose: e.target.value as any })} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500">
+                        <option value="billing">Billing</option>
+                        <option value="support">Support</option>
+                        <option value="info">Info</option>
+                        <option value="operations">Operations</option>
+                        <option value="marketing">Marketing</option>
+                      </select>
+                    </div>
+                    <ConfigInput label="Email Address" value={emailForm.email} onChange={v => setEmailForm({ ...emailForm, email: v })} placeholder="billing@company.com" />
+                    <ConfigInput label="Display Name" value={emailForm.display_name} onChange={v => setEmailForm({ ...emailForm, display_name: v })} placeholder="Company Billing" />
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Provider</label>
+                      <div className="flex gap-3">
+                        <button onClick={() => setEmailForm({ ...emailForm, provider: 'google' })} className={`flex-1 py-4 rounded-2xl text-xs font-bold transition-all ${emailForm.provider === 'google' ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-50 text-slate-600 border border-slate-100'}`}>Google</button>
+                        <button disabled className="flex-1 py-4 rounded-2xl text-xs font-bold bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed">Microsoft (Coming Soon)</button>
+                      </div>
+                    </div>
+                    {emailForm.purpose === 'operations' && (
+                      <ConfigInput label="Calendar ID (Optional)" value={emailForm.calendar_id} onChange={v => setEmailForm({ ...emailForm, calendar_id: v })} placeholder="primary or custom calendar ID" />
+                    )}
+                  </div>
+                  <div className="flex gap-3 mt-8">
+                    <button onClick={() => {
+                      if (!emailForm.email) { alert('Email address is required'); return; }
+                      const data: any = { email: emailForm.email, display_name: emailForm.display_name, purpose: emailForm.purpose, provider: emailForm.provider, is_active: false, is_default: false, calendar_id: emailForm.calendar_id || undefined };
+                      if (editingEmailAccount) data.id = editingEmailAccount.id;
+                      upsertRecord('orgEmailAccounts', data);
+                      setShowEmailAccountModal(false);
+                      alert('Email account saved. Google OAuth connection coming in next session.');
+                    }} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
+                      {editingEmailAccount ? 'Update' : 'Save & Connect Later'}
+                    </button>
+                    <button onClick={() => setShowEmailAccountModal(false)} className="px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ====== SECTION C: SMS Numbers (Admin Only) ====== */}
+            <h3 className="text-xl font-black text-slate-900 tracking-tight pt-8 border-t border-slate-100">SMS Numbers</h3>
+            <p className="text-xs text-slate-500 -mt-4 mb-2">Manage phone numbers for outbound and inbound SMS</p>
+            <div className="bg-white border border-slate-200 rounded-[35px] p-8 shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-100">
+                      <th className="text-left p-3 text-[9px] font-black text-slate-400 uppercase">Purpose</th>
+                      <th className="text-left p-3 text-[9px] font-black text-slate-400 uppercase">Number</th>
+                      <th className="text-left p-3 text-[9px] font-black text-slate-400 uppercase">Display Name</th>
+                      <th className="text-left p-3 text-[9px] font-black text-slate-400 uppercase">Provider</th>
+                      <th className="text-center p-3 text-[9px] font-black text-slate-400 uppercase">Default</th>
+                      <th className="text-center p-3 text-[9px] font-black text-slate-400 uppercase">Status</th>
+                      <th className="text-right p-3 text-[9px] font-black text-slate-400 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {smsNumbers.length === 0 ? (
+                      <tr><td colSpan={7} className="p-8 text-center text-slate-400 font-bold">No SMS numbers configured. Add your first number below.</td></tr>
+                    ) : smsNumbers.map(num => (
+                      <tr key={num.id} className="border-b border-slate-50 hover:bg-slate-50/50">
+                        <td className="p-3 font-bold text-slate-900 capitalize">{num.purpose}</td>
+                        <td className="p-3 text-slate-600 font-mono">{num.phone_number}</td>
+                        <td className="p-3 text-slate-600">{num.display_name || <span className="text-slate-300">&mdash;</span>}</td>
+                        <td className="p-3 text-slate-600 capitalize">{num.provider}</td>
+                        <td className="p-3 text-center">{num.is_default ? <Check size={14} className="inline text-emerald-500" /> : <span className="text-slate-300">&mdash;</span>}</td>
+                        <td className="p-3 text-center">
+                          {num.is_active ? <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500" title="Active" /> : <span className="inline-block w-2.5 h-2.5 rounded-full bg-slate-300" title="Inactive" />}
+                        </td>
+                        <td className="p-3 text-right">
+                          <div className="flex gap-2 justify-end">
+                            <button onClick={() => { setEditingSmsNumber(num); setSmsForm({ phone_number: num.phone_number, display_name: num.display_name || '', purpose: num.purpose, is_default: num.is_default }); setShowSmsNumberModal(true); }} className="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 text-[10px] font-bold transition-all">Edit</button>
+                            <button onClick={() => { if (window.confirm(`Remove ${num.phone_number}?`)) deleteRecord('smsNumbers', num.id); }} className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 text-[10px] font-bold transition-all">Remove</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button onClick={() => { setEditingSmsNumber(null); setSmsForm({ phone_number: '', display_name: '', purpose: 'general', is_default: false }); setShowSmsNumberModal(true); }} className="mt-4 w-full py-4 border-2 border-dashed border-slate-100 rounded-2xl text-[10px] font-black uppercase text-slate-400 hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                <Plus size={14} /> Add SMS Number
+              </button>
+
+              {/* Twilio Credentials */}
+              <div className="mt-6 pt-6 border-t border-slate-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <Info size={16} className="text-blue-500" />
+                  <span className="text-xs font-black text-slate-900 uppercase tracking-widest">Twilio Account Credentials</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <ConfigInput label="Account SID" value={twilioIntegration?.config?.account_sid || localSettings.integrations?.twilio?.accountSid || ''} onChange={v => updateNested('integrations.twilio.accountSid', v)} placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+                  <ConfigInput label="Auth Token" value={twilioIntegration?.config?.auth_token || localSettings.integrations?.twilio?.authToken || ''} onChange={v => updateNested('integrations.twilio.authToken', v)} type="password" />
+                </div>
+                <button onClick={() => {
+                  const sid = localSettings.integrations?.twilio?.accountSid;
+                  const token = localSettings.integrations?.twilio?.authToken;
+                  if (!sid || !token) { alert('Please enter both Account SID and Auth Token'); return; }
+                  upsertRecord('companyIntegrations', { ...(twilioIntegration || {}), provider: 'twilio', is_active: true, config: { account_sid: sid, auth_token: token } });
+                  alert('Twilio credentials saved.');
+                }} className="mt-4 px-6 py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center gap-2">
+                  <Save size={14} /> Save Twilio Credentials
+                </button>
+              </div>
+            </div>
+
+            {/* SMS Number Modal */}
+            {showSmsNumberModal && (
+              <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowSmsNumberModal(false)}>
+                <div className="bg-white rounded-[35px] p-10 w-full max-w-lg shadow-2xl" onClick={e => e.stopPropagation()}>
+                  <h3 className="text-xl font-black text-slate-900 mb-6">{editingSmsNumber ? 'Edit SMS Number' : 'Add SMS Number'}</h3>
+                  <div className="space-y-5">
+                    <ConfigInput label="Phone Number (E.164)" value={smsForm.phone_number} onChange={v => setSmsForm({ ...smsForm, phone_number: v })} placeholder="+61 400 123 456" />
+                    <ConfigInput label="Display Name" value={smsForm.display_name} onChange={v => setSmsForm({ ...smsForm, display_name: v })} placeholder="General SMS Line" />
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Purpose</label>
+                      <select value={smsForm.purpose} onChange={e => setSmsForm({ ...smsForm, purpose: e.target.value as any })} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500">
+                        <option value="general">General</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="campaigns">Campaigns</option>
+                        <option value="support">Support</option>
+                        <option value="operations">Operations</option>
+                      </select>
+                    </div>
+                    <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl cursor-pointer">
+                      <input type="checkbox" checked={smsForm.is_default} onChange={e => setSmsForm({ ...smsForm, is_default: e.target.checked })} className="w-4 h-4 rounded border-slate-300 text-blue-600" />
+                      <span className="text-xs font-bold text-slate-700">Set as default number for this purpose</span>
+                    </label>
+                  </div>
+                  <div className="flex gap-3 mt-8">
+                    <button onClick={() => {
+                      if (!smsForm.phone_number) { alert('Phone number is required'); return; }
+                      const data: any = { phone_number: smsForm.phone_number, display_name: smsForm.display_name, purpose: smsForm.purpose, is_default: smsForm.is_default, provider: 'twilio', is_active: true };
+                      if (editingSmsNumber) data.id = editingSmsNumber.id;
+                      upsertRecord('smsNumbers', data);
+                      setShowSmsNumberModal(false);
+                    }} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
+                      {editingSmsNumber ? 'Update Number' : 'Add Number'}
+                    </button>
+                    <button onClick={() => setShowSmsNumberModal(false)} className="px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            )}
+            </>)}
+
+            {/* ====== SECTION D: Payments & Maps (existing cards, now also save to company_integrations) ====== */}
+            <h3 className="text-xl font-black text-slate-900 tracking-tight pt-8 border-t border-slate-100">Payment Gateways</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <IntegrationCard
                 name="Stripe"
                 icon={<CreditCard size={24} />}
                 description="Accept credit card payments"
                 enabled={localSettings.integrations?.stripe?.enabled || false}
-                onToggle={(v: boolean) => updateNested('integrations.stripe.enabled', v)}
+                onToggle={(v: boolean) => { updateNested('integrations.stripe.enabled', v); upsertRecord('companyIntegrations', { ...(stripeIntegration || {}), provider: 'stripe', is_active: v, config: { ...(stripeIntegration?.config || {}), enabled: v } }); }}
                 fields={[
                   { label: 'Mode', value: localSettings.integrations?.stripe?.mode || 'test', onChange: (v: string) => updateNested('integrations.stripe.mode', v), type: 'select', options: [{ value: 'test', label: 'Test Mode' }, { value: 'live', label: 'Live Mode' }] },
                   { label: 'Publishable Key', value: localSettings.integrations?.stripe?.publicKey || '', onChange: (v: string) => updateNested('integrations.stripe.publicKey', v), type: 'text', placeholder: 'pk_test_... or pk_live_...' },
                   { label: 'Secret Key', value: localSettings.integrations?.stripe?.secretKey || '', onChange: (v: string) => updateNested('integrations.stripe.secretKey', v), type: 'password', placeholder: 'sk_test_... or sk_live_...' },
                   { label: 'Webhook Secret', value: localSettings.integrations?.stripe?.webhookSecret || '', onChange: (v: string) => updateNested('integrations.stripe.webhookSecret', v), type: 'password', placeholder: 'whsec_...' },
-                  { label: 'Webhook Endpoint', value: localSettings.integrations?.stripe?.webhookEndpoint || '', onChange: (v: string) => updateNested('integrations.stripe.webhookEndpoint', v), type: 'text', placeholder: 'https://your-domain.com/webhooks/stripe' },
-                  { label: 'Pass Surcharge to Customer', value: localSettings.integrations?.stripe?.passSurcharge || false, onChange: (v: string) => updateNested('integrations.stripe.passSurcharge', v), type: 'checkbox' },
                 ]}
               />
               <IntegrationCard
@@ -796,12 +1152,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 icon={<DollarSign size={24} />}
                 description="PayPal payment processing"
                 enabled={localSettings.integrations?.paypal?.enabled || false}
-                onToggle={(v: boolean) => updateNested('integrations.paypal.enabled', v)}
+                onToggle={(v: boolean) => { updateNested('integrations.paypal.enabled', v); upsertRecord('companyIntegrations', { ...(paypalIntegration || {}), provider: 'paypal', is_active: v, config: { ...(paypalIntegration?.config || {}), enabled: v } }); }}
                 fields={[
                   { label: 'Mode', value: localSettings.integrations?.paypal?.mode || 'sandbox', onChange: (v: string) => updateNested('integrations.paypal.mode', v), type: 'select', options: [{ value: 'sandbox', label: 'Sandbox' }, { value: 'live', label: 'Live' }] },
                   { label: 'Client ID', value: localSettings.integrations?.paypal?.clientId || '', onChange: (v: string) => updateNested('integrations.paypal.clientId', v), type: 'text' },
                   { label: 'Client Secret', value: localSettings.integrations?.paypal?.clientSecret || '', onChange: (v: string) => updateNested('integrations.paypal.clientSecret', v), type: 'password' },
-                  { label: 'Webhook ID', value: localSettings.integrations?.paypal?.webhookId || '', onChange: (v: string) => updateNested('integrations.paypal.webhookId', v), type: 'text', placeholder: 'Optional - for webhook verification' },
                 ]}
               />
             </div>
@@ -820,7 +1175,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                   { label: 'Auth Token', value: localSettings.integrations?.twilio?.authToken || '', onChange: (v: string) => updateNested('integrations.twilio.authToken', v), type: 'password' },
                   { label: 'Phone Number', value: localSettings.integrations?.twilio?.phoneNumber || '', onChange: (v: string) => updateNested('integrations.twilio.phoneNumber', v), type: 'text', placeholder: '+61412345678' },
                   { label: 'Caller ID Name', value: localSettings.integrations?.twilio?.callerId || '', onChange: (v: string) => updateNested('integrations.twilio.callerId', v), type: 'text', placeholder: 'Your Company Name' },
-                  { label: 'Status Callback URL', value: localSettings.integrations?.twilio?.statusCallbackUrl || '', onChange: (v: string) => updateNested('integrations.twilio.statusCallbackUrl', v), type: 'text', placeholder: 'https://your-domain.com/webhooks/twilio' },
                 ]}
               />
               <IntegrationCard
@@ -834,7 +1188,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                   { label: 'Verified Domain', value: localSettings.integrations?.sendgrid?.domain || '', onChange: (v: string) => updateNested('integrations.sendgrid.domain', v), type: 'text', placeholder: 'your-domain.com' },
                   { label: 'From Email', value: localSettings.integrations?.sendgrid?.fromEmail || '', onChange: (v: string) => updateNested('integrations.sendgrid.fromEmail', v), type: 'text', placeholder: 'noreply@your-domain.com' },
                   { label: 'From Name', value: localSettings.integrations?.sendgrid?.fromName || '', onChange: (v: string) => updateNested('integrations.sendgrid.fromName', v), type: 'text', placeholder: 'Your Company Name' },
-                  { label: 'Webhook URL', value: localSettings.integrations?.sendgrid?.webhookUrl || '', onChange: (v: string) => updateNested('integrations.sendgrid.webhookUrl', v), type: 'text', placeholder: 'https://your-domain.com/webhooks/sendgrid' },
                 ]}
               />
             </div>
@@ -849,17 +1202,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 enabled={localSettings.integrations?.byoSip?.enabled || false}
                 onToggle={(v: boolean) => updateNested('integrations.byoSip.enabled', v)}
                 fields={[
-                  { label: 'Provider Name', value: localSettings.integrations?.byoSip?.provider || '', onChange: (v: string) => updateNested('integrations.byoSip.provider', v), type: 'text', placeholder: 'e.g., Aatrox, Telcoinabox, Wholesale Provider' },
+                  { label: 'Provider Name', value: localSettings.integrations?.byoSip?.provider || '', onChange: (v: string) => updateNested('integrations.byoSip.provider', v), type: 'text', placeholder: 'e.g., Aatrox, Telcoinabox' },
                   { label: 'SIP Server', value: localSettings.integrations?.byoSip?.sipServer || '', onChange: (v: string) => updateNested('integrations.byoSip.sipServer', v), type: 'text', placeholder: 'sip.provider.com.au' },
-                  { label: 'SIP Port', value: localSettings.integrations?.byoSip?.sipPort || 5060, onChange: (v: string) => updateNested('integrations.byoSip.sipPort', parseInt(v) || 5060), type: 'number', placeholder: '5060' },
-                  { label: 'Transport', value: localSettings.integrations?.byoSip?.transport || 'udp', onChange: (v: string) => updateNested('integrations.byoSip.transport', v), type: 'select', options: [{ value: 'udp', label: 'UDP' }, { value: 'tcp', label: 'TCP' }, { value: 'tls', label: 'TLS' }] },
                   { label: 'Username', value: localSettings.integrations?.byoSip?.username || '', onChange: (v: string) => updateNested('integrations.byoSip.username', v), type: 'text' },
                   { label: 'Password', value: localSettings.integrations?.byoSip?.password || '', onChange: (v: string) => updateNested('integrations.byoSip.password', v), type: 'password' },
-                  { label: 'Realm (Optional)', value: localSettings.integrations?.byoSip?.realm || '', onChange: (v: string) => updateNested('integrations.byoSip.realm', v), type: 'text', placeholder: 'provider.com.au' },
-                  { label: 'Outbound Proxy (Optional)', value: localSettings.integrations?.byoSip?.outboundProxy || '', onChange: (v: string) => updateNested('integrations.byoSip.outboundProxy', v), type: 'text', placeholder: 'proxy.provider.com.au' },
-                  { label: 'Caller ID Name', value: localSettings.integrations?.byoSip?.callerIdName || '', onChange: (v: string) => updateNested('integrations.byoSip.callerIdName', v), type: 'text', placeholder: 'Your Company Name' },
                   { label: 'Caller ID Number', value: localSettings.integrations?.byoSip?.callerIdNumber || '', onChange: (v: string) => updateNested('integrations.byoSip.callerIdNumber', v), type: 'text', placeholder: '+61412345678' },
-                  { label: 'Register Expires (sec)', value: localSettings.integrations?.byoSip?.registerExpires || 600, onChange: (v: string) => updateNested('integrations.byoSip.registerExpires', parseInt(v) || 600), type: 'number', placeholder: '600' },
                 ]}
               />
               <IntegrationCard
@@ -869,19 +1216,15 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 enabled={localSettings.integrations?.byoSms?.enabled || false}
                 onToggle={(v: boolean) => updateNested('integrations.byoSms.enabled', v)}
                 fields={[
-                  { label: 'Provider Name', value: localSettings.integrations?.byoSms?.provider || '', onChange: (v: string) => updateNested('integrations.byoSms.provider', v), type: 'text', placeholder: 'e.g., MessageMedia, ClickSend, SMS Global' },
+                  { label: 'Provider Name', value: localSettings.integrations?.byoSms?.provider || '', onChange: (v: string) => updateNested('integrations.byoSms.provider', v), type: 'text', placeholder: 'e.g., MessageMedia, ClickSend' },
                   { label: 'API Endpoint', value: localSettings.integrations?.byoSms?.apiEndpoint || '', onChange: (v: string) => updateNested('integrations.byoSms.apiEndpoint', v), type: 'text', placeholder: 'https://api.provider.com.au/sms/v1' },
                   { label: 'API Key', value: localSettings.integrations?.byoSms?.apiKey || '', onChange: (v: string) => updateNested('integrations.byoSms.apiKey', v), type: 'password' },
-                  { label: 'API Secret (Optional)', value: localSettings.integrations?.byoSms?.apiSecret || '', onChange: (v: string) => updateNested('integrations.byoSms.apiSecret', v), type: 'password', placeholder: 'For HMAC signing' },
-                  { label: 'Auth Method', value: localSettings.integrations?.byoSms?.authMethod || 'bearer', onChange: (v: string) => updateNested('integrations.byoSms.authMethod', v), type: 'select', options: [{ value: 'bearer', label: 'Bearer Token' }, { value: 'basic', label: 'Basic Auth' }, { value: 'header', label: 'Custom Header' }] },
                   { label: 'From Number (E.164)', value: localSettings.integrations?.byoSms?.fromNumber || '', onChange: (v: string) => updateNested('integrations.byoSms.fromNumber', v), type: 'text', placeholder: '+61412345678' },
-                  { label: 'From Name (Optional)', value: localSettings.integrations?.byoSms?.fromName || '', onChange: (v: string) => updateNested('integrations.byoSms.fromName', v), type: 'text', placeholder: '11 chars max, may not work on all carriers' },
-                  { label: 'Webhook URL (Optional)', value: localSettings.integrations?.byoSms?.webhookUrl || '', onChange: (v: string) => updateNested('integrations.byoSms.webhookUrl', v), type: 'text', placeholder: 'https://your-domain.com/webhooks/sms' },
                 ]}
               />
             </div>
 
-            {/* Services */}
+            {/* External Services */}
             <h3 className="text-xl font-black text-slate-900 tracking-tight pt-8 border-t border-slate-100">External Services</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <IntegrationCard
@@ -889,7 +1232,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 icon={<MapPin size={24} />}
                 description="Maps & geocoding"
                 enabled={localSettings.integrations?.googleMaps?.enabled || false}
-                onToggle={(v: boolean) => updateNested('integrations.googleMaps.enabled', v)}
+                onToggle={(v: boolean) => { updateNested('integrations.googleMaps.enabled', v); upsertRecord('companyIntegrations', { ...(mapsIntegration || {}), provider: 'google_maps', is_active: v, config: { ...(mapsIntegration?.config || {}), enabled: v } }); }}
                 fields={[
                   { label: 'API Key', value: localSettings.integrations?.googleMaps?.apiKey || '', onChange: (v: string) => updateNested('integrations.googleMaps.apiKey', v), type: 'password', placeholder: 'Enable Geocoding, Places, and Maps JavaScript API' },
                   { label: 'Default Region', value: localSettings.integrations?.googleMaps?.defaultRegion || 'AU', onChange: (v: string) => updateNested('integrations.googleMaps.defaultRegion', v), type: 'text', placeholder: 'AU' },
@@ -903,9 +1246,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 onToggle={(v: boolean) => updateNested('integrations.openai.enabled', v)}
                 fields={[
                   { label: 'API Key', value: localSettings.integrations?.openai?.apiKey || '', onChange: (v: string) => updateNested('integrations.openai.apiKey', v), type: 'password', placeholder: 'sk-...' },
-                  { label: 'Organization ID (Optional)', value: localSettings.integrations?.openai?.organizationId || '', onChange: (v: string) => updateNested('integrations.openai.organizationId', v), type: 'text', placeholder: 'org-...' },
                   { label: 'Default Model', value: localSettings.integrations?.openai?.defaultModel || 'gpt-4-turbo', onChange: (v: string) => updateNested('integrations.openai.defaultModel', v), type: 'select', options: [{ value: 'gpt-4-turbo', label: 'GPT-4 Turbo' }, { value: 'gpt-4', label: 'GPT-4' }, { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' }] },
-                  { label: 'Max Tokens', value: localSettings.integrations?.openai?.maxTokens || 2000, onChange: (v: string) => updateNested('integrations.openai.maxTokens', parseInt(v) || 2000), type: 'number', placeholder: '2000' },
                 ]}
               />
               <IntegrationCard
@@ -917,7 +1258,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 fields={[
                   { label: 'Sync Frequency', value: localSettings.integrations?.xero?.syncFrequency || 'daily', onChange: (v: string) => updateNested('integrations.xero.syncFrequency', v), type: 'select', options: [{ value: 'daily', label: 'Daily' }, { value: 'weekly', label: 'Weekly' }, { value: 'manual', label: 'Manual' }] },
                   { label: 'Client ID (OAuth)', value: localSettings.integrations?.xero?.clientId || '', onChange: (v: string) => updateNested('integrations.xero.clientId', v), type: 'text', placeholder: 'Get from Xero Developer Portal' },
-                  { label: 'Tenant ID', value: localSettings.integrations?.xero?.tenantId || '', onChange: (v: string) => updateNested('integrations.xero.tenantId', v), type: 'text', placeholder: 'Xero organization ID' },
                 ]}
               />
             </div>
@@ -934,7 +1274,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 fields={[
                   { label: 'Enable Sync', value: localSettings.integrations?.googleCalendar?.syncEnabled || false, onChange: (v: string) => updateNested('integrations.googleCalendar.syncEnabled', v), type: 'checkbox' },
                   { label: 'Client ID (OAuth)', value: localSettings.integrations?.googleCalendar?.clientId || '', onChange: (v: string) => updateNested('integrations.googleCalendar.clientId', v), type: 'text', placeholder: 'Get from Google Cloud Console' },
-                  { label: 'Calendar ID', value: localSettings.integrations?.googleCalendar?.calendarId || '', onChange: (v: string) => updateNested('integrations.googleCalendar.calendarId', v), type: 'text', placeholder: 'primary or custom calendar ID' },
                 ]}
               />
               <IntegrationCard
@@ -946,7 +1285,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 fields={[
                   { label: 'Enable Sync', value: localSettings.integrations?.outlook?.syncEnabled || false, onChange: (v: string) => updateNested('integrations.outlook.syncEnabled', v), type: 'checkbox' },
                   { label: 'Client ID (Azure AD)', value: localSettings.integrations?.outlook?.clientId || '', onChange: (v: string) => updateNested('integrations.outlook.clientId', v), type: 'text', placeholder: 'Get from Azure Portal' },
-                  { label: 'Tenant ID', value: localSettings.integrations?.outlook?.tenantId || '', onChange: (v: string) => updateNested('integrations.outlook.tenantId', v), type: 'text', placeholder: 'Azure AD tenant ID' },
                 ]}
               />
             </div>
