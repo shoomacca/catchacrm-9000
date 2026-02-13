@@ -60,6 +60,7 @@ const WarehousePage = lazy(() => import('./pages/WarehousePage'));
 const ProcurementPage = lazy(() => import('./pages/ProcurementPage'));
 const JobMarketplacePage = lazy(() => import('./pages/JobMarketplacePage'));
 const CustomEntityListPage = lazy(() => import('./pages/CustomEntityListPage'));
+const SMSInboxPage = lazy(() => import('./pages/SMSInboxPage'));
 const KnowledgeBase = lazy(() => import('./pages/KnowledgeBase').then(m => ({ default: m.KnowledgeBase })));
 const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
 const Signup = lazy(() => import('./pages/Signup').then(m => ({ default: m.Signup })));
@@ -704,6 +705,7 @@ const AppContent: React.FC = () => {
               <NavItem to="/ops/tactical-queue" icon={AlertCircle} label="Tactical Queue" />
               <NavItem to="/ops/support-inbox" icon={Ticket} label="Support Tickets" />
               <NavItem to="/ops/comms-hub" icon={Mail} label="Comms Hub" />
+              <NavItem to="/ops/sms-inbox" icon={MessageSquare} label="SMS Inbox" />
               <NavItem to="/ops/reports" icon={BarChart3} label="Reports" />
               <NavItem to="/chat" icon={MessageSquareText} label="Team Chat" />
             </SidebarSection>
@@ -812,6 +814,7 @@ const AppContent: React.FC = () => {
               <Route path="/ops/tactical-queue" element={<TacticalQueue />} />
               <Route path="/ops/support-inbox" element={<SupportTickets />} />
               <Route path="/ops/comms-hub" element={<CommsHub />} />
+              <Route path="/ops/sms-inbox" element={<SMSInboxPage />} />
               <Route path="/ops/reports" element={<Reports />} />
               <Route path="/ops/knowledge-base" element={<KnowledgeBase />} />
               <Route path="/tickets" element={<Navigate to="/ops/support-inbox" replace />} />

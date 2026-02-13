@@ -14,6 +14,7 @@ import { useCRM } from '../context/CRMContext';
 import { EntityType } from '../types';
 import { EmailComposer } from '../components/EmailComposer';
 import { SMSComposer } from '../components/SMSComposer';
+import { SMSConversation } from '../components/SMSConversation';
 import { BillAccountModal } from '../components/BillAccountModal';
 import { GenerateQuoteModal } from '../components/GenerateQuoteModal';
 import SignatureCapture from '../components/SignatureCapture';
@@ -90,7 +91,10 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
     const base = ['OVERVIEW', 'DETAILS', 'DOCUMENTS', 'COMMUNICATION', 'TASKS', 'NOTES', 'HISTORY'];
     if (entityType === 'accounts') base.splice(3, 0, 'SERVICES & REVENUE');
     if (entityType === 'deals') base.splice(3, 0, 'REVENUE HUB');
-    if (['accounts', 'contacts', 'leads'].includes(entityType)) base.splice(base.length - 1, 0, 'TICKETS');
+    if (['accounts', 'contacts', 'leads'].includes(entityType)) {
+      base.splice(base.length - 1, 0, 'TICKETS');
+      base.splice(base.indexOf('COMMUNICATION') + 1, 0, 'SMS');
+    }
     return base;
   }, [entityType]);
 
@@ -1277,6 +1281,19 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                 </div>
               </div>
               )}
+            </div>
+          )}
+
+          {/* SMS TAB */}
+          {activeTab === 'SMS' && ['contacts', 'leads', 'accounts'].includes(entityType) && (
+            <div>
+              <SMSConversation
+                contactPhone={(entity as any)?.phone || (entity as any)?.mobile}
+                contactId={entity?.id}
+                contactName={(entity as any)?.name}
+                dealId={undefined}
+                ticketId={undefined}
+              />
             </div>
           )}
 
