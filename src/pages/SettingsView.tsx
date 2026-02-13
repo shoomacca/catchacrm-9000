@@ -27,7 +27,7 @@ import {
 } from '../services/supabaseData';
 import { sendSMS } from '../services/smsService';
 
-type SettingTab = 'GENERAL' | 'MODULES' | 'USERS_ACCESS' | 'INTEGRATIONS' | 'AUTOMATION' | 'BLUEPRINT' | 'DOMAIN_CONFIG' | 'IMPORT_EXPORT' | 'DIAGNOSTICS';
+type SettingTab = 'GENERAL' | 'BUSINESS' | 'MODULES' | 'USERS_ACCESS' | 'INTEGRATIONS' | 'AUTOMATION' | 'BLUEPRINT' | 'DOMAIN_CONFIG' | 'IMPORT_EXPORT' | 'DIAGNOSTICS';
 type DomainSubTab = 'SALES' | 'FINANCIAL' | 'FIELD' | 'MARKETING';
 
 interface SettingsViewProps {
@@ -49,6 +49,34 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [loginHistory, setLoginHistory] = useState<any[]>([]);
   const [loadingLoginHistory, setLoadingLoginHistory] = useState(false);
+
+  // Business details state
+  const [orgDetails, setOrgDetails] = useState<any>({
+    name: '',
+    abn: '',
+    logo_url: '',
+    address_line1: '',
+    address_line2: '',
+    city: '',
+    state: '',
+    postcode: '',
+    country: 'Australia',
+    phone: '',
+    email: '',
+    website: '',
+    bank_name: '',
+    bank_bsb: '',
+    bank_account_number: '',
+    bank_account_name: '',
+    invoice_prefix: 'INV',
+    invoice_next_number: 1,
+    default_tax_rate: 10.00,
+    default_payment_terms: 30,
+    invoice_notes: '',
+    invoice_footer: ''
+  });
+  const [loadingOrgDetails, setLoadingOrgDetails] = useState(false);
+  const [savingOrgDetails, setSavingOrgDetails] = useState(false);
 
   // Integration modals & state
   const [showEmailAccountModal, setShowEmailAccountModal] = useState(false);
@@ -132,6 +160,13 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
     }
   }, [activeTab]);
 
+  // Load organization details when BUSINESS tab is active
+  useEffect(() => {
+    if (activeTab === 'BUSINESS') {
+      loadOrganizationDetails();
+    }
+  }, [activeTab]);
+
   const loadRecentJobs = async () => {
     setLoadingJobs(true);
     try {
@@ -192,6 +227,103 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
       setLoginHistory([]);
     } finally {
       setLoadingLoginHistory(false);
+    }
+  };
+
+  const loadOrganizationDetails = async () => {
+    if (!supabase) return;
+
+    setLoadingOrgDetails(true);
+    try {
+      const orgId = await getCurrentOrgId();
+
+      const { data: org, error } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', orgId)
+        .single();
+
+      if (error) {
+        console.error('Error loading organization details:', error);
+        return;
+      }
+
+      if (org) {
+        setOrgDetails({
+          name: org.name || '',
+          abn: org.abn || '',
+          logo_url: org.logo_url || '',
+          address_line1: org.address_line1 || '',
+          address_line2: org.address_line2 || '',
+          city: org.city || '',
+          state: org.state || '',
+          postcode: org.postcode || '',
+          country: org.country || 'Australia',
+          phone: org.phone || '',
+          email: org.email || '',
+          website: org.website || '',
+          bank_name: org.bank_name || '',
+          bank_bsb: org.bank_bsb || '',
+          bank_account_number: org.bank_account_number || '',
+          bank_account_name: org.bank_account_name || '',
+          invoice_prefix: org.invoice_prefix || 'INV',
+          invoice_next_number: org.invoice_next_number || 1,
+          default_tax_rate: org.default_tax_rate || 10.00,
+          default_payment_terms: org.default_payment_terms || 30,
+          invoice_notes: org.invoice_notes || '',
+          invoice_footer: org.invoice_footer || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error loading organization details:', error);
+    } finally {
+      setLoadingOrgDetails(false);
+    }
+  };
+
+  const saveOrganizationDetails = async () => {
+    if (!supabase) return;
+
+    setSavingOrgDetails(true);
+    try {
+      const orgId = await getCurrentOrgId();
+
+      const { error } = await supabase
+        .from('organizations')
+        .update({
+          name: orgDetails.name,
+          abn: orgDetails.abn,
+          logo_url: orgDetails.logo_url,
+          address_line1: orgDetails.address_line1,
+          address_line2: orgDetails.address_line2,
+          city: orgDetails.city,
+          state: orgDetails.state,
+          postcode: orgDetails.postcode,
+          country: orgDetails.country,
+          phone: orgDetails.phone,
+          email: orgDetails.email,
+          website: orgDetails.website,
+          bank_name: orgDetails.bank_name,
+          bank_bsb: orgDetails.bank_bsb,
+          bank_account_number: orgDetails.bank_account_number,
+          bank_account_name: orgDetails.bank_account_name,
+          invoice_prefix: orgDetails.invoice_prefix,
+          invoice_next_number: orgDetails.invoice_next_number,
+          default_tax_rate: orgDetails.default_tax_rate,
+          default_payment_terms: orgDetails.default_payment_terms,
+          invoice_notes: orgDetails.invoice_notes,
+          invoice_footer: orgDetails.invoice_footer
+        })
+        .eq('id', orgId);
+
+      if (error) throw error;
+
+      alert('Business details saved successfully!');
+    } catch (error: any) {
+      console.error('Error saving organization details:', error);
+      alert('Failed to save: ' + error.message);
+    } finally {
+      setSavingOrgDetails(false);
     }
   };
 
@@ -275,6 +407,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
 
   const tabs = [
     { id: 'GENERAL', icon: Building2, label: 'General', description: 'Identity & Branding' },
+    { id: 'BUSINESS', icon: Receipt, label: 'Business Details', description: 'Invoicing & Bank' },
     { id: 'MODULES', icon: Layers, label: 'Modules', description: 'Feature Flags' },
     { id: 'USERS_ACCESS', icon: ShieldCheck, label: 'Users & Access', description: 'RBAC & Teams' },
     { id: 'INTEGRATIONS', icon: Plug, label: 'Integrations', description: 'External Services' },
@@ -516,6 +649,330 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                 </div>
               </div>
             </SettingsCard>
+          </div>
+        )}
+
+        {/* =========== BUSINESS TAB =========== */}
+        {activeTab === 'BUSINESS' && (
+          <div className="space-y-8">
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 p-8 rounded-[45px] mb-8">
+              <h3 className="text-2xl font-black text-slate-900 mb-2">Business Details</h3>
+              <p className="text-sm text-slate-600">Company information for invoices, quotes, and payments</p>
+            </div>
+
+            {loadingOrgDetails ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {/* Company Information */}
+                <div className="p-8 rounded-[45px] bg-white border border-slate-200">
+                  <h4 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
+                    <Building size={20} className="text-blue-600" />
+                    Company Information
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Company Name *</label>
+                      <input
+                        type="text"
+                        value={orgDetails.name}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, name: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Your Company Pty Ltd"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">ABN (11 digits)</label>
+                      <input
+                        type="text"
+                        value={orgDetails.abn}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, abn: e.target.value.replace(/[^0-9]/g, '').slice(0, 11) })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="12 345 678 901"
+                        maxLength={11}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+                      <input
+                        type="email"
+                        value={orgDetails.email}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, email: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="admin@company.com.au"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Phone</label>
+                      <input
+                        type="tel"
+                        value={orgDetails.phone}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, phone: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="(02) 1234 5678"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Website</label>
+                      <input
+                        type="url"
+                        value={orgDetails.website}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, website: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="https://www.company.com.au"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Logo URL</label>
+                      <input
+                        type="url"
+                        value={orgDetails.logo_url}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, logo_url: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="https://example.com/logo.png"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Appears on invoices and quotes. Use a transparent PNG for best results.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Business Address */}
+                <div className="p-8 rounded-[45px] bg-white border border-slate-200">
+                  <h4 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
+                    <MapPin size={20} className="text-blue-600" />
+                    Business Address
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Address Line 1</label>
+                      <input
+                        type="text"
+                        value={orgDetails.address_line1}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, address_line1: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="123 Main Street"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Address Line 2 (Optional)</label>
+                      <input
+                        type="text"
+                        value={orgDetails.address_line2}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, address_line2: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Suite 4"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">City</label>
+                      <input
+                        type="text"
+                        value={orgDetails.city}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, city: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Sydney"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">State</label>
+                      <select
+                        value={orgDetails.state}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, state: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Select State</option>
+                        <option value="NSW">NSW</option>
+                        <option value="VIC">VIC</option>
+                        <option value="QLD">QLD</option>
+                        <option value="SA">SA</option>
+                        <option value="WA">WA</option>
+                        <option value="TAS">TAS</option>
+                        <option value="NT">NT</option>
+                        <option value="ACT">ACT</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Postcode</label>
+                      <input
+                        type="text"
+                        value={orgDetails.postcode}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, postcode: e.target.value.replace(/[^0-9]/g, '').slice(0, 4) })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="2000"
+                        maxLength={4}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Country</label>
+                      <input
+                        type="text"
+                        value={orgDetails.country}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, country: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Australia"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bank Details */}
+                <div className="p-8 rounded-[45px] bg-white border border-slate-200">
+                  <h4 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
+                    <DollarSign size={20} className="text-blue-600" />
+                    Bank Details
+                  </h4>
+                  <p className="text-sm text-slate-600 mb-6">These details appear on invoices for direct bank transfers</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Bank Name</label>
+                      <input
+                        type="text"
+                        value={orgDetails.bank_name}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, bank_name: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Commonwealth Bank"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">BSB (XXX-XXX)</label>
+                      <input
+                        type="text"
+                        value={orgDetails.bank_bsb}
+                        onChange={(e) => {
+                          let val = e.target.value.replace(/[^0-9]/g, '');
+                          if (val.length > 3) val = val.slice(0, 3) + '-' + val.slice(3, 6);
+                          setOrgDetails({ ...orgDetails, bank_bsb: val });
+                        }}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="062-000"
+                        maxLength={7}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Account Number</label>
+                      <input
+                        type="text"
+                        value={orgDetails.bank_account_number}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, bank_account_number: e.target.value.replace(/[^0-9]/g, '') })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="12345678"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Account Name</label>
+                      <input
+                        type="text"
+                        value={orgDetails.bank_account_name}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, bank_account_name: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Your Company Pty Ltd"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Invoice Settings */}
+                <div className="p-8 rounded-[45px] bg-white border border-slate-200">
+                  <h4 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
+                    <FileText size={20} className="text-blue-600" />
+                    Invoice Settings
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Invoice Prefix</label>
+                      <input
+                        type="text"
+                        value={orgDetails.invoice_prefix}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, invoice_prefix: e.target.value.toUpperCase() })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="INV"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Invoice numbers will be {orgDetails.invoice_prefix}-0001, {orgDetails.invoice_prefix}-0002, etc.</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Next Invoice Number</label>
+                      <input
+                        type="number"
+                        value={orgDetails.invoice_next_number}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, invoice_next_number: parseInt(e.target.value) || 1 })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        min="1"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Next invoice: {orgDetails.invoice_prefix}-{String(orgDetails.invoice_next_number).padStart(4, '0')}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Default Tax Rate (%)</label>
+                      <input
+                        type="number"
+                        value={orgDetails.default_tax_rate}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, default_tax_rate: parseFloat(e.target.value) || 0 })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">GST in Australia is 10%</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Default Payment Terms (days)</label>
+                      <input
+                        type="number"
+                        value={orgDetails.default_payment_terms}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, default_payment_terms: parseInt(e.target.value) || 0 })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        min="0"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">NET 30 = payment due in 30 days</p>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Invoice Notes</label>
+                      <textarea
+                        value={orgDetails.invoice_notes}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, invoice_notes: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        rows={3}
+                        placeholder="Thank you for your business. Please pay within 30 days."
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Appears on every invoice</p>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Invoice Footer</label>
+                      <textarea
+                        value={orgDetails.invoice_footer}
+                        onChange={(e) => setOrgDetails({ ...orgDetails, invoice_footer: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        rows={2}
+                        placeholder="Your Company Pty Ltd | ABN 12 345 678 901 | info@company.com.au"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Small print at the bottom of invoices</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={saveOrganizationDetails}
+                    disabled={savingOrgDetails}
+                    className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-[35px] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {savingOrgDetails ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={20} />
+                        Save Business Details
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
