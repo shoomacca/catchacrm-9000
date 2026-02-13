@@ -16,7 +16,7 @@ interface ConversationThread {
 }
 
 const SMSInboxPage: React.FC = () => {
-  const { smsMessages, contacts, leads, settings } = useCRM();
+  const { smsMessages } = useCRM();
   const [selectedPhone, setSelectedPhone] = useState<string | null>(null);
   const [selectedThread, setSelectedThread] = useState<ConversationThread | null>(null);
   const [searchFilter, setSearchFilter] = useState('');
@@ -24,7 +24,6 @@ const SMSInboxPage: React.FC = () => {
   const [composePhone, setComposePhone] = useState('');
   const [composeBody, setComposeBody] = useState('');
   const [composeSending, setComposeSending] = useState(false);
-  const isDarkMode = settings.branding?.theme === 'dark';
 
   // Group messages into conversation threads by phone number
   const threads = useMemo(() => {
@@ -126,8 +125,8 @@ const SMSInboxPage: React.FC = () => {
             <MessageSquare size={24} className="text-white" />
           </div>
           <div>
-            <h1 className={`text-2xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>SMS Inbox</h1>
-            <p className={`text-xs font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">SMS Inbox</h1>
+            <p className="text-xs font-bold text-slate-500">
               {threads.length} conversation{threads.length !== 1 ? 's' : ''}
             </p>
           </div>
@@ -141,11 +140,11 @@ const SMSInboxPage: React.FC = () => {
       </div>
 
       {/* Main Layout: Sidebar + Conversation */}
-      <div className={`flex rounded-[35px] overflow-hidden border shadow-sm h-[calc(100%-80px)] ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+      <div className="flex rounded-[35px] overflow-hidden border shadow-sm h-[calc(100%-80px)] bg-white border-slate-200">
         {/* Left: Conversation List */}
-        <div className={`w-80 border-r flex flex-col shrink-0 ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`}>
+        <div className="w-80 border-r flex flex-col shrink-0 border-slate-200">
           {/* Search */}
-          <div className={`p-3 border-b ${isDarkMode ? 'border-slate-700' : 'border-slate-100'}`}>
+          <div className="p-3 border-b border-slate-100">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
@@ -153,11 +152,7 @@ const SMSInboxPage: React.FC = () => {
                 value={searchFilter}
                 onChange={e => setSearchFilter(e.target.value)}
                 placeholder="Search conversations..."
-                className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
-                  isDarkMode
-                    ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400'
-                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'
-                }`}
+                className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium border focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400"
               />
             </div>
           </div>
@@ -167,7 +162,7 @@ const SMSInboxPage: React.FC = () => {
             {filteredThreads.length === 0 ? (
               <div className="p-8 text-center">
                 <MessageSquare size={32} className="mx-auto text-slate-300 mb-3" />
-                <p className={`text-xs font-bold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                <p className="text-xs font-bold text-slate-400">
                   {searchFilter ? 'No matching conversations' : 'No SMS conversations yet'}
                 </p>
               </div>
@@ -183,13 +178,13 @@ const SMSInboxPage: React.FC = () => {
                     }}
                     className={`w-full text-left p-4 border-b transition-colors ${
                       isSelected
-                        ? isDarkMode ? 'bg-blue-900/30 border-slate-600' : 'bg-blue-50 border-blue-100'
-                        : isDarkMode ? 'hover:bg-slate-700/50 border-slate-700' : 'hover:bg-slate-50 border-slate-50'
+                        ? 'bg-blue-50 border-blue-100'
+                        : 'hover:bg-slate-50 border-slate-50'
                     }`}
                   >
                     <div className="flex items-start justify-between mb-1">
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-bold truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                        <p className="text-sm font-bold truncate text-slate-900">
                           {thread.contactName || 'Unknown'}
                         </p>
                         <p className="text-[10px] font-mono text-slate-400">{thread.phoneNumber}</p>
@@ -203,7 +198,7 @@ const SMSInboxPage: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    <p className={`text-xs truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    <p className="text-xs truncate text-slate-500">
                       {thread.lastMessage.direction === 'outbound' && <span className="text-slate-400">You: </span>}
                       {thread.lastMessage.body}
                     </p>
@@ -224,11 +219,11 @@ const SMSInboxPage: React.FC = () => {
             />
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center">
-              <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-4 ${isDarkMode ? 'bg-slate-700' : 'bg-slate-100'}`}>
+              <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-4 bg-slate-100">
                 <MessageSquare size={36} className="text-slate-300" />
               </div>
-              <p className={`text-sm font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Select a conversation</p>
-              <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Choose from the list or start a new message</p>
+              <p className="text-sm font-bold text-slate-500">Select a conversation</p>
+              <p className="text-xs mt-1 text-slate-400">Choose from the list or start a new message</p>
             </div>
           )}
         </div>
@@ -238,7 +233,7 @@ const SMSInboxPage: React.FC = () => {
       {showCompose && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowCompose(false)}>
           <div className="bg-white rounded-[35px] p-10 w-full max-w-lg shadow-2xl" onClick={e => e.stopPropagation()}>
-            <h3 className={`text-xl font-black mb-6 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>New SMS</h3>
+            <h3 className="text-xl font-black mb-6 text-slate-900">New SMS</h3>
             <div className="space-y-5">
               <div>
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Recipient Phone Number</label>

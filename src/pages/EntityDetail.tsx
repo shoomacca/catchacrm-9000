@@ -15,7 +15,9 @@ import { EntityType } from '../types';
 import { EmailComposer } from '../components/EmailComposer';
 import { SMSComposer } from '../components/SMSComposer';
 import { SMSConversation } from '../components/SMSConversation';
+import { getCurrentOrgId } from '../services/supabaseData';
 import { BillAccountModal } from '../components/BillAccountModal';
+import { PaymentCollect } from '../components/PaymentCollect';
 import { GenerateQuoteModal } from '../components/GenerateQuoteModal';
 import SignatureCapture from '../components/SignatureCapture';
 import PhotoUploader from '../components/PhotoUploader';
@@ -37,6 +39,7 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
     crews, jobs, zones, equipment, inventoryItems, purchaseOrders,
     bankTransactions, expenses, reviews, referralRewards, inboundForms,
     chatWidgets, calculators, automationWorkflows, webhooks, industryTemplates,
+    paymentTransactions, companyIntegrations, settings,
     openModal, deleteRecord, getAccountRevenueStats, canAccessRecord, hasPermission, toggleTask, convertLead, addNote,
     convertLeadToDeal, acceptQuote, closeDealAsWon, updateJobWorkflow, pickBOMItem, convertQuoteToInvoice
   } = useCRM();
@@ -44,6 +47,7 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
   const [noteText, setNoteText] = useState('');
   const [expandedComms, setExpandedComms] = useState<Set<string>>(new Set());
   const [commFilter, setCommFilter] = useState<'all' | 'Email' | 'Call' | 'SMS'>('all');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const toggleCommExpand = (commId: string) => {
     setExpandedComms(prev => {
@@ -95,6 +99,9 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
       base.splice(base.length - 1, 0, 'TICKETS');
       base.splice(base.indexOf('COMMUNICATION') + 1, 0, 'SMS');
     }
+    if (['accounts', 'contacts', 'deals'].includes(entityType)) {
+      base.splice(base.length - 1, 0, 'PAYMENTS');
+    }
     return base;
   }, [entityType]);
 
@@ -124,7 +131,7 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
           <h2 className="text-3xl font-black text-slate-900 tracking-tight">Security Access Denied</h2>
           <p className="text-slate-400 font-bold uppercase text-xs tracking-widest mt-2 max-w-md mx-auto">This record is outside of your management hierarchy.</p>
        </div>
-       <button onClick={() => navigate(-1)} className="bg-slate-900 text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest">Return</button>
+       <button onClick={() => navigate(-1)} className="bg-slate-900 text-white px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest">Return</button>
     </div>
   );
 
@@ -669,7 +676,7 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                                   {!isPicked && (
                                     <button
                                       onClick={() => pickBOMItem(entity.id, item.inventoryItemId, item.qtyRequired)}
-                                      className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold rounded-lg transition-colors"
+                                      className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors shadow-lg shadow-blue-500/20"
                                     >
                                       Pick All
                                     </button>
@@ -684,7 +691,7 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                             <p className="text-sm">No BOM items assigned to this job</p>
                             <button
                               onClick={() => updateJobWorkflow(entity.id, { status: 'InProgress' })}
-                              className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold rounded-lg transition-colors"
+                              className="mt-4 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors shadow-lg shadow-blue-500/20"
                             >
                               Skip to Execution
                             </button>
@@ -1296,6 +1303,128 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
               />
             </div>
           )}
+
+          {/* PAYMENTS TAB */}
+          {activeTab === 'PAYMENTS' && ['accounts', 'contacts', 'deals'].includes(entityType) && (() => {
+            const entityPayments = paymentTransactions.filter(pt => {
+              if (entityType === 'contacts') return pt.contact_id === entity?.id;
+              if (entityType === 'deals') return pt.deal_id === entity?.id;
+              if (entityType === 'accounts') {
+                const accountContacts = contacts.filter(c => c.accountId === entity?.id);
+                return accountContacts.some(c => pt.contact_id === c.id);
+              }
+              return false;
+            });
+            const totalCollected = entityPayments.filter(p => p.status === 'succeeded').reduce((sum, p) => sum + p.amount, 0);
+            const totalPending = entityPayments.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0);
+            const totalFailed = entityPayments.filter(p => ['failed', 'refunded'].includes(p.status)).reduce((sum, p) => sum + p.amount, 0);
+            const currencySymbol = settings.localization?.currencySymbol || '$';
+
+            return (
+              <div className="space-y-6">
+                {/* Payment Summary Cards */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 text-center">
+                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Collected</p>
+                    <p className="text-xl font-black text-emerald-700">{currencySymbol}{totalCollected.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-center">
+                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">Pending</p>
+                    <p className="text-xl font-black text-amber-700">{currencySymbol}{totalPending.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 text-center">
+                    <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">Failed/Refunded</p>
+                    <p className="text-xl font-black text-rose-700">{currencySymbol}{totalFailed.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                {/* Collect Payment Button */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setShowPaymentModal(true)}
+                    className="px-5 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all flex items-center gap-2"
+                  >
+                    <CreditCard size={14} /> Collect Payment
+                  </button>
+                </div>
+
+                {/* Payment History Table */}
+                {entityPayments.length === 0 ? (
+                  <div className="text-center py-12 bg-slate-50 rounded-[30px] border-2 border-dashed border-slate-200">
+                    <CreditCard size={48} className="mx-auto text-slate-300 mb-4" />
+                    <p className="text-sm font-bold text-slate-400">No payment transactions yet</p>
+                    <p className="text-xs text-slate-400 mt-1">Collect a payment to get started</p>
+                  </div>
+                ) : (
+                  <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-slate-100 bg-slate-50">
+                          <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Date</th>
+                          <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Amount</th>
+                          <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Provider</th>
+                          <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Status</th>
+                          <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Description</th>
+                          <th className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 py-3">Receipt</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {entityPayments.map(pt => (
+                          <tr key={pt.id} className="border-b border-slate-50 hover:bg-slate-50/50">
+                            <td className="px-4 py-3 text-xs font-medium text-slate-600">{new Date(pt.createdAt).toLocaleDateString()}</td>
+                            <td className="px-4 py-3 text-xs font-bold text-slate-900">{currencySymbol}{pt.amount.toFixed(2)} {pt.currency?.toUpperCase()}</td>
+                            <td className="px-4 py-3">
+                              <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${pt.provider === 'stripe' ? 'bg-indigo-100 text-indigo-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                {pt.provider === 'stripe' ? 'Stripe' : 'PayPal'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${
+                                pt.status === 'succeeded' ? 'bg-emerald-100 text-emerald-700' :
+                                pt.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                pt.status === 'refunded' ? 'bg-blue-100 text-blue-700' :
+                                'bg-rose-100 text-rose-700'
+                              }`}>
+                                {pt.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-slate-500 truncate max-w-[200px]">{pt.description || '—'}</td>
+                            <td className="px-4 py-3">
+                              {pt.receipt_url ? (
+                                <a href={pt.receipt_url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 font-bold hover:underline">View</a>
+                              ) : <span className="text-xs text-slate-400">—</span>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Payment Collection Modal */}
+                {showPaymentModal && (
+                  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowPaymentModal(false)}>
+                    <div className="bg-white rounded-[35px] p-10 w-full max-w-lg shadow-2xl" onClick={e => e.stopPropagation()}>
+                      <h3 className="text-xl font-black text-slate-900 mb-6">Collect Payment</h3>
+                      <PaymentCollect
+                        orgId=""
+                        amount={entityType === 'deals' ? ((entity as any)?.amount || 0) : 0}
+                        currency={settings.localization?.currency?.toLowerCase() || 'aud'}
+                        description={`Payment for ${(entity as any)?.name || entityType}`}
+                        contactId={entityType === 'contacts' ? entity?.id : undefined}
+                        contactName={(entity as any)?.name}
+                        contactEmail={(entity as any)?.email}
+                        dealId={entityType === 'deals' ? entity?.id : undefined}
+                        onSuccess={() => { setShowPaymentModal(false); }}
+                        onError={(err) => { alert(err); }}
+                      />
+                      <button onClick={() => setShowPaymentModal(false)} className="w-full mt-4 py-3 bg-slate-100 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* DETAILS TAB */}
           {activeTab === 'DETAILS' && (
