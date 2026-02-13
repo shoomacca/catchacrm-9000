@@ -52,7 +52,8 @@ export type EntityType =
   | 'userIntegrations'
   | 'orgEmailAccounts'
   | 'smsNumbers'
-  | 'smsMessages';
+  | 'smsMessages'
+  | 'paymentTransactions';
 
 export type CommunicationOutcome = 'answered' | 'no-answer' | 'voicemail' | 'meeting-booked' | 'converted';
 
@@ -251,6 +252,10 @@ export interface CalendarEvent extends CRMBase {
   relatedToId?: string;
   priority?: 'high' | 'medium' | 'low';
   isAllDay?: boolean;
+  attendees?: string[];
+  is_recurring?: boolean;
+  recurrence_rule?: string;
+  recurrence_end?: string;
 }
 
 export interface Campaign extends CRMBase {
@@ -1542,6 +1547,26 @@ export interface SmsNumber extends CRMBase {
   is_active: boolean;
   is_default: boolean;
   webhook_url?: string;
+  created_by?: string;
+}
+
+export interface PaymentTransaction extends CRMBase {
+  org_id: string;
+  provider: 'stripe' | 'paypal';
+  amount: number;
+  currency: string;
+  status: 'pending' | 'succeeded' | 'failed' | 'refunded' | 'cancelled';
+  description?: string;
+  provider_transaction_id?: string;
+  provider_customer_id?: string;
+  provider_response?: Record<string, any>;
+  contact_id?: string;
+  contact_name?: string;
+  deal_id?: string;
+  invoice_id?: string;
+  payment_method?: string;
+  receipt_url?: string;
+  error_message?: string;
   created_by?: string;
 }
 

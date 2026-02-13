@@ -16,7 +16,7 @@ type EventFilter = 'all' | 'meetings' | 'tasks' | 'personal' | 'followups' | 'ti
 
 const CalendarView: React.FC = () => {
   const navigate = useNavigate();
-  const { tasks, deals, tickets, calendarEvents, communications, leads, contacts, accounts, users, openModal, upsertRecord, toggleTask, updateStatus } = useCRM();
+  const { tasks, deals, tickets, calendarEvents, communications, leads, contacts, accounts, users, openModal, upsertRecord, deleteRecord, toggleTask, updateStatus } = useCRM();
 
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -613,7 +613,7 @@ const CalendarView: React.FC = () => {
                     className={`p-3 ${evt.color} rounded-2xl text-white shadow-lg group cursor-pointer hover:scale-[1.02] active:scale-95 transition-all`}
                   >
                     <div className="flex justify-between items-start mb-1">
-                      <evt.icon size={10} className="opacity-80" />
+                      <evt.icon size={14} className="opacity-80" />
                       <span className="text-[8px] font-black uppercase tracking-widest opacity-80">
                         {evt.date.includes('T') ? new Date(evt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'All Day'}
                       </span>
@@ -699,6 +699,20 @@ const CalendarView: React.FC = () => {
     closeEventPopup();
   };
 
+  // Handle deleting a calendar event
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const handleDeleteEvent = () => {
+    if (!selectedEvent) return;
+    setShowDeleteConfirm(true);
+  };
+  const confirmDeleteEvent = () => {
+    if (!selectedEvent) return;
+    const entityType = selectedEvent.type as EntityType;
+    deleteRecord(entityType, selectedEvent.id);
+    setShowDeleteConfirm(false);
+    closeEventPopup();
+  };
+
   // Event Popup Modal - Enhanced with more features
   const renderEventPopup = () => {
     if (!selectedEvent) return null;
@@ -752,6 +766,13 @@ const CalendarView: React.FC = () => {
                   title="Edit"
                 >
                   <Edit3 size={20} />
+                </button>
+                <button
+                  onClick={handleDeleteEvent}
+                  className="p-2.5 hover:bg-red-500/30 rounded-xl transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 size={20} />
                 </button>
                 <button onClick={closeEventPopup} className="p-2.5 hover:bg-white/20 rounded-xl transition-colors">
                   <X size={20} />
@@ -1088,6 +1109,27 @@ const CalendarView: React.FC = () => {
             </div>
           </div>
         </div>
+        {/* Delete Confirmation Dialog */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)}>
+            <div className="bg-white rounded-[35px] p-8 max-w-sm shadow-2xl animate-slide-up" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center">
+                  <Trash2 size={24} className="text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">Delete Event</h3>
+                  <p className="text-xs text-slate-500">This action cannot be undone</p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 mb-6">Are you sure you want to delete "<span className="font-bold">{selectedEvent?.title || selectedEvent?.name || selectedEvent?.subject}</span>"?</p>
+              <div className="flex gap-3">
+                <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-colors">Cancel</button>
+                <button onClick={confirmDeleteEvent} className="flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-500/20">Delete</button>
+              </div>
+            </div>
+          </div>
+        )}
       </>
     );
   };
