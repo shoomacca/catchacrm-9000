@@ -61,6 +61,13 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
   const [emailForm, setEmailForm] = useState({ email: '', display_name: '', purpose: 'billing' as OrgEmailAccount['purpose'], provider: 'google' as OrgEmailAccount['provider'], calendar_id: '' });
   // SMS number form
   const [smsForm, setSmsForm] = useState({ phone_number: '', display_name: '', purpose: 'general' as SmsNumber['purpose'], is_default: false });
+  // Google credential form (stored in company_integrations where provider='google')
+  const googleIntegration = companyIntegrations.find(ci => ci.provider === 'google');
+  const [googleClientId, setGoogleClientId] = useState('');
+  const [googleClientSecret, setGoogleClientSecret] = useState('');
+  const googleRedirectUri = `${import.meta.env.VITE_SUPABASE_URL || 'https://YOUR_SUPABASE_URL'}/functions/v1/google-oauth-callback`;
+  const googleConfigured = !!(googleIntegration?.is_active && googleIntegration?.config?.client_id);
+
   // Twilio credentials form (stored in company_integrations)
   const twilioIntegration = companyIntegrations.find(ci => ci.provider === 'twilio');
   const stripeIntegration = companyIntegrations.find(ci => ci.provider === 'stripe');
@@ -77,6 +84,30 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
+
+  // Sync Google credential form with stored integration data
+  useEffect(() => {
+    if (googleIntegration?.config) {
+      setGoogleClientId(googleIntegration.config.client_id || '');
+      setGoogleClientSecret(googleIntegration.config.client_secret || '');
+    }
+  }, [googleIntegration]);
+
+  // Handle OAuth callback URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get('google_success');
+    const error = params.get('google_error');
+    const tab = params.get('tab');
+    if (tab === 'INTEGRATIONS') setActiveTab('INTEGRATIONS');
+    if (success) {
+      alert(`Google account connected successfully (${success}).`);
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (error) {
+      alert(`Google connection failed: ${error}`);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   // Load recent jobs when IMPORT_EXPORT tab is active
   useEffect(() => {
@@ -863,8 +894,64 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
               <p className="text-sm text-slate-600">Connect third-party services, email accounts, SMS numbers, and OAuth providers</p>
             </div>
 
+            {/* ====== SECTION 0: Google Workspace Configuration (Admin Only) ====== */}
+            {isAdmin && (
+            <div>
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">Google Workspace Configuration</h3>
+              <p className="text-xs text-slate-500 mb-4">Enter your Google Cloud OAuth credentials so users can connect their Google accounts</p>
+              <div className="p-8 rounded-[35px] border border-slate-200 bg-white shadow-sm space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${googleConfigured ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                    <Key size={24} />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-black text-slate-900">OAuth 2.0 Credentials</h4>
+                    <p className="text-[10px] text-slate-500">From Google Cloud Console &rarr; APIs &amp; Services &rarr; Credentials</p>
+                  </div>
+                  <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase ${googleConfigured ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
+                    {googleConfigured ? 'Configured' : 'Not Configured'}
+                  </span>
+                </div>
+                <ConfigInput label="Google Client ID" value={googleClientId} onChange={v => setGoogleClientId(v)} placeholder="123456789-abc.apps.googleusercontent.com" />
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Google Client Secret</label>
+                  <input type="password" value={googleClientSecret} onChange={e => setGoogleClientSecret(e.target.value)} placeholder="GOCSPX-..." className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Redirect URI (copy to Google Console)</label>
+                  <div className="flex gap-2">
+                    <input readOnly value={googleRedirectUri} className="flex-1 px-6 py-4 bg-slate-100 border border-slate-200 rounded-2xl text-xs font-mono text-slate-600" />
+                    <button onClick={() => { navigator.clipboard.writeText(googleRedirectUri); alert('Redirect URI copied to clipboard'); }} className="px-4 py-4 bg-slate-200 hover:bg-slate-300 rounded-2xl text-[10px] font-bold text-slate-600 transition-all flex items-center gap-1">
+                      <ExternalLink size={12} /> Copy
+                    </button>
+                  </div>
+                </div>
+                <button onClick={async () => {
+                  if (!googleClientId || !googleClientSecret) { alert('Both Client ID and Client Secret are required.'); return; }
+                  const orgId = await getCurrentOrgId();
+                  const data: any = { org_id: orgId, provider: 'google' as const, is_active: true, config: { client_id: googleClientId, client_secret: googleClientSecret, redirect_uri: googleRedirectUri } };
+                  if (googleIntegration?.id) data.id = googleIntegration.id;
+                  upsertRecord('companyIntegrations', data);
+                  alert('Google credentials saved successfully.');
+                }} className="w-full py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                  <Save size={14} /> Save Google Credentials
+                </button>
+                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3">
+                  <Info size={16} className="text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-blue-900 mb-1">Setup Guide</p>
+                    <p className="text-xs text-blue-700">
+                      Go to <span className="font-mono">console.cloud.google.com</span> &rarr; APIs &amp; Services &rarr; Credentials &rarr; Create OAuth 2.0 Client ID.
+                      Set the redirect URI to the URL shown above. Enable the Gmail API and Google Calendar API.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            )}
+
             {/* ====== SECTION A: Google Workspace (Per-User) ====== */}
-            <h3 className="text-xl font-black text-slate-900 tracking-tight">Google Workspace (Your Account)</h3>
+            <h3 className="text-xl font-black text-slate-900 tracking-tight pt-8 border-t border-slate-100">Google Workspace (Your Account)</h3>
             <div className="p-8 rounded-[35px] border border-slate-200 bg-white shadow-sm">
               <div className="flex items-center gap-4 mb-6">
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${currentUserIntegration?.is_active ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
@@ -902,7 +989,18 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                     <button onClick={() => alert('Sync triggered. Real-time sync coming in next session.')} className="px-5 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
                       <RefreshCw size={14} /> Sync Now
                     </button>
-                    <button onClick={() => { if (window.confirm('Disconnect your Google account? This will stop Gmail and Calendar sync.')) { deleteRecord('userIntegrations', currentUserIntegration.id); } }} className="px-5 py-3 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all flex items-center gap-2">
+                    <button onClick={async () => {
+                      if (!window.confirm('Disconnect your Google account? This will stop Gmail and Calendar sync.')) return;
+                      try {
+                        const { disconnectGoogle } = await import('../services/googleIntegration');
+                        await disconnectGoogle(currentUserIntegration.id, 'user_integrations');
+                        deleteRecord('userIntegrations', currentUserIntegration.id);
+                        alert('Google account disconnected.');
+                      } catch (err: any) {
+                        deleteRecord('userIntegrations', currentUserIntegration.id);
+                        alert('Disconnected locally. Remote revocation may have failed.');
+                      }
+                    }} className="px-5 py-3 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all flex items-center gap-2">
                       <X size={14} /> Disconnect
                     </button>
                   </div>
@@ -913,9 +1011,23 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                     <div className="w-3 h-3 rounded-full bg-slate-300" />
                     <span className="text-sm font-bold text-slate-500">Not Connected</span>
                   </div>
-                  <button onClick={() => alert('Google OAuth flow coming in next session. This will redirect to Google sign-in to authorize Gmail and Calendar access.')} className="px-6 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
-                    <ExternalLink size={14} /> Connect Google Account
-                  </button>
+                  {googleConfigured ? (
+                    <button onClick={async () => {
+                      try {
+                        const { connectGoogle } = await import('../services/googleIntegration');
+                        const orgId = await getCurrentOrgId();
+                        await connectGoogle('user', '', orgId);
+                      } catch (err: any) {
+                        alert(err.message || 'Failed to start Google OAuth');
+                      }
+                    }} className="px-6 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
+                      <ExternalLink size={14} /> Connect Google Account
+                    </button>
+                  ) : (
+                    <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl">
+                      <p className="text-xs font-bold text-amber-800 flex items-center gap-2"><AlertTriangle size={14} /> Admin must configure Google credentials first</p>
+                    </div>
+                  )}
                   <div className="px-2">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Permissions Requested</p>
                     <ul className="space-y-1 text-xs text-slate-500">
@@ -1008,15 +1120,29 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                     )}
                   </div>
                   <div className="flex gap-3 mt-8">
+                    {!editingEmailAccount && googleConfigured && emailForm.provider === 'google' && (
+                      <button onClick={async () => {
+                        try {
+                          const { connectGoogle } = await import('../services/googleIntegration');
+                          const orgId = await getCurrentOrgId();
+                          setShowEmailAccountModal(false);
+                          await connectGoogle('org', emailForm.purpose, orgId);
+                        } catch (err: any) {
+                          alert(err.message || 'Failed to start Google OAuth');
+                        }
+                      }} className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        <ExternalLink size={14} /> Connect via Google
+                      </button>
+                    )}
                     <button onClick={() => {
                       if (!emailForm.email) { alert('Email address is required'); return; }
                       const data: any = { email: emailForm.email, display_name: emailForm.display_name, purpose: emailForm.purpose, provider: emailForm.provider, is_active: false, is_default: false, calendar_id: emailForm.calendar_id || undefined };
                       if (editingEmailAccount) data.id = editingEmailAccount.id;
                       upsertRecord('orgEmailAccounts', data);
                       setShowEmailAccountModal(false);
-                      alert('Email account saved. Google OAuth connection coming in next session.');
+                      alert('Email account saved. Use "Connect via Google" to authenticate.');
                     }} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
-                      {editingEmailAccount ? 'Update' : 'Save & Connect Later'}
+                      {editingEmailAccount ? 'Update' : 'Save Manually'}
                     </button>
                     <button onClick={() => setShowEmailAccountModal(false)} className="px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
                   </div>

@@ -1490,7 +1490,7 @@ export interface MassOperationJob extends CRMBase {
 
 export interface CompanyIntegration extends CRMBase {
   org_id: string;
-  provider: 'stripe' | 'paypal' | 'google_maps' | 'twilio';
+  provider: 'google' | 'stripe' | 'paypal' | 'google_maps' | 'twilio';
   is_active: boolean;
   config: Record<string, any>;
   created_by?: string;
