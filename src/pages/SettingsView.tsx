@@ -25,6 +25,7 @@ import {
   updateImportJob,
   fetchRecentJobs
 } from '../services/supabaseData';
+import { sendSMS } from '../services/smsService';
 
 type SettingTab = 'GENERAL' | 'MODULES' | 'USERS_ACCESS' | 'INTEGRATIONS' | 'AUTOMATION' | 'BLUEPRINT' | 'DOMAIN_CONFIG' | 'IMPORT_EXPORT' | 'DIAGNOSTICS';
 type DomainSubTab = 'SALES' | 'FINANCIAL' | 'FIELD' | 'MARKETING';
@@ -70,6 +71,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
 
   // Twilio credentials form (stored in company_integrations)
   const twilioIntegration = companyIntegrations.find(ci => ci.provider === 'twilio');
+  // Test SMS modal
+  const [showTestSmsModal, setShowTestSmsModal] = useState(false);
+  const [testSmsTo, setTestSmsTo] = useState('');
+  const [testSmsBody, setTestSmsBody] = useState('This is a test SMS from CatchaCRM.');
+  const [testSmsStatus, setTestSmsStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [testSmsSending, setTestSmsSending] = useState(false);
   const stripeIntegration = companyIntegrations.find(ci => ci.provider === 'stripe');
   const paypalIntegration = companyIntegrations.find(ci => ci.provider === 'paypal');
   const mapsIntegration = companyIntegrations.find(ci => ci.provider === 'google_maps');
@@ -1205,17 +1212,109 @@ const SettingsView: React.FC<SettingsViewProps> = ({ initialTab = 'GENERAL' }) =
                   <ConfigInput label="Account SID" value={twilioIntegration?.config?.account_sid || localSettings.integrations?.twilio?.accountSid || ''} onChange={v => updateNested('integrations.twilio.accountSid', v)} placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
                   <ConfigInput label="Auth Token" value={twilioIntegration?.config?.auth_token || localSettings.integrations?.twilio?.authToken || ''} onChange={v => updateNested('integrations.twilio.authToken', v)} type="password" />
                 </div>
-                <button onClick={() => {
-                  const sid = localSettings.integrations?.twilio?.accountSid;
-                  const token = localSettings.integrations?.twilio?.authToken;
-                  if (!sid || !token) { alert('Please enter both Account SID and Auth Token'); return; }
-                  upsertRecord('companyIntegrations', { ...(twilioIntegration || {}), provider: 'twilio', is_active: true, config: { account_sid: sid, auth_token: token } });
-                  alert('Twilio credentials saved.');
-                }} className="mt-4 px-6 py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center gap-2">
-                  <Save size={14} /> Save Twilio Credentials
-                </button>
+                <div className="flex gap-3 mt-4">
+                  <button onClick={() => {
+                    const sid = localSettings.integrations?.twilio?.accountSid;
+                    const token = localSettings.integrations?.twilio?.authToken;
+                    if (!sid || !token) { alert('Please enter both Account SID and Auth Token'); return; }
+                    upsertRecord('companyIntegrations', { ...(twilioIntegration || {}), provider: 'twilio', is_active: true, config: { account_sid: sid, auth_token: token } });
+                    alert('Twilio credentials saved.');
+                  }} className="px-6 py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center gap-2">
+                    <Save size={14} /> Save Twilio Credentials
+                  </button>
+                  {twilioIntegration?.is_active && smsNumbers.length > 0 && (
+                    <button onClick={() => { setTestSmsStatus(null); setShowTestSmsModal(true); }} className="px-6 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
+                      <Play size={14} /> Test SMS
+                    </button>
+                  )}
+                </div>
+
+                {/* Webhook URLs */}
+                {twilioIntegration?.is_active && (
+                  <div className="mt-6 pt-6 border-t border-slate-100">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Webhook size={16} className="text-blue-500" />
+                      <span className="text-xs font-black text-slate-900 uppercase tracking-widest">Twilio Webhook URLs</span>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-4">Copy these URLs into your Twilio phone number configuration at console.twilio.com</p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Inbound SMS Webhook</label>
+                        <div className="flex items-center gap-2">
+                          <input type="text" readOnly value={`${import.meta.env.VITE_SUPABASE_URL || 'https://YOUR-PROJECT-REF.supabase.co'}/functions/v1/sms-webhook`} className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-mono text-slate-600" />
+                          <button onClick={() => { navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sms-webhook`); }} className="px-3 py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-bold hover:bg-slate-200 transition-all" title="Copy">Copy</button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Status Callback URL</label>
+                        <div className="flex items-center gap-2">
+                          <input type="text" readOnly value={`${import.meta.env.VITE_SUPABASE_URL || 'https://YOUR-PROJECT-REF.supabase.co'}/functions/v1/sms-status-webhook`} className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-mono text-slate-600" />
+                          <button onClick={() => { navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sms-status-webhook`); }} className="px-3 py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-bold hover:bg-slate-200 transition-all" title="Copy">Copy</button>
+                        </div>
+                      </div>
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                        <p className="text-xs text-blue-800">
+                          <strong>Setup Instructions:</strong><br/>
+                          1. Go to console.twilio.com &rarr; Phone Numbers &rarr; your number<br/>
+                          2. Under &quot;Messaging&quot;, set &quot;A message comes in&quot; webhook to the Inbound URL above (HTTP POST)<br/>
+                          3. Set the status callback URL to the Status URL above (HTTP POST)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Test SMS Modal */}
+            {showTestSmsModal && (
+              <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowTestSmsModal(false)}>
+                <div className="bg-white rounded-[35px] p-10 w-full max-w-lg shadow-2xl" onClick={e => e.stopPropagation()}>
+                  <h3 className="text-xl font-black text-slate-900 mb-6">Send Test SMS</h3>
+                  <div className="space-y-5">
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Recipient Phone Number</label>
+                      <input type="tel" value={testSmsTo} onChange={e => setTestSmsTo(e.target.value)} placeholder="+61 4XX XXX XXX" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Message</label>
+                      <textarea value={testSmsBody} onChange={e => setTestSmsBody(e.target.value)} rows={3} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500 resize-none" />
+                    </div>
+                    {testSmsStatus && (
+                      <div className={`p-4 rounded-xl text-xs font-bold ${testSmsStatus.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`}>
+                        {testSmsStatus.message}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-3 mt-8">
+                    <button
+                      disabled={testSmsSending || !testSmsTo}
+                      onClick={async () => {
+                        setTestSmsSending(true);
+                        setTestSmsStatus(null);
+                        try {
+                          const orgId = await getCurrentOrgId();
+                          const result = await sendSMS({ orgId, to: testSmsTo, body: testSmsBody });
+                          if (result.success) {
+                            setTestSmsStatus({ type: 'success', message: `SMS sent successfully! SID: ${result.twilioSid}` });
+                          } else {
+                            setTestSmsStatus({ type: 'error', message: result.error || 'Failed to send SMS' });
+                          }
+                        } catch (err: any) {
+                          setTestSmsStatus({ type: 'error', message: err.message || 'Failed to send SMS' });
+                        } finally {
+                          setTestSmsSending(false);
+                        }
+                      }}
+                      className="flex-1 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
+                    >
+                      {testSmsSending ? 'Sending...' : 'Send Test SMS'}
+                    </button>
+                    <button onClick={() => setShowTestSmsModal(false)} className="px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Close</button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* SMS Number Modal */}
             {showSmsNumberModal && (
