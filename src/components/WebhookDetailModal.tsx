@@ -91,40 +91,47 @@ const WebhookDetailModal: React.FC<WebhookDetailModalProps> = ({ webhook, onClos
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-[35px] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-slide-up">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <div>
-            <h2 className="text-2xl font-black text-slate-900">{webhook.name}</h2>
-            <p className="text-sm text-slate-600 mt-1">{webhook.url}</p>
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                <Zap size={24} />
+              </div>
+              <div>
+                <h2 className="text-xl font-black">{webhook.name}</h2>
+                <p className="text-blue-100 text-sm font-medium mt-0.5">{webhook.url}</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
+            >
+              <X size={20} />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-          >
-            <X size={20} className="text-slate-600" />
-          </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-200 px-6">
+        <div className="flex border-b border-slate-100 px-6">
           <button
             onClick={() => setActiveTab('config')}
-            className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors ${
+            className={`px-6 py-3 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors ${
               activeTab === 'config'
                 ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-600 hover:text-slate-900'
+                : 'border-transparent text-slate-400 hover:text-slate-900'
             }`}
           >
             Configuration
           </button>
           <button
             onClick={() => setActiveTab('logs')}
-            className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors ${
+            className={`px-6 py-3 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors ${
               activeTab === 'logs'
                 ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-600 hover:text-slate-900'
+                : 'border-transparent text-slate-400 hover:text-slate-900'
             }`}
           >
             Delivery History ({logs.length})
@@ -141,7 +148,7 @@ const WebhookDetailModal: React.FC<WebhookDetailModalProps> = ({ webhook, onClos
             <div className="space-y-6">
               {/* Authentication */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-2">Authentication Type</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Authentication Type</label>
                 <select
                   value={config.auth_type}
                   onChange={(e) => setConfig({ ...config, auth_type: e.target.value as any })}
@@ -157,7 +164,7 @@ const WebhookDetailModal: React.FC<WebhookDetailModalProps> = ({ webhook, onClos
               {config.auth_type === 'basic' && (
                 <>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-2">Username</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Username</label>
                     <input
                       type="text"
                       value={config.auth_username || ''}
@@ -166,7 +173,7 @@ const WebhookDetailModal: React.FC<WebhookDetailModalProps> = ({ webhook, onClos
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-2">Password</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Password</label>
                     <input
                       type="password"
                       value={config.auth_password || ''}
@@ -179,7 +186,7 @@ const WebhookDetailModal: React.FC<WebhookDetailModalProps> = ({ webhook, onClos
 
               {config.auth_type === 'bearer' && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-2">Bearer Token</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Bearer Token</label>
                   <input
                     type="password"
                     value={config.auth_token || ''}
@@ -192,7 +199,7 @@ const WebhookDetailModal: React.FC<WebhookDetailModalProps> = ({ webhook, onClos
               {config.auth_type === 'api_key' && (
                 <>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-2">API Key Header</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">API Key Header</label>
                     <input
                       type="text"
                       value={config.auth_api_key_header || 'X-API-Key'}
@@ -202,7 +209,7 @@ const WebhookDetailModal: React.FC<WebhookDetailModalProps> = ({ webhook, onClos
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-2">API Key</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">API Key</label>
                     <input
                       type="password"
                       value={config.auth_api_key || ''}
@@ -216,7 +223,7 @@ const WebhookDetailModal: React.FC<WebhookDetailModalProps> = ({ webhook, onClos
               {/* Retry Settings */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-2">Timeout (ms)</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Timeout (ms)</label>
                   <input
                     type="number"
                     value={config.timeout_ms || 30000}
@@ -225,7 +232,7 @@ const WebhookDetailModal: React.FC<WebhookDetailModalProps> = ({ webhook, onClos
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-2">Retry Count</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Retry Count</label>
                   <input
                     type="number"
                     value={config.retry_count || 3}
@@ -322,10 +329,10 @@ const WebhookDetailModal: React.FC<WebhookDetailModalProps> = ({ webhook, onClos
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-slate-200">
+        <div className="flex items-center justify-between p-6 border-t border-slate-100">
           <button
             onClick={onClose}
-            className="px-6 py-3 text-slate-700 font-bold text-sm hover:bg-slate-100 rounded-xl transition-colors"
+            className="px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-colors"
           >
             Close
           </button>
@@ -334,7 +341,7 @@ const WebhookDetailModal: React.FC<WebhookDetailModalProps> = ({ webhook, onClos
               <button
                 onClick={handleSaveConfig}
                 disabled={saving}
-                className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="px-5 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-lg shadow-blue-500/20"
               >
                 {saving ? 'Saving...' : 'Save Configuration'}
               </button>
@@ -343,9 +350,9 @@ const WebhookDetailModal: React.FC<WebhookDetailModalProps> = ({ webhook, onClos
               <button
                 onClick={handleTestWebhook}
                 disabled={testing}
-                className="flex items-center gap-2 px-6 py-3 bg-violet-600 text-white rounded-xl font-bold text-sm hover:bg-violet-700 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-5 py-3 bg-violet-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-violet-700 disabled:opacity-50 transition-colors shadow-lg shadow-violet-500/20"
               >
-                <Zap size={16} />
+                <Zap size={14} />
                 {testing ? 'Testing...' : 'Test Webhook'}
               </button>
             )}

@@ -22,70 +22,72 @@ const DuplicateWarningModal: React.FC<DuplicateWarningModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const entityLabel = entityType.charAt(0).toUpperCase() + entityType.slice(1, -1); // e.g., "Lead", "Contact"
+  const entityLabel = entityType.charAt(0).toUpperCase() + entityType.slice(1, -1);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-[35px] shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-slide-up">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-amber-50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-amber-600" />
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                <AlertTriangle size={24} />
+              </div>
+              <div>
+                <h2 className="text-xl font-black">Possible Duplicate Detected</h2>
+                <p className="text-amber-100 text-sm font-medium">
+                  {matches.length} similar {matches.length === 1 ? 'record' : 'records'} found
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Possible Duplicate Detected</h2>
-              <p className="text-sm text-gray-600">
-                {matches.length} similar {matches.length === 1 ? 'record' : 'records'} found
-              </p>
-            </div>
+            <button
+              onClick={onCancel}
+              className="w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
+            >
+              <X size={20} />
+            </button>
           </div>
-          <button
-            onClick={onCancel}
-            className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-600" />
-          </button>
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="space-y-3">
-            {matches.map((match, index) => (
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="space-y-4">
+            {matches.map((match) => (
               <div
                 key={match.id}
-                className="border border-gray-200 rounded-lg p-4 hover:border-amber-300 transition-colors"
+                className="border-2 border-slate-100 rounded-2xl p-5 hover:border-amber-300 transition-colors"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="font-medium text-gray-900">
+                    <h3 className="font-bold text-slate-900">
                       {getRecordDisplayName(match.record, entityType)}
                     </h3>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
                       ID: {match.record.id}
                     </p>
                   </div>
                   <button
                     onClick={() => onViewDuplicate(match.record.id)}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye size={14} />
                     View
                   </button>
                 </div>
 
                 {/* Matched Fields */}
-                <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-                  <p className="text-xs font-medium text-gray-700 uppercase tracking-wide">
+                <div className="bg-slate-50 rounded-xl p-4 space-y-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                     Matched Fields
                   </p>
                   <div className="space-y-1">
                     {Object.entries(match.matchedOn).map(([field, value]) => (
                       <div key={field} className="flex items-center gap-2 text-sm">
-                        <span className="font-medium text-gray-700 capitalize">
+                        <span className="font-bold text-slate-600 capitalize">
                           {field.replace(/_/g, ' ')}:
                         </span>
-                        <span className="text-gray-900">{value}</span>
+                        <span className="text-slate-900">{value}</span>
                       </div>
                     ))}
                   </div>
@@ -97,14 +99,14 @@ const DuplicateWarningModal: React.FC<DuplicateWarningModalProps> = ({
                     <>
                       {match.record.company && (
                         <div>
-                          <span className="text-gray-500">Company:</span>
-                          <span className="ml-2 text-gray-900">{match.record.company}</span>
+                          <span className="text-slate-400 text-xs font-bold">Company:</span>
+                          <span className="ml-2 text-slate-900">{match.record.company}</span>
                         </div>
                       )}
                       {match.record.status && (
                         <div>
-                          <span className="text-gray-500">Status:</span>
-                          <span className="ml-2 text-gray-900">{match.record.status}</span>
+                          <span className="text-slate-400 text-xs font-bold">Status:</span>
+                          <span className="ml-2 text-slate-900">{match.record.status}</span>
                         </div>
                       )}
                     </>
@@ -113,14 +115,14 @@ const DuplicateWarningModal: React.FC<DuplicateWarningModalProps> = ({
                     <>
                       {match.record.account_name && (
                         <div>
-                          <span className="text-gray-500">Account:</span>
-                          <span className="ml-2 text-gray-900">{match.record.account_name}</span>
+                          <span className="text-slate-400 text-xs font-bold">Account:</span>
+                          <span className="ml-2 text-slate-900">{match.record.account_name}</span>
                         </div>
                       )}
                       {match.record.title && (
                         <div>
-                          <span className="text-gray-500">Title:</span>
-                          <span className="ml-2 text-gray-900">{match.record.title}</span>
+                          <span className="text-slate-400 text-xs font-bold">Title:</span>
+                          <span className="ml-2 text-slate-900">{match.record.title}</span>
                         </div>
                       )}
                     </>
@@ -129,22 +131,22 @@ const DuplicateWarningModal: React.FC<DuplicateWarningModalProps> = ({
                     <>
                       {match.record.industry && (
                         <div>
-                          <span className="text-gray-500">Industry:</span>
-                          <span className="ml-2 text-gray-900">{match.record.industry}</span>
+                          <span className="text-slate-400 text-xs font-bold">Industry:</span>
+                          <span className="ml-2 text-slate-900">{match.record.industry}</span>
                         </div>
                       )}
                       {match.record.city && (
                         <div>
-                          <span className="text-gray-500">City:</span>
-                          <span className="ml-2 text-gray-900">{match.record.city}</span>
+                          <span className="text-slate-400 text-xs font-bold">City:</span>
+                          <span className="ml-2 text-slate-900">{match.record.city}</span>
                         </div>
                       )}
                     </>
                   )}
                   {match.record.created_at && (
                     <div className="col-span-2">
-                      <span className="text-gray-500">Created:</span>
-                      <span className="ml-2 text-gray-900">
+                      <span className="text-slate-400 text-xs font-bold">Created:</span>
+                      <span className="ml-2 text-slate-900">
                         {new Date(match.record.created_at).toLocaleDateString()}
                       </span>
                     </div>
@@ -156,26 +158,21 @@ const DuplicateWarningModal: React.FC<DuplicateWarningModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="border-t bg-gray-50 p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600">
-              What would you like to do?
-            </p>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={onCancel}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={onCreateAnyway}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-              >
-                <Check className="w-4 h-4" />
-                Create Anyway
-              </button>
-            </div>
+        <div className="border-t border-slate-100 p-6">
+          <div className="flex items-center justify-end gap-3">
+            <button
+              onClick={onCancel}
+              className="px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onCreateAnyway}
+              className="flex items-center gap-2 px-5 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-blue-600 hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20"
+            >
+              <Check size={14} />
+              Create Anyway
+            </button>
           </div>
         </div>
       </div>
