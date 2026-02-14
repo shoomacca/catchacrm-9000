@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCRM } from '../context/CRMContext';
 import {
@@ -7,12 +7,14 @@ import {
   Factory, Truck, Calendar, Shield, Ruler, Weight,
   Image as ImageIcon, Star
 } from 'lucide-react';
+import { ProductComposer } from '../components/ProductComposer';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { products, deleteRecord, openModal } = useCRM();
+  const { products, deleteRecord } = useCRM();
 
+  const [showProductComposer, setShowProductComposer] = useState(false);
   const product = useMemo(() => products.find(p => p.id === id), [products, id]);
 
   if (!product) {
@@ -69,8 +71,8 @@ const ProductDetail: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => openModal('products', product)}
-            className="p-3 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+            onClick={() => setShowProductComposer(true)}
+            className="p-3 text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-xl transition-all"
           >
             <Edit3 size={20} />
           </button>
@@ -344,6 +346,14 @@ const ProductDetail: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Product Composer Modal */}
+      <ProductComposer
+        isOpen={showProductComposer}
+        onClose={() => setShowProductComposer(false)}
+        initialData={product}
+        mode="edit"
+      />
     </div>
   );
 };
