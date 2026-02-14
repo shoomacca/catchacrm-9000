@@ -7,11 +7,13 @@ import {
   ChevronDown, MoreVertical, Edit3, Copy, ToggleLeft, ToggleRight,
   Tag, Clock, Users, Box, Barcode, X
 } from 'lucide-react';
+import { ProductComposer } from '../../components/ProductComposer';
+import { ServiceComposer } from '../../components/ServiceComposer';
 
 const ItemsCatalog: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { products, services, openModal, searchQuery, setSearchQuery } = useCRM();
+  const { products, services, searchQuery, setSearchQuery } = useCRM();
 
   // Read tab from URL query param, default to 'products'
   const tabParam = searchParams.get('tab');
@@ -26,6 +28,10 @@ const ItemsCatalog: React.FC = () => {
   const [priceRange, setPriceRange] = useState<'all' | 'low' | 'mid' | 'high'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'category'>('name');
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [showProductComposer, setShowProductComposer] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [showServiceComposer, setShowServiceComposer] = useState(false);
+  const [editingService, setEditingService] = useState<any>(null);
 
   // Product types: physical items that can be stocked/shipped
   const productTypes = ['Physical Item', 'Digital Product', 'Consumable', 'Equipment', 'Raw Material'];
@@ -137,10 +143,22 @@ const ItemsCatalog: React.FC = () => {
     setActiveDropdown(null);
 
     if (action === 'edit') {
-      openModal(tab, item);
+      if (tab === 'products') {
+        setEditingProduct(item);
+        setShowProductComposer(true);
+      } else {
+        setEditingService(item);
+        setShowServiceComposer(true);
+      }
     } else if (action === 'duplicate') {
       const newItem = { ...item, id: undefined, name: `${item.name} (Copy)` };
-      openModal(tab, newItem);
+      if (tab === 'products') {
+        setEditingProduct(newItem);
+        setShowProductComposer(true);
+      } else {
+        setEditingService(newItem);
+        setShowServiceComposer(true);
+      }
     }
   };
 
@@ -275,7 +293,15 @@ const ItemsCatalog: React.FC = () => {
 
               {/* Add Button */}
               <button
-                onClick={() => openModal(tab as any)}
+                onClick={() => {
+                  if (tab === 'products') {
+                    setEditingProduct(null);
+                    setShowProductComposer(true);
+                  } else {
+                    setEditingService(null);
+                    setShowServiceComposer(true);
+                  }
+                }}
                 className={`flex items-center gap-2 px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg ${
                   tab === 'products'
                     ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700'
@@ -598,7 +624,15 @@ const ItemsCatalog: React.FC = () => {
               </p>
               {!searchQuery && typeFilter === 'all' && categoryFilter === 'all' && statusFilter === 'all' && priceRange === 'all' && (
                 <button
-                  onClick={() => openModal(tab as any)}
+                  onClick={() => {
+                    if (tab === 'products') {
+                      setEditingProduct(null);
+                      setShowProductComposer(true);
+                    } else {
+                      setEditingService(null);
+                      setShowServiceComposer(true);
+                    }
+                  }}
                   className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg ${
                     tab === 'products'
                       ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
@@ -620,6 +654,28 @@ const ItemsCatalog: React.FC = () => {
           onClick={() => setActiveDropdown(null)}
         />
       )}
+
+      {/* Product Composer */}
+      <ProductComposer
+        isOpen={showProductComposer}
+        onClose={() => {
+          setShowProductComposer(false);
+          setEditingProduct(null);
+        }}
+        initialData={editingProduct || undefined}
+        mode={editingProduct ? 'edit' : 'create'}
+      />
+
+      {/* Service Composer */}
+      <ServiceComposer
+        isOpen={showServiceComposer}
+        onClose={() => {
+          setShowServiceComposer(false);
+          setEditingService(null);
+        }}
+        initialData={editingService || undefined}
+        mode={editingService ? 'edit' : 'create'}
+      />
     </div>
   );
 };
