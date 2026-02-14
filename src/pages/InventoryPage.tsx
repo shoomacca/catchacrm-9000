@@ -5,19 +5,25 @@ import {
   DollarSign, BarChart3, ArrowUp, ArrowDown, ArrowUpDown, Box
 } from 'lucide-react';
 import { useCRM } from '../context/CRMContext';
+import { InventoryItemComposer } from '../components/InventoryItemComposer';
+import { PurchaseOrderComposer } from '../components/PurchaseOrderComposer';
 
 type SortField = 'name' | 'stock' | 'value';
 type SortDirection = 'asc' | 'desc';
 
 const InventoryPage: React.FC = () => {
   const navigate = useNavigate();
-  const { inventoryItems, openModal } = useCRM();
+  const { inventoryItems } = useCRM();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [showInventoryItemComposer, setShowInventoryItemComposer] = useState(false);
+  const [editingInventoryItem, setEditingInventoryItem] = useState<any>(null);
+  const [showPurchaseOrderComposer, setShowPurchaseOrderComposer] = useState(false);
+  const [editingPurchaseOrder, setEditingPurchaseOrder] = useState<any>(null);
 
   // Calculate summary stats
   const stats = useMemo(() => {
@@ -172,7 +178,7 @@ const InventoryPage: React.FC = () => {
             Export {selectedItems.size > 0 ? `(${selectedItems.size})` : ''}
           </button>
           <button
-            onClick={() => openModal('inventoryItems')}
+            onClick={() => { setEditingInventoryItem(null); setShowInventoryItemComposer(true); }}
             className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
           >
             <Plus size={16} />
@@ -237,7 +243,7 @@ const InventoryPage: React.FC = () => {
             </span>
             <div className="flex gap-2">
               <button
-                onClick={() => openModal('purchaseOrders')}
+                onClick={() => { setEditingPurchaseOrder(null); setShowPurchaseOrderComposer(true); }}
                 className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-white/20 hover:bg-white/30 transition-all"
               >
                 Create PO
@@ -394,7 +400,7 @@ const InventoryPage: React.FC = () => {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  openModal('purchaseOrders');
+                                  { setEditingPurchaseOrder(null); setShowPurchaseOrderComposer(true); }
                                 }}
                                 className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all"
                               >
@@ -449,6 +455,26 @@ const InventoryPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      <InventoryItemComposer
+        isOpen={showInventoryItemComposer}
+        onClose={() => {
+          setShowInventoryItemComposer(false);
+          setEditingInventoryItem(null);
+        }}
+        initialData={editingInventoryItem || undefined}
+        mode={editingInventoryItem ? 'edit' : 'create'}
+      />
+
+      <PurchaseOrderComposer
+        isOpen={showPurchaseOrderComposer}
+        onClose={() => {
+          setShowPurchaseOrderComposer(false);
+          setEditingPurchaseOrder(null);
+        }}
+        initialData={editingPurchaseOrder || undefined}
+        mode={editingPurchaseOrder ? 'edit' : 'create'}
+      />
     </div>
   );
 };

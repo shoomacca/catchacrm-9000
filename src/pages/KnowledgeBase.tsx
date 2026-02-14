@@ -2,12 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useCRM } from '../context/CRMContext';
 import { Book, Plus, Search, FolderOpen, FileText, Eye, ThumbsUp, ThumbsDown, ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { KBArticle, KBCategory } from '../types';
+import { KBArticleComposer } from '../components/KBArticleComposer';
+import { KBCategoryComposer } from '../components/KBCategoryComposer';
 
 export const KnowledgeBase: React.FC = () => {
-  const { kbCategories, kbArticles, upsertRecord, deleteRecord, openModal, currentUser } = useCRM();
+  const { kbCategories, kbArticles, upsertRecord, deleteRecord, currentUser } = useCRM();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedArticle, setSelectedArticle] = useState<KBArticle | null>(null);
+  const [showKBArticleComposer, setShowKBArticleComposer] = useState(false);
+  const [editingKBArticle, setEditingKBArticle] = useState<any>(null);
+  const [showKBCategoryComposer, setShowKBCategoryComposer] = useState(false);
+  const [editingKBCategory, setEditingKBCategory] = useState<any>(null);
 
   // Seed default categories if none exist
   useEffect(() => {
@@ -103,7 +109,7 @@ export const KnowledgeBase: React.FC = () => {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => openModal('kbArticles', selectedArticle)}
+                onClick={() => { setEditingKBArticle(selectedArticle); setShowKBArticleComposer(true); }}
                 className="p-2 bg-purple-50 text-purple-600 rounded-xl hover:bg-purple-100 transition-all"
               >
                 <Edit size={18} />
@@ -179,7 +185,7 @@ export const KnowledgeBase: React.FC = () => {
           </div>
 
           <button
-            onClick={() => openModal('kbCategories')}
+            onClick={() => { setEditingKBCategory(null); setShowKBCategoryComposer(true); }}
             className="w-full px-4 py-3 bg-purple-600 text-white rounded-xl text-sm font-black uppercase tracking-wider hover:bg-purple-700 transition-all flex items-center justify-center gap-2"
           >
             <Plus size={16} />
@@ -251,11 +257,11 @@ export const KnowledgeBase: React.FC = () => {
               />
             </div>
             <button
-              onClick={() => openModal('kbArticles', {
+              onClick={() => { setEditingKBArticle({
                 categoryId: selectedCategory,
                 status: 'draft',
                 authorId: currentUser?.id
-              })}
+              }); setShowKBArticleComposer(true); }}
               className="px-6 py-4 bg-purple-600 text-white rounded-2xl text-sm font-black uppercase tracking-wider hover:bg-purple-700 transition-all flex items-center gap-2 whitespace-nowrap"
             >
               <Plus size={16} />
@@ -271,11 +277,11 @@ export const KnowledgeBase: React.FC = () => {
                 {searchQuery ? 'No articles found matching your search' : 'No articles yet'}
               </p>
               <button
-                onClick={() => openModal('kbArticles', {
+                onClick={() => { setEditingKBArticle({
                   categoryId: selectedCategory,
                   status: 'draft',
                   authorId: currentUser?.id
-                })}
+                }); setShowKBArticleComposer(true); }}
                 className="mt-4 text-purple-600 hover:text-purple-700 font-bold"
               >
                 Create your first article
@@ -318,6 +324,26 @@ export const KnowledgeBase: React.FC = () => {
           )}
         </div>
       </div>
+
+      <KBArticleComposer
+        isOpen={showKBArticleComposer}
+        onClose={() => {
+          setShowKBArticleComposer(false);
+          setEditingKBArticle(null);
+        }}
+        initialData={editingKBArticle || undefined}
+        mode={editingKBArticle ? 'edit' : 'create'}
+      />
+
+      <KBCategoryComposer
+        isOpen={showKBCategoryComposer}
+        onClose={() => {
+          setShowKBCategoryComposer(false);
+          setEditingKBCategory(null);
+        }}
+        initialData={editingKBCategory || undefined}
+        mode={editingKBCategory ? 'edit' : 'create'}
+      />
     </div>
   );
 };
