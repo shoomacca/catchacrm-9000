@@ -12,6 +12,7 @@ import {
 import EmptyState from '../components/EmptyState';
 import { exportAccounts } from '../utils/csvExport';
 import { EmailComposer } from '../components/EmailComposer';
+import { AccountComposer } from '../components/AccountComposer';
 
 type ViewMode = 'grid' | 'list';
 type EngagementLevel = 'champion' | 'engaged' | 'casual' | 'dormant';
@@ -26,6 +27,7 @@ const AccountsPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'revenue' | 'engagement' | 'name' | 'deals'>('revenue');
   const [showEmailComposer, setShowEmailComposer] = useState(false);
   const [selectedAccountForEmail, setSelectedAccountForEmail] = useState<any>(null);
+  const [showAccountComposer, setShowAccountComposer] = useState(false);
 
   // Get unique industries
   const industries = useMemo(() => {
@@ -229,8 +231,8 @@ const AccountsPage: React.FC = () => {
             <Download size={14} /> Export
           </button>
           <button
-            onClick={() => openModal('accounts')}
-            className="flex items-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+            onClick={() => setShowAccountComposer(true)}
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:from-indigo-700 hover:to-blue-700 transition-all shadow-lg shadow-indigo-500/20"
           >
             <Plus size={14} /> New Account
           </button>
@@ -673,6 +675,12 @@ const AccountsPage: React.FC = () => {
           recipientEmail={selectedAccountForEmail.email}
         />
       )}
+
+      <AccountComposer
+        isOpen={showAccountComposer}
+        onClose={() => setShowAccountComposer(false)}
+        mode="create"
+      />
     </div>
   );
 };

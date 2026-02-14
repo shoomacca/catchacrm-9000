@@ -11,6 +11,7 @@ import {
 import EmptyState from '../components/EmptyState';
 import { exportContacts } from '../utils/csvExport';
 import { EmailComposer } from '../components/EmailComposer';
+import { ContactComposer } from '../components/ContactComposer';
 
 type ViewMode = 'grid' | 'list';
 
@@ -24,6 +25,7 @@ const ContactsPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'activity' | 'name' | 'date'>('activity');
   const [showEmailComposer, setShowEmailComposer] = useState(false);
   const [selectedContactForEmail, setSelectedContactForEmail] = useState<any>(null);
+  const [showContactComposer, setShowContactComposer] = useState(false);
 
   // Get unique roles
   const roles = useMemo(() => {
@@ -179,8 +181,8 @@ const ContactsPage: React.FC = () => {
             <Download size={14} /> Export
           </button>
           <button
-            onClick={() => openModal('contacts')}
-            className="flex items-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+            onClick={() => setShowContactComposer(true)}
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:from-blue-700 hover:to-cyan-700 transition-all shadow-lg shadow-blue-500/20"
           >
             <Plus size={14} /> New Contact
           </button>
@@ -549,6 +551,12 @@ const ContactsPage: React.FC = () => {
           recipientEmail={selectedContactForEmail.email}
         />
       )}
+
+      <ContactComposer
+        isOpen={showContactComposer}
+        onClose={() => setShowContactComposer(false)}
+        mode="create"
+      />
     </div>
   );
 };
