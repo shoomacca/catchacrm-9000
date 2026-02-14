@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useCRM } from '../context/CRMContext';
 import { EntityType } from '../types';
+import { EventComposer } from '../components/EventComposer';
 
 type ViewMode = 'month' | 'week' | 'day';
 type EventFilter = 'all' | 'meetings' | 'tasks' | 'personal' | 'followups' | 'tickets' | 'milestones';
@@ -27,6 +28,9 @@ const CalendarView: React.FC = () => {
   const [dayMenuPosition, setDayMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [isEditingPopup, setIsEditingPopup] = useState(false);
   const [popupEdits, setPopupEdits] = useState<any>({});
+  const [showEventComposer, setShowEventComposer] = useState(false);
+  const [eventComposerData, setEventComposerData] = useState<any>(null);
+  const [eventComposerMode, setEventComposerMode] = useState<'create' | 'edit'>('create');
   const newEventMenuRef = useRef<HTMLDivElement>(null);
   const dayMenuRef = useRef<HTMLDivElement>(null);
 
@@ -279,7 +283,9 @@ const CalendarView: React.FC = () => {
       // Open tasks modal for tasks
       openModal('tasks', {});
     } else {
-      openModal('calendarEvents', { type: eventType });
+      setEventComposerData({ type: eventType });
+      setEventComposerMode('create');
+      setShowEventComposer(true);
     }
   };
 
@@ -300,11 +306,13 @@ const CalendarView: React.FC = () => {
           dueDate: dayMenuDate.toISOString().split('T')[0]
         });
       } else {
-        openModal('calendarEvents', {
+        setEventComposerData({
           type: eventType,
           startTime: startTime.toISOString(),
           endTime: endTime.toISOString()
         });
+        setEventComposerMode('create');
+        setShowEventComposer(true);
       }
     }
   };
@@ -688,7 +696,9 @@ const CalendarView: React.FC = () => {
   const handleEditEvent = () => {
     if (!selectedEvent) return;
     if (selectedEvent.type === 'calendarEvents') {
-      openModal('calendarEvents', selectedEvent);
+      setEventComposerData(selectedEvent);
+      setEventComposerMode('edit');
+      setShowEventComposer(true);
     } else if (selectedEvent.type === 'tasks') {
       openModal('tasks', selectedEvent);
     } else if (selectedEvent.type === 'deals') {
@@ -1414,6 +1424,17 @@ const CalendarView: React.FC = () => {
           </div>
         </div>
       )}
+
+      <EventComposer
+        isOpen={showEventComposer}
+        onClose={() => {
+          setShowEventComposer(false);
+          setEventComposerData(null);
+        }}
+        initialData={eventComposerData}
+        initialDate={eventComposerData?.startTime}
+        mode={eventComposerMode}
+      />
     </div>
   );
 };
