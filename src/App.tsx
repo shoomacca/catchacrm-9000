@@ -66,6 +66,7 @@ const KnowledgeBase = lazy(() => import('./pages/KnowledgeBase').then(m => ({ de
 const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
 const Signup = lazy(() => import('./pages/Signup').then(m => ({ default: m.Signup })));
 const DemoMode = lazy(() => import('./pages/DemoMode').then(m => ({ default: m.DemoMode })));
+const PublicInvoicePayment = lazy(() => import('./pages/PublicInvoicePayment'));
 
 // Non-page imports (keep as regular imports)
 import RecordModal from './components/RecordModal';
@@ -955,6 +956,14 @@ const App: React.FC = () => {
             }
           />
           <Route path="/demo" element={<DemoMode />} />
+          <Route
+            path="/invoice/pay/:paymentToken"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <PublicInvoicePayment />
+              </Suspense>
+            }
+          />
 
           {/* Protected Routes */}
           <Route

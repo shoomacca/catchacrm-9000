@@ -760,6 +760,7 @@ export interface Invoice extends CRMBase {
   notes?: string; // Additional invoice notes
   terms?: string; // Payment terms
   credits?: InvoiceCredit[];
+  payment_token?: string; // UUID token for public payment link access
 }
 
 export interface Subscription extends CRMBase {
