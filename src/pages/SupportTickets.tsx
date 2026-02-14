@@ -7,6 +7,7 @@ import {
   Calendar, Tag, MoreHorizontal, ExternalLink, X, Send, StickyNote,
   Inbox, Bell
 } from 'lucide-react';
+import { TicketComposer } from '../components/TicketComposer';
 
 type TicketType = 'all' | 'Technical' | 'Billing' | 'General' | 'Feature Request' | 'Bug Report';
 type TeamFilter = 'all' | 'Support' | 'Sales' | 'Technical' | 'Billing';
@@ -25,6 +26,9 @@ const SupportTickets: React.FC = () => {
   const [replyText, setReplyText] = useState('');
   const [noteText, setNoteText] = useState('');
   const [showNoteInput, setShowNoteInput] = useState(false);
+  const [showTicketComposer, setShowTicketComposer] = useState(false);
+  const [ticketComposerData, setTicketComposerData] = useState<any>(null);
+  const [ticketComposerMode, setTicketComposerMode] = useState<'create' | 'edit'>('create');
 
   const currentUserId = crmUserId;
 
@@ -190,8 +194,12 @@ const SupportTickets: React.FC = () => {
               Support Tickets
             </h2>
             <button
-              onClick={() => openModal('tickets')}
-              className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold hover:bg-blue-700 transition-all"
+              onClick={() => {
+                setTicketComposerData(null);
+                setTicketComposerMode('create');
+                setShowTicketComposer(true);
+              }}
+              className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg text-[10px] font-bold hover:from-red-700 hover:to-orange-700 transition-all shadow-lg shadow-red-500/20"
             >
               <Plus size={12} /> New
             </button>
@@ -592,6 +600,17 @@ const SupportTickets: React.FC = () => {
           <p className="text-xs text-slate-400 mt-1">Click on any ticket from the list</p>
         </div>
       )}
+
+      {/* Ticket Composer Modal */}
+      <TicketComposer
+        isOpen={showTicketComposer}
+        onClose={() => {
+          setShowTicketComposer(false);
+          setTicketComposerData(null);
+        }}
+        initialData={ticketComposerData}
+        mode={ticketComposerMode}
+      />
     </div>
   );
 };
