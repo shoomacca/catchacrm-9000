@@ -3,13 +3,15 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ChevronLeft, Building2, Mail, Phone, DollarSign, Calendar, FileText,
   Download, Send, CheckCircle2, XCircle, Clock, Edit3, Trash2, Printer,
-  CreditCard, Package, MapPin
+  CreditCard, Package, MapPin, Loader2
 } from 'lucide-react';
 import { useCRM } from '../../context/CRMContext';
 import PaymentModal from '../../components/PaymentModal';
 import { supabase } from '../../lib/supabase';
 import { getCurrentOrgId } from '../../services/supabaseData';
 import { generateInvoicePDF } from '../../utils/invoicePdf';
+import { sendEmail, isGmailConfigured } from '../../utils/sendEmail';
+import jsPDF from 'jspdf';
 
 const InvoiceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +19,8 @@ const InvoiceDetail: React.FC = () => {
   const { invoices, accounts, deals, quotes, products, services, openModal, deleteRecord, recordPayment } = useCRM();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [orgDetails, setOrgDetails] = useState<any>(null);
+  const [isEmailSending, setIsEmailSending] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const invoice = useMemo(() => invoices.find(inv => inv.id === id), [invoices, id]);
   const account = useMemo(() => accounts.find(a => a.id === invoice?.accountId), [accounts, invoice]);
@@ -47,6 +51,264 @@ const InvoiceDetail: React.FC = () => {
 
   // Calculate if invoice is overdue
   const isOverdue = invoice && invoice.status !== 'Paid' && new Date(invoice.dueDate) < new Date();
+
+  // Handle email invoice with PDF attachment
+  const handleEmailInvoice = async () => {
+    if (!invoice || !account || !orgDetails) return;
+
+    // Clear previous status
+    setEmailStatus(null);
+
+    // Check if recipient has email
+    if (!account.email) {
+      setEmailStatus({
+        type: 'error',
+        message: 'Customer email address not found. Please add an email to the account first.',
+      });
+      return;
+    }
+
+    // Check if Gmail is configured
+    const gmailConfigured = await isGmailConfigured();
+    if (!gmailConfigured) {
+      setEmailStatus({
+        type: 'error',
+        message: 'Gmail is not configured. Please set up Gmail OAuth in Settings > Business Details.',
+      });
+      return;
+    }
+
+    setIsEmailSending(true);
+
+    try {
+      // Generate PDF
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 20;
+      let yPos = margin;
+
+      // Helper function for wrapped text
+      const addWrappedText = (text: string, x: number, y: number, maxWidth: number, fontSize: number = 10) => {
+        doc.setFontSize(fontSize);
+        const lines = doc.splitTextToSize(text, maxWidth);
+        doc.text(lines, x, y);
+        return y + (lines.length * fontSize * 0.4);
+      };
+
+      // Company header
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text(orgDetails.name || 'Your Company', margin, yPos + 5);
+
+      doc.setFontSize(22);
+      doc.setTextColor(41, 128, 185);
+      doc.text('TAX INVOICE', pageWidth - margin - 60, yPos + 5);
+      yPos += 15;
+
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
+
+      if (orgDetails.abn) {
+        doc.text(`ABN: ${orgDetails.abn}`, margin, yPos);
+        yPos += 5;
+      }
+
+      if (orgDetails.address_line1) doc.text(orgDetails.address_line1, margin, yPos), yPos += 5;
+      if (orgDetails.address_line2) doc.text(orgDetails.address_line2, margin, yPos), yPos += 5;
+
+      const cityLine = [orgDetails.city, orgDetails.state, orgDetails.postcode].filter(Boolean).join(', ');
+      if (cityLine) doc.text(cityLine, margin, yPos), yPos += 5;
+      if (orgDetails.phone) doc.text(`Phone: ${orgDetails.phone}`, margin, yPos), yPos += 5;
+      if (orgDetails.email) doc.text(`Email: ${orgDetails.email}`, margin, yPos), yPos += 5;
+
+      // Invoice details (right side)
+      yPos = margin + 15;
+      const invoiceDetailsX = pageWidth - margin - 55;
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Invoice Number:', invoiceDetailsX, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(invoice.invoiceNumber, invoiceDetailsX + 35, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Issue Date:', invoiceDetailsX, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(new Date(invoice.issueDate).toLocaleDateString('en-AU'), invoiceDetailsX + 35, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Due Date:', invoiceDetailsX, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.text(new Date(invoice.dueDate).toLocaleDateString('en-AU'), invoiceDetailsX + 35, yPos);
+      yPos = Math.max(yPos + 10, 75);
+
+      // Bill To
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text('BILL TO:', margin, yPos);
+      yPos += 7;
+      doc.setFontSize(10);
+      doc.text(account.name, margin, yPos);
+      yPos += 6;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      if (account.email) doc.text(account.email, margin, yPos), yPos += 5;
+      if (account.phone) doc.text(account.phone, margin, yPos), yPos += 5;
+      yPos += 10;
+
+      // Line items table
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      const colX = {
+        description: margin,
+        qty: pageWidth - 120,
+        unitPrice: pageWidth - 95,
+        taxRate: pageWidth - 70,
+        amount: pageWidth - margin - 30
+      };
+
+      doc.setFillColor(248, 250, 252);
+      doc.rect(margin, yPos - 5, pageWidth - 2 * margin, 8, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text('DESCRIPTION', colX.description, yPos);
+      doc.text('QTY', colX.qty, yPos);
+      doc.text('PRICE', colX.unitPrice, yPos);
+      doc.text('TAX', colX.taxRate, yPos);
+      doc.text('AMOUNT', colX.amount, yPos);
+      yPos += 8;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+
+      invoice.lineItems.forEach((item, index) => {
+        doc.text(item.description, colX.description, yPos);
+        doc.text(String(item.qty), colX.qty, yPos);
+        doc.text(`$${item.unitPrice.toFixed(2)}`, colX.unitPrice, yPos);
+        doc.text(`${item.taxRate}%`, colX.taxRate, yPos);
+        doc.text(`$${item.lineTotal.toFixed(2)}`, colX.amount, yPos, { align: 'right' });
+        yPos += 7;
+        if (index < invoice.lineItems.length - 1) {
+          doc.setDrawColor(230, 230, 230);
+          doc.line(margin, yPos - 2, pageWidth - margin, yPos - 2);
+        }
+      });
+
+      yPos += 5;
+
+      // Totals
+      const totalsX = pageWidth - margin - 60;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(totalsX - 5, yPos, pageWidth - margin, yPos);
+      yPos += 8;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text('Subtotal:', totalsX, yPos);
+      doc.text(`$${invoice.subtotal.toFixed(2)}`, pageWidth - margin - 5, yPos, { align: 'right' });
+      yPos += 7;
+      doc.text('GST (10%):', totalsX, yPos);
+      doc.text(`$${invoice.taxTotal.toFixed(2)}`, pageWidth - margin - 5, yPos, { align: 'right' });
+      yPos += 7;
+      doc.setDrawColor(0, 0, 0);
+      doc.line(totalsX - 5, yPos - 2, pageWidth - margin, yPos - 2);
+      yPos += 5;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('TOTAL:', totalsX, yPos);
+      doc.text(`$${invoice.total.toFixed(2)}`, pageWidth - margin - 5, yPos, { align: 'right' });
+
+      // Get PDF as base64
+      const pdfBase64 = doc.output('datauristring').split(',')[1];
+      const filename = `${invoice.invoiceNumber}.pdf`;
+
+      // Prepare email body
+      const emailBody = `
+        <html>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <h2 style="color: #2563eb;">Invoice ${invoice.invoiceNumber}</h2>
+            <p>Dear ${account.name},</p>
+            <p>Please find attached invoice <strong>${invoice.invoiceNumber}</strong> for your records.</p>
+            <table style="border-collapse: collapse; margin: 20px 0;">
+              <tr>
+                <td style="padding: 8px; font-weight: bold;">Invoice Number:</td>
+                <td style="padding: 8px;">${invoice.invoiceNumber}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; font-weight: bold;">Issue Date:</td>
+                <td style="padding: 8px;">${new Date(invoice.issueDate).toLocaleDateString('en-AU')}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; font-weight: bold;">Due Date:</td>
+                <td style="padding: 8px;">${new Date(invoice.dueDate).toLocaleDateString('en-AU')}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; font-weight: bold;">Total Amount:</td>
+                <td style="padding: 8px; font-size: 18px; color: #2563eb;"><strong>$${invoice.total.toFixed(2)} AUD</strong></td>
+              </tr>
+            </table>
+            ${orgDetails.bank_name ? `
+              <h3 style="color: #2563eb; margin-top: 30px;">Payment Details</h3>
+              <table style="border-collapse: collapse;">
+                <tr><td style="padding: 4px; font-weight: bold;">Bank:</td><td style="padding: 4px;">${orgDetails.bank_name}</td></tr>
+                ${orgDetails.bank_bsb ? `<tr><td style="padding: 4px; font-weight: bold;">BSB:</td><td style="padding: 4px;">${orgDetails.bank_bsb}</td></tr>` : ''}
+                ${orgDetails.bank_account_number ? `<tr><td style="padding: 4px; font-weight: bold;">Account Number:</td><td style="padding: 4px;">${orgDetails.bank_account_number}</td></tr>` : ''}
+                ${orgDetails.bank_account_name ? `<tr><td style="padding: 4px; font-weight: bold;">Account Name:</td><td style="padding: 4px;">${orgDetails.bank_account_name}</td></tr>` : ''}
+              </table>
+            ` : ''}
+            <p style="margin-top: 30px;">If you have any questions about this invoice, please don't hesitate to contact us.</p>
+            <p>Thank you for your business!</p>
+            <p style="margin-top: 30px; color: #666; font-size: 12px;">
+              ${orgDetails.name}<br/>
+              ${orgDetails.email ? `${orgDetails.email}<br/>` : ''}
+              ${orgDetails.phone ? `${orgDetails.phone}` : ''}
+            </p>
+          </body>
+        </html>
+      `;
+
+      // Send email
+      const result = await sendEmail({
+        to: account.email,
+        subject: `Invoice ${invoice.invoiceNumber} from ${orgDetails.name}`,
+        body: emailBody,
+        attachments: [
+          {
+            filename,
+            content: pdfBase64,
+            mimeType: 'application/pdf',
+          },
+        ],
+      });
+
+      setIsEmailSending(false);
+
+      if (result.success) {
+        setEmailStatus({
+          type: 'success',
+          message: `Invoice sent successfully to ${account.email}`,
+        });
+        // Auto-clear success message after 5 seconds
+        setTimeout(() => setEmailStatus(null), 5000);
+      } else {
+        setEmailStatus({
+          type: 'error',
+          message: result.error || 'Failed to send invoice. Please try again.',
+        });
+      }
+    } catch (error: any) {
+      console.error('Error sending invoice:', error);
+      setIsEmailSending(false);
+      setEmailStatus({
+        type: 'error',
+        message: error.message || 'Failed to send invoice. Please try again.',
+      });
+    }
+  };
 
   if (!invoice) {
     return (
@@ -89,6 +351,42 @@ const InvoiceDetail: React.FC = () => {
 
   return (
     <div className="space-y-8 max-w-[1200px] mx-auto animate-slide-up pb-20">
+      {/* Email Status Toast */}
+      {emailStatus && (
+        <div
+          className={`fixed top-4 right-4 z-50 ${
+            emailStatus.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50 border-rose-200 text-rose-800'
+          } border-2 rounded-2xl p-6 shadow-lg max-w-md animate-slide-up`}
+        >
+          <div className="flex items-start gap-4">
+            {emailStatus.type === 'success' ? (
+              <CheckCircle2 size={24} className="text-emerald-600 flex-shrink-0" />
+            ) : (
+              <XCircle size={24} className="text-rose-600 flex-shrink-0" />
+            )}
+            <div className="flex-1">
+              <p className="font-bold text-sm">{emailStatus.message}</p>
+              {emailStatus.type === 'error' && (
+                <button
+                  onClick={() => setEmailStatus(null)}
+                  className="text-xs underline mt-2 hover:no-underline"
+                >
+                  Dismiss
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => setEmailStatus(null)}
+              className="text-slate-400 hover:text-slate-600 flex-shrink-0"
+            >
+              <XCircle size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -131,16 +429,22 @@ const InvoiceDetail: React.FC = () => {
             <Download size={18} />
           </button>
           <button
-            onClick={() => {
-              // Copy invoice details to clipboard for email
-              const emailBody = `Invoice ${invoice.invoiceNumber}\n\nBill To: ${account?.name || 'N/A'}\nIssue Date: ${new Date(invoice.issueDate).toLocaleDateString()}\nDue Date: ${new Date(invoice.dueDate).toLocaleDateString()}\nTotal: $${invoice.total.toFixed(2)}\nStatus: ${invoice.status}`;
-              const mailtoLink = `mailto:${account?.email || ''}?subject=Invoice ${invoice.invoiceNumber}&body=${encodeURIComponent(emailBody)}`;
-              window.open(mailtoLink, '_self');
-            }}
-            className="flex items-center gap-2 bg-purple-600 text-white px-6 py-2.5 rounded-xl text-sm font-black shadow-lg shadow-purple-500/20 active:scale-95 transition-all"
+            onClick={handleEmailInvoice}
+            disabled={isEmailSending}
+            className={`flex items-center gap-2 ${
+              isEmailSending ? 'bg-purple-400 cursor-not-allowed' : 'bg-purple-600 active:scale-95'
+            } text-white px-6 py-2.5 rounded-xl text-sm font-black shadow-lg shadow-purple-500/20 transition-all`}
             title="Email Invoice"
           >
-            <Send size={18} /> Email Invoice
+            {isEmailSending ? (
+              <>
+                <Loader2 size={18} className="animate-spin" /> Sending...
+              </>
+            ) : (
+              <>
+                <Send size={18} /> Email Invoice
+              </>
+            )}
           </button>
           <button
             onClick={() => deleteRecord('invoices', invoice.id)}
