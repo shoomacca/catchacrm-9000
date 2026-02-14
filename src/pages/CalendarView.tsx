@@ -11,6 +11,9 @@ import {
 import { useCRM } from '../context/CRMContext';
 import { EntityType } from '../types';
 import { EventComposer } from '../components/EventComposer';
+import { TaskComposer } from '../components/TaskComposer';
+import { DealComposer } from '../components/DealComposer';
+import { TicketComposer } from '../components/TicketComposer';
 
 type ViewMode = 'month' | 'week' | 'day';
 type EventFilter = 'all' | 'meetings' | 'tasks' | 'personal' | 'followups' | 'tickets' | 'milestones';
@@ -31,6 +34,12 @@ const CalendarView: React.FC = () => {
   const [showEventComposer, setShowEventComposer] = useState(false);
   const [eventComposerData, setEventComposerData] = useState<any>(null);
   const [eventComposerMode, setEventComposerMode] = useState<'create' | 'edit'>('create');
+  const [showTaskComposer, setShowTaskComposer] = useState(false);
+  const [editingTask, setEditingTask] = useState<any>(null);
+  const [showDealComposer, setShowDealComposer] = useState(false);
+  const [editingDeal, setEditingDeal] = useState<any>(null);
+  const [showTicketComposer, setShowTicketComposer] = useState(false);
+  const [editingTicket, setEditingTicket] = useState<any>(null);
   const newEventMenuRef = useRef<HTMLDivElement>(null);
   const dayMenuRef = useRef<HTMLDivElement>(null);
 
@@ -280,8 +289,8 @@ const CalendarView: React.FC = () => {
   const handleCreateEvent = (eventType: string) => {
     setShowNewEventMenu(false);
     if (eventType === 'Task') {
-      // Open tasks modal for tasks
-      openModal('tasks', {});
+      setEditingTask({});
+      setShowTaskComposer(true);
     } else {
       setEventComposerData({ type: eventType });
       setEventComposerMode('create');
@@ -302,9 +311,10 @@ const CalendarView: React.FC = () => {
 
       if (eventType === 'Task') {
         // Open tasks modal with the due date set
-        openModal('tasks', {
+        setEditingTask({
           dueDate: dayMenuDate.toISOString().split('T')[0]
         });
+        setShowTaskComposer(true);
       } else {
         setEventComposerData({
           type: eventType,
@@ -700,11 +710,14 @@ const CalendarView: React.FC = () => {
       setEventComposerMode('edit');
       setShowEventComposer(true);
     } else if (selectedEvent.type === 'tasks') {
-      openModal('tasks', selectedEvent);
+      setEditingTask(selectedEvent);
+      setShowTaskComposer(true);
     } else if (selectedEvent.type === 'deals') {
-      openModal('deals', selectedEvent);
+      setEditingDeal(selectedEvent);
+      setShowDealComposer(true);
     } else if (selectedEvent.type === 'tickets') {
-      openModal('tickets', selectedEvent);
+      setEditingTicket(selectedEvent);
+      setShowTicketComposer(true);
     }
     closeEventPopup();
   };
@@ -1434,6 +1447,36 @@ const CalendarView: React.FC = () => {
         initialData={eventComposerData}
         initialDate={eventComposerData?.startTime}
         mode={eventComposerMode}
+      />
+
+      <TaskComposer
+        isOpen={showTaskComposer}
+        onClose={() => {
+          setShowTaskComposer(false);
+          setEditingTask(null);
+        }}
+        initialData={editingTask || undefined}
+        mode={editingTask ? 'edit' : 'create'}
+      />
+
+      <DealComposer
+        isOpen={showDealComposer}
+        onClose={() => {
+          setShowDealComposer(false);
+          setEditingDeal(null);
+        }}
+        initialData={editingDeal || undefined}
+        mode={editingDeal ? 'edit' : 'create'}
+      />
+
+      <TicketComposer
+        isOpen={showTicketComposer}
+        onClose={() => {
+          setShowTicketComposer(false);
+          setEditingTicket(null);
+        }}
+        initialData={editingTicket || undefined}
+        mode={editingTicket ? 'edit' : 'create'}
       />
     </div>
   );
