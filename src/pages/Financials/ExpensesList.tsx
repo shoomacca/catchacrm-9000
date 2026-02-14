@@ -18,7 +18,6 @@ const ExpensesList: React.FC = () => {
   const {
     expenses,
     users,
-    openModal,
     deleteRecord,
     updateRecord,
     settings
@@ -35,6 +34,7 @@ const ExpensesList: React.FC = () => {
   const [dateTo, setDateTo] = useState('');
   const [showCategoryChart, setShowCategoryChart] = useState(false);
   const [showExpenseComposer, setShowExpenseComposer] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<any>(null);
 
   // Filter and sort expenses
   const filteredExpenses = useMemo(() => {
@@ -631,7 +631,7 @@ const ExpensesList: React.FC = () => {
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={e => { e.stopPropagation(); openModal('expenses', expense); }}
+                            onClick={e => { e.stopPropagation(); setEditingExpense(expense); setShowExpenseComposer(true); }}
                             className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-all"
                             title="Edit"
                           >
@@ -736,7 +736,7 @@ const ExpensesList: React.FC = () => {
                                   </button>
                                 )}
                                 <button
-                                  onClick={() => openModal('expenses', expense)}
+                                  onClick={() => { setEditingExpense(expense); setShowExpenseComposer(true); }}
                                   className="flex items-center gap-2 px-5 py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
                                 >
                                   <Edit2 size={14} /> Edit
@@ -793,8 +793,12 @@ const ExpensesList: React.FC = () => {
       {/* Expense Composer Modal */}
       <ExpenseComposer
         isOpen={showExpenseComposer}
-        onClose={() => setShowExpenseComposer(false)}
-        mode="create"
+        onClose={() => {
+          setShowExpenseComposer(false);
+          setEditingExpense(null);
+        }}
+        initialData={editingExpense || undefined}
+        mode={editingExpense ? 'edit' : 'create'}
       />
     </div>
   );

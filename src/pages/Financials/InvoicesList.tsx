@@ -17,7 +17,6 @@ const InvoicesList: React.FC = () => {
   const {
     invoices,
     accounts,
-    openModal,
     deleteRecord,
     updateRecord,
     settings
@@ -32,6 +31,7 @@ const InvoicesList: React.FC = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [showInvoiceComposer, setShowInvoiceComposer] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<any>(null);
 
   // Sort handler
   const handleSort = (field: SortField) => {
@@ -536,7 +536,7 @@ const InvoicesList: React.FC = () => {
                       <td className="p-4">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={e => { e.stopPropagation(); openModal('invoices', invoice); }}
+                            onClick={e => { e.stopPropagation(); setEditingInvoice(invoice); setShowInvoiceComposer(true); }}
                             className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-all"
                             title="Edit"
                           >
@@ -670,7 +670,7 @@ const InvoicesList: React.FC = () => {
                                   </button>
                                 )}
                                 <button
-                                  onClick={() => openModal('invoices', invoice)}
+                                  onClick={() => { setEditingInvoice(invoice); setShowInvoiceComposer(true); }}
                                   className="flex items-center gap-2 px-5 py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
                                 >
                                   <Edit2 size={14} /> Edit
@@ -727,8 +727,12 @@ const InvoicesList: React.FC = () => {
       {/* Invoice Composer Modal */}
       <InvoiceComposer
         isOpen={showInvoiceComposer}
-        onClose={() => setShowInvoiceComposer(false)}
-        mode="create"
+        onClose={() => {
+          setShowInvoiceComposer(false);
+          setEditingInvoice(null);
+        }}
+        initialData={editingInvoice || undefined}
+        mode={editingInvoice ? 'edit' : 'create'}
       />
     </div>
   );
