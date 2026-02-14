@@ -9,6 +9,9 @@ import {
   Building2, Edit3
 } from 'lucide-react';
 import { TaskComposer } from '../components/TaskComposer';
+import { TicketComposer } from '../components/TicketComposer';
+import { CalendarEventComposer } from '../components/CalendarEventComposer';
+import { LeadComposer } from '../components/LeadComposer';
 
 type ViewMode = 'today' | 'week' | 'all';
 type FilterType = 'all' | 'tasks' | 'callbacks' | 'followups' | 'meetings' | 'tickets' | 'personal';
@@ -32,7 +35,7 @@ const MySchedule: React.FC = () => {
   const navigate = useNavigate();
   const {
     tasks, leads, deals, contacts, accounts, communications, tickets,
-    calendarEvents, users, openModal, toggleTask, dataSource
+    calendarEvents, users, toggleTask, dataSource
   } = useCRM();
 
   const [viewMode, setViewMode] = useState<ViewMode>('today');
@@ -43,6 +46,13 @@ const MySchedule: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [activeStatFilter, setActiveStatFilter] = useState<string | null>(null);
   const [showTaskComposer, setShowTaskComposer] = useState(false);
+  const [editingTask, setEditingTask] = useState<any>(null);
+  const [showTicketComposer, setShowTicketComposer] = useState(false);
+  const [editingTicket, setEditingTicket] = useState<any>(null);
+  const [showCalendarEventComposer, setShowCalendarEventComposer] = useState(false);
+  const [editingCalendarEvent, setEditingCalendarEvent] = useState<any>(null);
+  const [showLeadComposer, setShowLeadComposer] = useState(false);
+  const [editingLead, setEditingLead] = useState<any>(null);
   const [taskComposerType, setTaskComposerType] = useState<'general' | 'call' | 'lead' | 'deal'>('general');
   const [selectedItem, setSelectedItem] = useState<ScheduleItem | null>(null);
   const [noteText, setNoteText] = useState('');
@@ -386,20 +396,24 @@ const MySchedule: React.FC = () => {
     if (item.type === 'task') {
       const taskId = item.id.replace('task-', '');
       const taskData = tasks.find(t => t.id === taskId);
-      openModal('tasks', taskData);
+      setEditingTask(taskData);
+      setShowTaskComposer(true);
     } else if (item.type === 'ticket') {
       const ticketId = item.id.replace('ticket-', '');
       const ticketData = tickets.find(t => t.id === ticketId);
-      openModal('tickets', ticketData);
+      setEditingTicket(ticketData);
+      setShowTicketComposer(true);
     } else if (item.type === 'personal' || item.type === 'followup' || item.type === 'meeting') {
       const eventId = item.id.replace('event-', '');
       const eventData = calendarEvents.find(e => e.id === eventId);
-      openModal('calendarEvents', eventData);
+      setEditingCalendarEvent(eventData);
+      setShowCalendarEventComposer(true);
     } else if (item.type === 'callback') {
       // Callbacks are linked to leads
       const leadId = item.id.replace('callback-', '');
       const leadData = leads.find(l => l.id === leadId);
-      openModal('leads', leadData);
+      setEditingLead(leadData);
+      setShowLeadComposer(true);
     }
   };
 
@@ -452,17 +466,20 @@ const MySchedule: React.FC = () => {
         setShowTaskComposer(true);
         break;
       case 'meeting':
-        openModal('calendarEvents', { type: 'Meeting' });
+        setEditingCalendarEvent({ type: 'Meeting' });
+        setShowCalendarEventComposer(true);
         break;
       case 'followup':
-        openModal('calendarEvents', { type: 'Follow-up' });
+        setEditingCalendarEvent({ type: 'Follow-up' });
+        setShowCalendarEventComposer(true);
         break;
       case 'callback':
         setTaskComposerType('call');
         setShowTaskComposer(true);
         break;
       case 'reminder':
-        openModal('calendarEvents', { type: 'Reminder' });
+        setEditingCalendarEvent({ type: 'Reminder' });
+        setShowCalendarEventComposer(true);
         break;
       default:
         setTaskComposerType('general');
@@ -1154,12 +1171,45 @@ const MySchedule: React.FC = () => {
         </div>
       </div>
 
-      {/* Task Composer Modal */}
+      {/* Composers */}
       <TaskComposer
         isOpen={showTaskComposer}
-        onClose={() => setShowTaskComposer(false)}
-        taskType={taskComposerType}
-        mode="create"
+        onClose={() => {
+          setShowTaskComposer(false);
+          setEditingTask(null);
+        }}
+        initialData={editingTask || undefined}
+        mode={editingTask ? 'edit' : 'create'}
+      />
+
+      <TicketComposer
+        isOpen={showTicketComposer}
+        onClose={() => {
+          setShowTicketComposer(false);
+          setEditingTicket(null);
+        }}
+        initialData={editingTicket || undefined}
+        mode={editingTicket ? 'edit' : 'create'}
+      />
+
+      <CalendarEventComposer
+        isOpen={showCalendarEventComposer}
+        onClose={() => {
+          setShowCalendarEventComposer(false);
+          setEditingCalendarEvent(null);
+        }}
+        initialData={editingCalendarEvent || undefined}
+        mode={editingCalendarEvent ? 'edit' : 'create'}
+      />
+
+      <LeadComposer
+        isOpen={showLeadComposer}
+        onClose={() => {
+          setShowLeadComposer(false);
+          setEditingLead(null);
+        }}
+        initialData={editingLead || undefined}
+        mode={editingLead ? 'edit' : 'create'}
       />
     </div>
   );

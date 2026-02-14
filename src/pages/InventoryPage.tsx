@@ -447,7 +447,7 @@ const InventoryPage: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => openModal('purchaseOrders')}
+              onClick={() => { setEditingPurchaseOrder(null); setShowPurchaseOrderComposer(true); }}
               className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
             >
               Create Purchase Order
