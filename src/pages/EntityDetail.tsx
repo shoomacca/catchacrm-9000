@@ -21,6 +21,17 @@ import { PaymentCollect } from '../components/PaymentCollect';
 import { GenerateQuoteModal } from '../components/GenerateQuoteModal';
 import SignatureCapture from '../components/SignatureCapture';
 import PhotoUploader from '../components/PhotoUploader';
+import { InvoiceComposer } from '../components/InvoiceComposer';
+import { SubscriptionComposer } from '../components/SubscriptionComposer';
+import { QuoteComposer } from '../components/QuoteComposer';
+import { CommunicationComposer } from '../components/CommunicationComposer';
+import { TaskComposer } from '../components/TaskComposer';
+import { DocumentComposer } from '../components/DocumentComposer';
+import { TicketComposer } from '../components/TicketComposer';
+import { LeadComposer } from '../components/LeadComposer';
+import { DealComposer } from '../components/DealComposer';
+import { AccountComposer } from '../components/AccountComposer';
+import { ContactComposer } from '../components/ContactComposer';
 
 const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
   const { module: routeModule, id } = useParams<{ module: string, id: string }>();
@@ -40,7 +51,7 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
     bankTransactions, expenses, reviews, referralRewards, inboundForms,
     chatWidgets, calculators, automationWorkflows, webhooks, industryTemplates,
     paymentTransactions, companyIntegrations, settings,
-    openModal, deleteRecord, getAccountRevenueStats, canAccessRecord, hasPermission, toggleTask, convertLead, addNote,
+    deleteRecord, getAccountRevenueStats, canAccessRecord, hasPermission, toggleTask, convertLead, addNote,
     convertLeadToDeal, acceptQuote, closeDealAsWon, updateJobWorkflow, pickBOMItem, convertQuoteToInvoice
   } = useCRM();
 
@@ -48,6 +59,25 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
   const [expandedComms, setExpandedComms] = useState<Set<string>>(new Set());
   const [commFilter, setCommFilter] = useState<'all' | 'Email' | 'Call' | 'SMS'>('all');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  // Composer states
+  const [showInvoiceComposer, setShowInvoiceComposer] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<any>(null);
+  const [showSubscriptionComposer, setShowSubscriptionComposer] = useState(false);
+  const [editingSubscription, setEditingSubscription] = useState<any>(null);
+  const [showQuoteComposer, setShowQuoteComposer] = useState(false);
+  const [editingQuote, setEditingQuote] = useState<any>(null);
+  const [showCommunicationComposer, setShowCommunicationComposer] = useState(false);
+  const [editingCommunication, setEditingCommunication] = useState<any>(null);
+  const [showTaskComposer, setShowTaskComposer] = useState(false);
+  const [editingTask, setEditingTask] = useState<any>(null);
+  const [showDocumentComposer, setShowDocumentComposer] = useState(false);
+  const [editingDocument, setEditingDocument] = useState<any>(null);
+  const [showTicketComposer, setShowTicketComposer] = useState(false);
+  const [editingTicket, setEditingTicket] = useState<any>(null);
+  // Entity-specific composers for Edit Record button
+  const [showEntityComposer, setShowEntityComposer] = useState(false);
+  const [editingEntity, setEditingEntity] = useState<any>(null);
 
   const toggleCommExpand = (commId: string) => {
     setExpandedComms(prev => {
@@ -311,7 +341,14 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
               <button onClick={() => deleteRecord(entityType, entity.id)} className="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-rose-500 transition-all"><Trash2 size={18} /></button>
             ) : null;
           })()}
-          <button onClick={() => openModal(entityType, entity)} className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-black shadow-lg shadow-blue-500/20 active:scale-95 transition-all"><Edit3 size={18} /> Edit Record</button>
+          <button
+            onClick={() => {
+              setEditingEntity(entity);
+              setShowEntityComposer(true);
+            }}
+            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-black shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
+            <Edit3 size={18} /> Edit Record
+          </button>
         </div>
       </div>
 
@@ -414,8 +451,22 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                      </div>
                   </div>
                   <div className="flex gap-2">
-                     <button onClick={() => openModal('invoices', { accountId: id })} className="bg-white border border-slate-200 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"><Plus size={14}/> One-Off Invoice</button>
-                     <button onClick={() => openModal('subscriptions', { accountId: id })} className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"><Plus size={14}/> Provision Service</button>
+                     <button
+                       onClick={() => {
+                         setEditingInvoice({ accountId: id });
+                         setShowInvoiceComposer(true);
+                       }}
+                       className="bg-white border border-slate-200 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
+                       <Plus size={14}/> One-Off Invoice
+                     </button>
+                     <button
+                       onClick={() => {
+                         setEditingSubscription({ accountId: id });
+                         setShowSubscriptionComposer(true);
+                       }}
+                       className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                       <Plus size={14}/> Provision Service
+                     </button>
                   </div>
                </div>
 
@@ -424,7 +475,13 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                   <div className="space-y-4">
                     <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2"><RefreshCcw size={14} className="text-blue-600"/> Active Services</h4>
                     {entitySubs.map(sub => (
-                      <div key={sub.id} onClick={() => openModal('subscriptions', sub)} className="p-6 bg-blue-50/50 border border-blue-100 rounded-[30px] flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all cursor-pointer">
+                      <div
+                        key={sub.id}
+                        onClick={() => {
+                          setEditingSubscription(sub);
+                          setShowSubscriptionComposer(true);
+                        }}
+                        className="p-6 bg-blue-50/50 border border-blue-100 rounded-[30px] flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all cursor-pointer">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-600 shadow-sm"><RefreshCcw size={18}/></div>
                           <div>
@@ -442,7 +499,13 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                   <div className="space-y-4">
                     <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2"><FileText size={14} className="text-emerald-600"/> Transaction History</h4>
                     {entityInvoices.map(inv => (
-                      <div key={inv.id} onClick={() => openModal('invoices', inv)} className="p-6 bg-slate-50 border border-slate-100 rounded-[30px] flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all cursor-pointer">
+                      <div
+                        key={inv.id}
+                        onClick={() => {
+                          setEditingInvoice(inv);
+                          setShowInvoiceComposer(true);
+                        }}
+                        className="p-6 bg-slate-50 border border-slate-100 rounded-[30px] flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all cursor-pointer">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-600 shadow-sm"><DollarSign size={18}/></div>
                           <div>
@@ -474,8 +537,22 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                      </div>
                   </div>
                   <div className="flex gap-2">
-                     <button onClick={() => openModal('quotes', { dealId: id, accountId: entity?.accountId })} className="bg-white border border-slate-200 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"><Plus size={14}/> Create Quote</button>
-                     <button onClick={() => openModal('invoices', { dealId: id, accountId: entity?.accountId })} className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"><Plus size={14}/> Create Invoice</button>
+                     <button
+                       onClick={() => {
+                         setEditingQuote({ dealId: id, accountId: entity?.accountId });
+                         setShowQuoteComposer(true);
+                       }}
+                       className="bg-white border border-slate-200 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
+                       <Plus size={14}/> Create Quote
+                     </button>
+                     <button
+                       onClick={() => {
+                         setEditingInvoice({ dealId: id, accountId: entity?.accountId });
+                         setShowInvoiceComposer(true);
+                       }}
+                       className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20">
+                       <Plus size={14}/> Create Invoice
+                     </button>
                   </div>
                </div>
 
@@ -485,7 +562,12 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                     <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2"><FileText size={14} className="text-violet-600"/> Quotes & Proposals</h4>
                     {entityQuotes.map(quote => (
                       <div key={quote.id} className="p-6 bg-violet-50/50 border border-violet-100 rounded-[30px] flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all">
-                        <div className="flex items-center gap-4 cursor-pointer" onClick={() => openModal('quotes', quote)}>
+                        <div
+                          className="flex items-center gap-4 cursor-pointer"
+                          onClick={() => {
+                            setEditingQuote(quote);
+                            setShowQuoteComposer(true);
+                          }}>
                           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-violet-600 shadow-sm"><FileText size={18}/></div>
                           <div>
                             <p className="text-sm font-black text-slate-900">{quote.quoteNumber}</p>
@@ -526,7 +608,13 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                   <div className="space-y-4">
                     <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2"><CreditCard size={14} className="text-emerald-600"/> Invoices</h4>
                     {entityInvoices.map(inv => (
-                      <div key={inv.id} onClick={() => openModal('invoices', inv)} className="p-6 bg-slate-50 border border-slate-100 rounded-[30px] flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all cursor-pointer">
+                      <div
+                        key={inv.id}
+                        onClick={() => {
+                          setEditingInvoice(inv);
+                          setShowInvoiceComposer(true);
+                        }}
+                        className="p-6 bg-slate-50 border border-slate-100 rounded-[30px] flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all cursor-pointer">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-600 shadow-sm"><DollarSign size={18}/></div>
                           <div>
@@ -996,7 +1084,10 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                     </>
                   )}
                   <button
-                    onClick={() => openModal('communications', { relatedToType: entityType, relatedToId: id })}
+                    onClick={() => {
+                      setEditingCommunication({ relatedToType: entityType, relatedToId: id });
+                      setShowCommunicationComposer(true);
+                    }}
                     className="bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"
                   >
                     <Plus size={14}/> Log
@@ -1252,7 +1343,11 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
                           )}
                           <div className="flex items-center gap-2 mt-4">
                             <button
-                              onClick={(e) => { e.stopPropagation(); openModal('communications', { relatedToType: entityType, relatedToId: id }); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingCommunication({ relatedToType: entityType, relatedToId: id });
+                                setShowCommunicationComposer(true);
+                              }}
                               className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-bold hover:bg-emerald-700 transition-all"
                             >
                               Log Follow-up
@@ -1803,7 +1898,14 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
           {activeTab === 'TASKS' && (
             <div className="space-y-6">
               <div className="flex justify-end mb-4">
-                <button onClick={() => openModal('tasks', { relatedToType: entityType, relatedToId: id })} className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"><Plus size={14}/> Add Task</button>
+                <button
+                  onClick={() => {
+                    setEditingTask({ relatedToType: entityType, relatedToId: id });
+                    setShowTaskComposer(true);
+                  }}
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                  <Plus size={14}/> Add Task
+                </button>
               </div>
               {entityTasks.map(task => (
                 <div key={task.id} className={`bg-slate-50/50 border border-slate-100 p-6 rounded-[30px] flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all ${task.status === 'Completed' ? 'opacity-60' : ''}`}>
@@ -1878,7 +1980,14 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
           {activeTab === 'DOCUMENTS' && (
             <div className="space-y-6">
               <div className="flex justify-end mb-4">
-                <button onClick={() => openModal('documents', { relatedToType: entityType, relatedToId: id })} className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"><Plus size={14}/> Add Document</button>
+                <button
+                  onClick={() => {
+                    setEditingDocument({ relatedToType: entityType, relatedToId: id });
+                    setShowDocumentComposer(true);
+                  }}
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                  <Plus size={14}/> Add Document
+                </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {entityDocs.map(doc => (
@@ -1906,7 +2015,19 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
           {activeTab === 'TICKETS' && (
             <div className="space-y-6">
               <div className="flex justify-end mb-4">
-                <button onClick={() => openModal('tickets', { relatedToType: entityType, relatedToId: id, accountId: entityType === 'accounts' ? id : entity?.accountId, requesterId: entityType === 'contacts' ? id : undefined })} className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"><Plus size={14}/> Create Ticket</button>
+                <button
+                  onClick={() => {
+                    setEditingTicket({
+                      relatedToType: entityType,
+                      relatedToId: id,
+                      accountId: entityType === 'accounts' ? id : entity?.accountId,
+                      requesterId: entityType === 'contacts' ? id : undefined
+                    });
+                    setShowTicketComposer(true);
+                  }}
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                  <Plus size={14}/> Create Ticket
+                </button>
               </div>
               {entityTickets.map(ticket => (
                 <Link to={`/tickets/${ticket.id}`} key={ticket.id} className="block bg-slate-50/50 border border-slate-100 p-6 rounded-[30px] hover:bg-white hover:shadow-xl transition-all">
@@ -2413,6 +2534,129 @@ const EntityDetail: React.FC<{ type?: string }> = ({ type }) => {
           dealId={entity.id}
         />
       )}
+
+      {/* Entity-specific Composer for Edit Record button */}
+      {entityType === 'leads' && (
+        <LeadComposer
+          isOpen={showEntityComposer}
+          onClose={() => {
+            setShowEntityComposer(false);
+            setEditingEntity(null);
+          }}
+          initialData={editingEntity || undefined}
+          mode={editingEntity ? 'edit' : 'create'}
+        />
+      )}
+      {entityType === 'deals' && (
+        <DealComposer
+          isOpen={showEntityComposer}
+          onClose={() => {
+            setShowEntityComposer(false);
+            setEditingEntity(null);
+          }}
+          initialData={editingEntity || undefined}
+          mode={editingEntity ? 'edit' : 'create'}
+        />
+      )}
+      {entityType === 'accounts' && (
+        <AccountComposer
+          isOpen={showEntityComposer}
+          onClose={() => {
+            setShowEntityComposer(false);
+            setEditingEntity(null);
+          }}
+          initialData={editingEntity || undefined}
+          mode={editingEntity ? 'edit' : 'create'}
+        />
+      )}
+      {entityType === 'contacts' && (
+        <ContactComposer
+          isOpen={showEntityComposer}
+          onClose={() => {
+            setShowEntityComposer(false);
+            setEditingEntity(null);
+          }}
+          initialData={editingEntity || undefined}
+          mode={editingEntity ? 'edit' : 'create'}
+        />
+      )}
+
+      {/* Invoice Composer */}
+      <InvoiceComposer
+        isOpen={showInvoiceComposer}
+        onClose={() => {
+          setShowInvoiceComposer(false);
+          setEditingInvoice(null);
+        }}
+        initialData={editingInvoice || undefined}
+        mode={editingInvoice ? 'edit' : 'create'}
+      />
+
+      {/* Subscription Composer */}
+      <SubscriptionComposer
+        isOpen={showSubscriptionComposer}
+        onClose={() => {
+          setShowSubscriptionComposer(false);
+          setEditingSubscription(null);
+        }}
+        initialData={editingSubscription || undefined}
+        mode={editingSubscription ? 'edit' : 'create'}
+      />
+
+      {/* Quote Composer */}
+      <QuoteComposer
+        isOpen={showQuoteComposer}
+        onClose={() => {
+          setShowQuoteComposer(false);
+          setEditingQuote(null);
+        }}
+        initialData={editingQuote || undefined}
+        mode={editingQuote ? 'edit' : 'create'}
+      />
+
+      {/* Communication Composer */}
+      <CommunicationComposer
+        isOpen={showCommunicationComposer}
+        onClose={() => {
+          setShowCommunicationComposer(false);
+          setEditingCommunication(null);
+        }}
+        initialData={editingCommunication || undefined}
+        mode={editingCommunication ? 'edit' : 'create'}
+      />
+
+      {/* Task Composer */}
+      <TaskComposer
+        isOpen={showTaskComposer}
+        onClose={() => {
+          setShowTaskComposer(false);
+          setEditingTask(null);
+        }}
+        initialData={editingTask || undefined}
+        mode={editingTask ? 'edit' : 'create'}
+      />
+
+      {/* Document Composer */}
+      <DocumentComposer
+        isOpen={showDocumentComposer}
+        onClose={() => {
+          setShowDocumentComposer(false);
+          setEditingDocument(null);
+        }}
+        initialData={editingDocument || undefined}
+        mode={editingDocument ? 'edit' : 'create'}
+      />
+
+      {/* Ticket Composer */}
+      <TicketComposer
+        isOpen={showTicketComposer}
+        onClose={() => {
+          setShowTicketComposer(false);
+          setEditingTicket(null);
+        }}
+        initialData={editingTicket || undefined}
+        mode={editingTicket ? 'edit' : 'create'}
+      />
     </div>
   );
 };
