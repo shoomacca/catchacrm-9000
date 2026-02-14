@@ -707,8 +707,9 @@ export interface LineItem {
   description: string;
   qty: number;
   unitPrice: number;
-  taxRate: number;
-  lineTotal: number;
+  taxRate: number; // Percentage (e.g., 10 for 10%)
+  taxAmount?: number; // Calculated tax amount
+  lineTotal: number; // qty * unitPrice (excluding tax)
 }
 
 export interface Quote extends CRMBase {
