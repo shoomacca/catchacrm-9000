@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   CheckSquare, Ticket, Clock, AlertCircle,
@@ -7,13 +7,16 @@ import {
   TrendingUp, Package, ShieldAlert
 } from 'lucide-react';
 import { useCRM } from '../context/CRMContext';
+import { TaskComposer } from '../components/TaskComposer';
 
 const OpsDashboard: React.FC = () => {
   const navigate = useNavigate();
   const {
     opsStats, tasks, tickets, jobs, crews, zones, equipment,
-    openModal, toggleTask, dataSource
+    toggleTask, dataSource
   } = useCRM();
+  const [showTaskComposer, setShowTaskComposer] = useState(false);
+  const [editingTask, setEditingTask] = useState<any>(null);
 
   // Field Service Stats
   const fieldServiceStats = useMemo(() => {
@@ -418,7 +421,7 @@ const OpsDashboard: React.FC = () => {
                   >
                     <CheckSquare size={12} className="opacity-0 group-hover:opacity-100" />
                   </button>
-                  <div className="min-w-0 flex-1" onClick={() => openModal('tasks', task)}>
+                  <div className="min-w-0 flex-1" onClick={() => { setEditingTask(task); setShowTaskComposer(true); }}>
                     <p className={`text-sm font-black text-slate-900 group-hover:text-blue-600 transition-colors truncate`}>{task.title}</p>
                     <p className={`text-[11px] font-bold mt-1 leading-tight ${isOverdue ? 'text-rose-500' : 'text-slate-500'}`}>
                       {isOverdue ? 'OVERDUE' : task.priority.toUpperCase()} • {new Date(task.dueDate).toLocaleDateString()}
@@ -432,7 +435,7 @@ const OpsDashboard: React.FC = () => {
 
           <div className="mt-8 pt-8 border-t border-slate-100">
             <button
-              onClick={() => openModal('tasks')}
+              onClick={() => { setEditingTask(null); setShowTaskComposer(true); }}
               className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-3xl font-black text-xs shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all"
             >
               <Plus size={16} /> New Task Entry
@@ -440,6 +443,16 @@ const OpsDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <TaskComposer
+        isOpen={showTaskComposer}
+        onClose={() => {
+          setShowTaskComposer(false);
+          setEditingTask(null);
+        }}
+        initialData={editingTask || undefined}
+        mode={editingTask ? 'edit' : 'create'}
+      />
     </div>
   );
 };

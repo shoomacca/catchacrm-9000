@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCRM } from '../context/CRMContext';
 import {
@@ -6,11 +6,14 @@ import {
   Hash, Tag, Clock, Users, Cog, CheckSquare,
   Image as ImageIcon, TrendingUp, Shield, AlertCircle, RefreshCcw
 } from 'lucide-react';
+import { ServiceComposer } from '../components/ServiceComposer';
 
 const ServiceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { services, deleteRecord, openModal } = useCRM();
+  const { services, deleteRecord } = useCRM();
+  const [showServiceComposer, setShowServiceComposer] = useState(false);
+  const [editingService, setEditingService] = useState<any>(null);
 
   const service = useMemo(() => services.find(s => s.id === id), [services, id]);
 
@@ -63,7 +66,7 @@ const ServiceDetail: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => openModal('services', service)}
+            onClick={() => { setEditingService(service); setShowServiceComposer(true); }}
             className="p-3 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
           >
             <Edit3 size={20} />
@@ -349,6 +352,16 @@ const ServiceDetail: React.FC = () => {
           )}
         </div>
       </div>
+
+      <ServiceComposer
+        isOpen={showServiceComposer}
+        onClose={() => {
+          setShowServiceComposer(false);
+          setEditingService(null);
+        }}
+        initialData={editingService || undefined}
+        mode={editingService ? 'edit' : 'create'}
+      />
     </div>
   );
 };

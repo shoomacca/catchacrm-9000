@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useCRM } from '../../context/CRMContext';
 import PaymentModal from '../../components/PaymentModal';
+import { InvoiceComposer } from '../../components/InvoiceComposer';
 import { supabase } from '../../lib/supabase';
 import { getCurrentOrgId } from '../../services/supabaseData';
 import { generateInvoicePDF } from '../../utils/invoicePdf';
@@ -16,8 +17,10 @@ import jsPDF from 'jspdf';
 const InvoiceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { invoices, accounts, deals, quotes, products, services, openModal, deleteRecord, recordPayment } = useCRM();
+  const { invoices, accounts, deals, quotes, products, services, deleteRecord, recordPayment } = useCRM();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showInvoiceComposer, setShowInvoiceComposer] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<any>(null);
   const [orgDetails, setOrgDetails] = useState<any>(null);
   const [isEmailSending, setIsEmailSending] = useState(false);
   const [emailStatus, setEmailStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -453,7 +456,7 @@ const InvoiceDetail: React.FC = () => {
             <Trash2 size={18} />
           </button>
           <button
-            onClick={() => openModal('invoices', invoice)}
+            onClick={() => { setEditingInvoice(invoice); setShowInvoiceComposer(true); }}
             className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-black shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
           >
             <Edit3 size={18} /> Edit Invoice
@@ -858,6 +861,16 @@ const InvoiceDetail: React.FC = () => {
         onRecordPayment={(payment) => {
           recordPayment(invoice.id, payment);
         }}
+      />
+
+      <InvoiceComposer
+        isOpen={showInvoiceComposer}
+        onClose={() => {
+          setShowInvoiceComposer(false);
+          setEditingInvoice(null);
+        }}
+        initialData={editingInvoice || undefined}
+        mode={editingInvoice ? 'edit' : 'create'}
       />
     </div>
   );

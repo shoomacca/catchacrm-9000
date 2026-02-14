@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Megaphone, TrendingUp, Users, Target, MousePointer2,
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useCRM } from '../context/CRMContext';
+import { CampaignComposer } from '../components/CampaignComposer';
 
 const MetricCard = ({ label, value, icon: Icon, color, alert, onClick }: any) => (
   <div
@@ -40,9 +41,11 @@ const StatusRow = ({ label, value, color }: { label: string; value: number; colo
 const MarketingDashboard: React.FC = () => {
   const navigate = useNavigate();
   const {
-    marketingStats, openModal, campaigns, leads,
+    marketingStats, campaigns, leads,
     reviews, referralRewards, inboundForms, chatWidgets, calculators, dataSource
   } = useCRM();
+  const [showCampaignComposer, setShowCampaignComposer] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<any>(null);
 
   const marketingModuleStats = useMemo(() => {
     // Reviews stats
@@ -113,7 +116,7 @@ const MarketingDashboard: React.FC = () => {
           <p className="text-slate-400 font-semibold">Attribution, campaign ROI, lead sourcing, and marketing automation.</p>
         </div>
         <button
-          onClick={() => openModal('campaigns')}
+          onClick={() => { setEditingCampaign(null); setShowCampaignComposer(true); }}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl text-sm font-black transition-all shadow-lg shadow-blue-500/20 active:scale-95"
         >
           <Plus size={18} /> Launch Campaign
@@ -230,7 +233,7 @@ const MarketingDashboard: React.FC = () => {
           </div>
           <div className="space-y-8 flex-1">
             {marketingStats.campaignPerformance.slice(0, 5).map((c) => (
-              <div key={c.id} className="group cursor-pointer" onClick={() => openModal('campaigns', c)}>
+              <div key={c.id} className="group cursor-pointer" onClick={() => { setEditingCampaign(c); setShowCampaignComposer(true); }}>
                 <div className="flex justify-between items-center mb-2">
                   <p className="text-xs font-black text-slate-900 group-hover:text-blue-600 transition-colors">{c.name}</p>
                   <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
@@ -429,6 +432,16 @@ const MarketingDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <CampaignComposer
+        isOpen={showCampaignComposer}
+        onClose={() => {
+          setShowCampaignComposer(false);
+          setEditingCampaign(null);
+        }}
+        initialData={editingCampaign || undefined}
+        mode={editingCampaign ? 'edit' : 'create'}
+      />
     </div>
   );
 };

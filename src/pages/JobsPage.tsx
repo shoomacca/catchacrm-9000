@@ -475,7 +475,8 @@ const JobsPage: React.FC = () => {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  openModal('jobs', jobData);
+                                  setEditingJob(jobData);
+                                  setShowJobComposer(true);
                                 }}
                                 className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all"
                               >

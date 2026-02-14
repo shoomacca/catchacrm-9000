@@ -260,7 +260,7 @@ const PurchaseLedger: React.FC = () => {
             <Download size={14} /> Export CSV
           </button>
           <button
-            onClick={() => openModal('expenses', { category: 'Materials' })}
+            onClick={() => { setEditingExpense({ category: 'Materials' }); setShowExpenseComposer(true); }}
             className="flex items-center gap-2 px-5 py-3 bg-rose-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-500/20"
           >
             <Plus size={14} /> New Bill
@@ -511,7 +511,7 @@ const PurchaseLedger: React.FC = () => {
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={e => { e.stopPropagation(); openModal('expenses', bill); }}
+                            onClick={e => { e.stopPropagation(); setEditingExpense(bill); setShowExpenseComposer(true); }}
                             className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-all"
                             title="Edit"
                           >
@@ -598,7 +598,7 @@ const PurchaseLedger: React.FC = () => {
                                   </button>
                                 )}
                                 <button
-                                  onClick={() => openModal('expenses', bill)}
+                                  onClick={() => { setEditingExpense(bill); setShowExpenseComposer(true); }}
                                   className="flex items-center gap-2 px-5 py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
                                 >
                                   <Edit2 size={14} /> Edit
