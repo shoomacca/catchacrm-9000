@@ -7,6 +7,7 @@ import {
   Trash, Mail
 } from 'lucide-react';
 import { Quote } from '../../types';
+import { QuoteComposer } from '../../components/QuoteComposer';
 
 type FilterStatus = 'all' | 'draft' | 'sent' | 'accepted' | 'expired' | 'declined';
 type SortField = 'date' | 'quoteNumber' | 'account' | 'expiry' | 'amount' | 'status';
@@ -32,6 +33,7 @@ const QuotesList: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [showQuoteComposer, setShowQuoteComposer] = useState(false);
 
   // Sort handler
   const handleSort = (field: SortField) => {
@@ -323,8 +325,8 @@ const QuotesList: React.FC = () => {
             <Download size={14} /> Export CSV
           </button>
           <button
-            onClick={() => openModal('quotes')}
-            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg shadow-violet-500/20"
+            onClick={() => setShowQuoteComposer(true)}
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/20"
           >
             <Plus size={14} /> New Quote
           </button>
@@ -809,6 +811,13 @@ const QuotesList: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Quote Composer Modal */}
+      <QuoteComposer
+        isOpen={showQuoteComposer}
+        onClose={() => setShowQuoteComposer(false)}
+        mode="create"
+      />
     </div>
   );
 };

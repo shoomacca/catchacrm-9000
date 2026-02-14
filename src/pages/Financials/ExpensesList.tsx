@@ -7,6 +7,7 @@ import {
   ArrowUp, ArrowDown, ArrowUpDown, Upload, BarChart3
 } from 'lucide-react';
 import { Expense } from '../../types';
+import { ExpenseComposer } from '../../components/ExpenseComposer';
 
 type FilterStatus = 'all' | 'pending' | 'paid';
 type FilterCategory = 'all' | 'Materials' | 'Fuel' | 'Subbies' | 'Rent' | 'Other';
@@ -33,6 +34,7 @@ const ExpensesList: React.FC = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [showCategoryChart, setShowCategoryChart] = useState(false);
+  const [showExpenseComposer, setShowExpenseComposer] = useState(false);
 
   // Filter and sort expenses
   const filteredExpenses = useMemo(() => {
@@ -300,8 +302,8 @@ const ExpensesList: React.FC = () => {
             <BarChart3 size={14} /> {showCategoryChart ? 'Hide' : 'Show'} Chart
           </button>
           <button
-            onClick={() => openModal('expenses')}
-            className="flex items-center gap-2 px-5 py-3 bg-amber-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-500/20"
+            onClick={() => setShowExpenseComposer(true)}
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:from-orange-700 hover:to-red-700 transition-all shadow-lg shadow-orange-500/20"
           >
             <Plus size={14} /> New Expense
           </button>
@@ -787,6 +789,13 @@ const ExpensesList: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Expense Composer Modal */}
+      <ExpenseComposer
+        isOpen={showExpenseComposer}
+        onClose={() => setShowExpenseComposer(false)}
+        mode="create"
+      />
     </div>
   );
 };
