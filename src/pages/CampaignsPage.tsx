@@ -8,6 +8,7 @@ import {
   CheckCircle2, XCircle, Clock, Percent, AlertTriangle, Download
 } from 'lucide-react';
 import { exportCampaigns } from '../utils/csvExport';
+import { CampaignComposer } from '../components/CampaignComposer';
 
 type ViewMode = 'cards' | 'list';
 type TypeFilter = 'all' | 'email' | 'social' | 'search' | 'event' | 'referral';
@@ -21,6 +22,7 @@ const CampaignsPage: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sortBy, setSortBy] = useState<'roi' | 'budget' | 'date' | 'name'>('date');
+  const [showCampaignComposer, setShowCampaignComposer] = useState(false);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -162,8 +164,8 @@ const CampaignsPage: React.FC = () => {
             <Download size={14} /> Export
           </button>
           <button
-            onClick={() => openModal('campaigns')}
-            className="bg-violet-600 hover:bg-violet-700 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-violet-500/20 active:scale-95 transition-all flex items-center gap-2"
+            onClick={() => setShowCampaignComposer(true)}
+            className="bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-pink-500/20 active:scale-95 transition-all flex items-center gap-2"
           >
             <Plus size={16} /> New Campaign
           </button>
@@ -404,13 +406,20 @@ const CampaignsPage: React.FC = () => {
               : 'Create your first campaign to get started'}
           </p>
           <button
-            onClick={() => openModal('campaigns')}
-            className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-violet-500/20 transition-all"
+            onClick={() => setShowCampaignComposer(true)}
+            className="bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-pink-500/20 transition-all"
           >
             Create Campaign
           </button>
         </div>
       )}
+
+      {/* Campaign Composer Modal */}
+      <CampaignComposer
+        isOpen={showCampaignComposer}
+        onClose={() => setShowCampaignComposer(false)}
+        mode="create"
+      />
     </div>
   );
 };
