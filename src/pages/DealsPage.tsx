@@ -15,7 +15,7 @@ type ViewMode = 'pipeline' | 'cards' | 'list';
 
 const DealsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { deals, accounts, contacts, users, settings, openModal, upsertRecord, searchQuery, setSearchQuery } = useCRM();
+  const { deals, accounts, contacts, users, settings, upsertRecord, searchQuery, setSearchQuery } = useCRM();
 
   const [viewMode, setViewMode] = useState<ViewMode>('pipeline');
   const [draggedDeal, setDraggedDeal] = useState<string | null>(null);

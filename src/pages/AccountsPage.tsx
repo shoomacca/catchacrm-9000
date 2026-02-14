@@ -19,7 +19,7 @@ type EngagementLevel = 'champion' | 'engaged' | 'casual' | 'dormant';
 
 const AccountsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { accounts, contacts, deals, leads, invoices, users, settings, openModal, searchQuery, setSearchQuery } = useCRM();
+  const { accounts, contacts, deals, leads, invoices, users, settings, searchQuery, setSearchQuery } = useCRM();
 
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [engagementFilter, setEngagementFilter] = useState<EngagementLevel | 'all'>('all');

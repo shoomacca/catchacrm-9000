@@ -7,6 +7,7 @@ import {
   User, Package, TrendingDown, CreditCard
 } from 'lucide-react';
 import { Expense } from '../../types';
+import { ExpenseComposer } from '../../components/ExpenseComposer';
 
 type FilterStatus = 'all' | 'pending' | 'paid' | 'overdue';
 type SortField = 'date' | 'vendor' | 'amount';
@@ -17,11 +18,13 @@ const PurchaseLedger: React.FC = () => {
     expenses,
     accounts,
     users,
-    openModal,
     deleteRecord,
     updateRecord,
     settings
   } = useCRM();
+
+  const [showExpenseComposer, setShowExpenseComposer] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<any>(null);
 
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -648,6 +651,17 @@ const PurchaseLedger: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Expense Composer Modal */}
+      <ExpenseComposer
+        isOpen={showExpenseComposer}
+        onClose={() => {
+          setShowExpenseComposer(false);
+          setEditingExpense(null);
+        }}
+        initialData={editingExpense || undefined}
+        mode={editingExpense ? 'edit' : 'create'}
+      />
     </div>
   );
 };

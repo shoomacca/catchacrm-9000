@@ -15,15 +15,16 @@ type FilterStatus = 'all' | 'scheduled' | 'inprogress' | 'completed' | 'cancelle
 
 const JobsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { jobs, openModal } = useCRM();
+  const { jobs } = useCRM();
 
+  const [showJobComposer, setShowJobComposer] = useState(false);
+  const [editingJob, setEditingJob] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
-  const [showJobComposer, setShowJobComposer] = useState(false);
 
   // Calculate summary stats
   const stats = useMemo(() => {
@@ -513,8 +514,12 @@ const JobsPage: React.FC = () => {
       {/* Job Composer Modal */}
       <JobComposer
         isOpen={showJobComposer}
-        onClose={() => setShowJobComposer(false)}
-        mode="create"
+        onClose={() => {
+          setShowJobComposer(false);
+          setEditingJob(null);
+        }}
+        initialData={editingJob || undefined}
+        mode={editingJob ? 'edit' : 'create'}
       />
     </div>
   );

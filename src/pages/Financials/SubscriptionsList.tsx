@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useCRM } from '../../context/CRMContext';
 import { RefreshCcw, Plus, Calendar, DollarSign, Building2, Clock, CheckCircle, Pause, X, Search, TrendingUp, AlertTriangle, LayoutGrid, List, ChevronRight } from 'lucide-react';
+import { SubscriptionComposer } from '../../components/SubscriptionComposer';
 
 type StatusFilter = 'all' | 'Active' | 'Paused' | 'Cancelled';
 type CycleFilter = 'all' | 'monthly' | 'yearly' | 'weekly';
@@ -8,7 +9,9 @@ type ViewMode = 'grid' | 'list';
 type DueFilter = 'all' | 'due-soon';
 
 const SubscriptionsList: React.FC = () => {
-  const { subscriptions, accounts, openModal, searchQuery, setSearchQuery } = useCRM();
+  const { subscriptions, accounts, searchQuery, setSearchQuery } = useCRM();
+  const [showSubscriptionComposer, setShowSubscriptionComposer] = useState(false);
+  const [editingSubscription, setEditingSubscription] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [cycleFilter, setCycleFilter] = useState<CycleFilter>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -131,7 +134,7 @@ const SubscriptionsList: React.FC = () => {
               <List size={14} /> List
             </button>
           </div>
-          <button onClick={() => openModal('subscriptions')} className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
+          <button onClick={() => { setEditingSubscription(null); setShowSubscriptionComposer(true); }} className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2">
             <Plus size={16}/> New Plan
           </button>
         </div>
@@ -285,7 +288,7 @@ const SubscriptionsList: React.FC = () => {
                 return (
                   <tr
                     key={sub.id}
-                    onClick={() => openModal('subscriptions', sub)}
+                    onClick={() => { setEditingSubscription(sub); setShowSubscriptionComposer(true); }}
                     className={`hover:bg-slate-50 transition-all cursor-pointer group ${dueSoon && sub.status === 'Active' ? 'bg-amber-50/30' : ''}`}
                   >
                     <td className="px-8 py-5">
@@ -361,7 +364,7 @@ const SubscriptionsList: React.FC = () => {
             return (
               <div
                 key={sub.id}
-                onClick={() => openModal('subscriptions', sub)}
+                onClick={() => { setEditingSubscription(sub); setShowSubscriptionComposer(true); }}
                 className={`bg-white border rounded-[24px] p-6 hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden ${
                   dueSoon && sub.status === 'Active' ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 hover:border-blue-300'
                 }`}
@@ -440,6 +443,16 @@ const SubscriptionsList: React.FC = () => {
           )}
         </div>
       )}
+      {/* Subscription Composer Modal */}
+      <SubscriptionComposer
+        isOpen={showSubscriptionComposer}
+        onClose={() => {
+          setShowSubscriptionComposer(false);
+          setEditingSubscription(null);
+        }}
+        initialData={editingSubscription || undefined}
+        mode={editingSubscription ? 'edit' : 'create'}
+      />
     </div>
   );
 };

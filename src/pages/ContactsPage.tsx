@@ -17,7 +17,7 @@ type ViewMode = 'grid' | 'list';
 
 const ContactsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { contacts, accounts, deals, leads, settings, openModal, searchQuery, setSearchQuery } = useCRM();
+  const { contacts, accounts, deals, leads, settings, searchQuery, setSearchQuery } = useCRM();
 
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [activityFilter, setActivityFilter] = useState<'all' | 'active' | 'inactive'>('all');

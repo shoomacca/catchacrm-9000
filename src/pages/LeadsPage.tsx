@@ -19,7 +19,7 @@ type LeadTemp = 'hot' | 'warm' | 'cold' | 'all';
 
 const LeadsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { leads, accounts, contacts, campaigns, settings, openModal, searchQuery, setSearchQuery, upsertRecord, updateStatus, deleteRecord, users } = useCRM();
+  const { leads, accounts, contacts, campaigns, settings, searchQuery, setSearchQuery, upsertRecord, updateStatus, deleteRecord, users } = useCRM();
 
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [tempFilter, setTempFilter] = useState<LeadTemp>('all');
