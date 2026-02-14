@@ -21,12 +21,13 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { PurchaseOrderComposer } from '../components/PurchaseOrderComposer';
 
 type SortField = 'poNumber' | 'total' | 'status' | 'createdAt';
 type SortDirection = 'asc' | 'desc';
 
 const PurchaseOrdersPage: React.FC = () => {
-  const { purchaseOrders, accounts, openModal } = useCRM();
+  const { purchaseOrders, accounts } = useCRM();
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,6 +36,8 @@ const PurchaseOrdersPage: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [showPurchaseOrderComposer, setShowPurchaseOrderComposer] = useState(false);
+  const [editingPurchaseOrder, setEditingPurchaseOrder] = useState<any>(null);
 
   // Calculate summary statistics
   const stats = useMemo(() => {
@@ -190,7 +193,7 @@ const PurchaseOrdersPage: React.FC = () => {
             Export
           </button>
           <button
-            onClick={() => openModal('purchaseOrders')}
+            onClick={() => { setEditingPurchaseOrder(null); setShowPurchaseOrderComposer(true); }}
             className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
           >
             <Plus size={16} />
@@ -464,7 +467,7 @@ const PurchaseOrdersPage: React.FC = () => {
             <h3 className="text-2xl font-black text-slate-900 mb-2">No Purchase Orders Found</h3>
             <p className="text-slate-500 mb-6">Create your first purchase order to get started.</p>
             <button
-              onClick={() => openModal('purchaseOrders')}
+              onClick={() => { setEditingPurchaseOrder(null); setShowPurchaseOrderComposer(true); }}
               className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-orange-500/20 active:scale-95 transition-all"
             >
               Create Purchase Order
@@ -492,6 +495,16 @@ const PurchaseOrdersPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      <PurchaseOrderComposer
+        isOpen={showPurchaseOrderComposer}
+        onClose={() => {
+          setShowPurchaseOrderComposer(false);
+          setEditingPurchaseOrder(null);
+        }}
+        initialData={editingPurchaseOrder || undefined}
+        mode={editingPurchaseOrder ? 'edit' : 'create'}
+      />
     </div>
   );
 };

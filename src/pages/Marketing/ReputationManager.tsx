@@ -6,6 +6,7 @@ import {
   TrendingUp, Award, Filter, Search, ExternalLink, ChevronRight,
   Check, X, Clock, Mail, Zap, Plus, Eye, Edit3
 } from 'lucide-react';
+import { AutomationWorkflowComposer } from '../../components/AutomationWorkflowComposer';
 
 type PlatformFilter = 'all' | 'Google' | 'Facebook' | 'Yelp' | 'Trustpilot' | 'Internal';
 type StatusFilter = 'all' | 'New' | 'Replied' | 'Escalated' | 'Ignored';
@@ -13,7 +14,7 @@ type SentimentFilter = 'all' | 'Positive' | 'Neutral' | 'Negative';
 
 const ReputationManager: React.FC = () => {
   const navigate = useNavigate();
-  const { reviews, jobs, contacts, accounts, settings, openModal, upsertRecord } = useCRM();
+  const { reviews, jobs, contacts, accounts, settings, upsertRecord } = useCRM();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
@@ -21,6 +22,8 @@ const ReputationManager: React.FC = () => {
   const [sentimentFilter, setSentimentFilter] = useState<SentimentFilter>('all');
   const [selectedReview, setSelectedReview] = useState<typeof reviews[0] | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [showAutomationWorkflowComposer, setShowAutomationWorkflowComposer] = useState(false);
+  const [editingAutomationWorkflow, setEditingAutomationWorkflow] = useState<any>(null);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -225,7 +228,7 @@ const ReputationManager: React.FC = () => {
           </div>
           <div className="flex flex-col gap-2">
             <button
-              onClick={() => openModal('automationWorkflows')}
+              onClick={() => { setEditingAutomationWorkflow(null); setShowAutomationWorkflowComposer(true); }}
               className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-wider hover:border-slate-300 hover:shadow-md transition-all"
             >
               <Eye size={16} />
@@ -476,6 +479,16 @@ const ReputationManager: React.FC = () => {
           </div>
         </div>
       )}
+
+      <AutomationWorkflowComposer
+        isOpen={showAutomationWorkflowComposer}
+        onClose={() => {
+          setShowAutomationWorkflowComposer(false);
+          setEditingAutomationWorkflow(null);
+        }}
+        initialData={editingAutomationWorkflow || undefined}
+        mode={editingAutomationWorkflow ? 'edit' : 'create'}
+      />
     </div>
   );
 };

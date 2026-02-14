@@ -6,16 +6,19 @@ import {
   ChevronRight, Star, Target, Award, Plus, Search, Filter,
   ExternalLink, Mail, Clock, CheckCircle2, XCircle, AlertCircle
 } from 'lucide-react';
+import { ReferralRewardComposer } from '../../components/ReferralRewardComposer';
 
 type StatusFilter = 'all' | 'Active' | 'Pending Payout' | 'Paid' | 'Cancelled';
 
 const ReferralEngine: React.FC = () => {
   const navigate = useNavigate();
-  const { contacts, accounts, referralRewards, leads, deals, settings, openModal, users } = useCRM();
+  const { contacts, accounts, referralRewards, leads, deals, settings, users } = useCRM();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
+  const [showReferralRewardComposer, setShowReferralRewardComposer] = useState(false);
+  const [editingReferralReward, setEditingReferralReward] = useState<any>(null);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -119,7 +122,7 @@ const ReferralEngine: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => openModal('referralRewards')}
+            onClick={() => { setEditingReferralReward(null); setShowReferralRewardComposer(true); }}
             className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
           >
             <Plus size={16} />
@@ -304,7 +307,7 @@ const ReferralEngine: React.FC = () => {
                   <tr
                     key={reward.id}
                     className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors"
-                    onClick={() => openModal('referralRewards', reward)}
+                    onClick={() => { setEditingReferralReward(reward); setShowReferralRewardComposer(true); }}
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -386,6 +389,16 @@ const ReferralEngine: React.FC = () => {
           </button>
         </div>
       </div>
+
+      <ReferralRewardComposer
+        isOpen={showReferralRewardComposer}
+        onClose={() => {
+          setShowReferralRewardComposer(false);
+          setEditingReferralReward(null);
+        }}
+        initialData={editingReferralReward || undefined}
+        mode={editingReferralReward ? 'edit' : 'create'}
+      />
     </div>
   );
 };
