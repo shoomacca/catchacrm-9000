@@ -5,19 +5,22 @@ import {
   ArrowUp, ArrowDown, ArrowUpDown, Map
 } from 'lucide-react';
 import { useCRM } from '../context/CRMContext';
+import { ZoneComposer } from '../components/ZoneComposer';
 
 type SortField = 'name' | 'jobCount';
 type SortDirection = 'asc' | 'desc';
 
 const ZonesPage: React.FC = () => {
   const navigate = useNavigate();
-  const { zones, jobs, openModal } = useCRM();
+  const { zones, jobs } = useCRM();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedZones, setSelectedZones] = useState<Set<string>>(new Set());
+  const [showZoneComposer, setShowZoneComposer] = useState(false);
+  const [editingZone, setEditingZone] = useState<any>(null);
 
   // Calculate summary stats
   const stats = useMemo(() => {
@@ -107,8 +110,11 @@ const ZonesPage: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => openModal('zones')}
-            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
+            onClick={() => {
+              setEditingZone(null);
+              setShowZoneComposer(true);
+            }}
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/30 hover:-translate-y-0.5 transition-all"
           >
             <Plus size={16} />
             Add Zone
@@ -285,7 +291,8 @@ const ZonesPage: React.FC = () => {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  openModal('zones', zone);
+                                  setEditingZone(zone);
+                                  setShowZoneComposer(true);
                                 }}
                                 className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all"
                               >
@@ -326,6 +333,17 @@ const ZonesPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Zone Composer Modal */}
+      <ZoneComposer
+        isOpen={showZoneComposer}
+        onClose={() => {
+          setShowZoneComposer(false);
+          setEditingZone(null);
+        }}
+        initialData={editingZone || undefined}
+        mode={editingZone ? 'edit' : 'create'}
+      />
     </div>
   );
 };

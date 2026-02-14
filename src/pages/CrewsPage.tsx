@@ -6,6 +6,7 @@ import {
   Phone, Mail, MapPin
 } from 'lucide-react';
 import { useCRM } from '../context/CRMContext';
+import { CrewComposer } from '../components/CrewComposer';
 
 type SortField = 'name' | 'role' | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -13,7 +14,7 @@ type FilterStatus = 'all' | 'active' | 'inactive';
 
 const CrewsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { crews, openModal } = useCRM();
+  const { crews } = useCRM();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
@@ -21,6 +22,8 @@ const CrewsPage: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedCrews, setSelectedCrews] = useState<Set<string>>(new Set());
+  const [showCrewComposer, setShowCrewComposer] = useState(false);
+  const [editingCrew, setEditingCrew] = useState<any>(null);
 
   // Calculate summary stats
   const stats = useMemo(() => {
@@ -198,8 +201,11 @@ const CrewsPage: React.FC = () => {
             Export {selectedCrews.size > 0 ? `(${selectedCrews.size})` : ''}
           </button>
           <button
-            onClick={() => openModal('crews')}
-            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
+            onClick={() => {
+              setEditingCrew(null);
+              setShowCrewComposer(true);
+            }}
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 transition-all"
           >
             <Plus size={16} />
             Add Crew
@@ -444,7 +450,8 @@ const CrewsPage: React.FC = () => {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  openModal('crews', crew);
+                                  setEditingCrew(crew);
+                                  setShowCrewComposer(true);
                                 }}
                                 className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all"
                               >
@@ -479,6 +486,17 @@ const CrewsPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Crew Composer Modal */}
+      <CrewComposer
+        isOpen={showCrewComposer}
+        onClose={() => {
+          setShowCrewComposer(false);
+          setEditingCrew(null);
+        }}
+        initialData={editingCrew || undefined}
+        mode={editingCrew ? 'edit' : 'create'}
+      />
     </div>
   );
 };

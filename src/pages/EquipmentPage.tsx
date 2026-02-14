@@ -6,6 +6,7 @@ import {
   Clock, DollarSign
 } from 'lucide-react';
 import { useCRM } from '../context/CRMContext';
+import { EquipmentComposer } from '../components/EquipmentComposer';
 
 type SortField = 'name' | 'condition' | 'lastService';
 type SortDirection = 'asc' | 'desc';
@@ -13,7 +14,7 @@ type FilterCondition = 'all' | 'excellent' | 'good' | 'needsmaintenance';
 
 const EquipmentPage: React.FC = () => {
   const navigate = useNavigate();
-  const { equipment, openModal } = useCRM();
+  const { equipment } = useCRM();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCondition, setFilterCondition] = useState<FilterCondition>('all');
@@ -21,6 +22,8 @@ const EquipmentPage: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedEquipment, setSelectedEquipment] = useState<Set<string>>(new Set());
+  const [showEquipmentComposer, setShowEquipmentComposer] = useState(false);
+  const [editingEquipment, setEditingEquipment] = useState<any>(null);
 
   // Calculate summary stats
   const stats = useMemo(() => {
@@ -185,8 +188,11 @@ const EquipmentPage: React.FC = () => {
             Export {selectedEquipment.size > 0 ? `(${selectedEquipment.size})` : ''}
           </button>
           <button
-            onClick={() => openModal('equipment')}
-            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
+            onClick={() => {
+              setEditingEquipment(null);
+              setShowEquipmentComposer(true);
+            }}
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-0.5 transition-all"
           >
             <Plus size={16} />
             Add Equipment
@@ -439,7 +445,8 @@ const EquipmentPage: React.FC = () => {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  openModal('equipment', equip);
+                                  setEditingEquipment(equip);
+                                  setShowEquipmentComposer(true);
                                 }}
                                 className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-[20px] text-xs font-bold uppercase tracking-wide border border-slate-200 active:scale-95 transition-all"
                               >
@@ -494,6 +501,17 @@ const EquipmentPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Equipment Composer Modal */}
+      <EquipmentComposer
+        isOpen={showEquipmentComposer}
+        onClose={() => {
+          setShowEquipmentComposer(false);
+          setEditingEquipment(null);
+        }}
+        initialData={editingEquipment || undefined}
+        mode={editingEquipment ? 'edit' : 'create'}
+      />
     </div>
   );
 };
