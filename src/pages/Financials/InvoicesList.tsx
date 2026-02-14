@@ -7,6 +7,7 @@ import {
   Trash, Mail
 } from 'lucide-react';
 import { Invoice } from '../../types';
+import { InvoiceComposer } from '../../components/InvoiceComposer';
 
 type FilterStatus = 'all' | 'draft' | 'sent' | 'paid' | 'overdue';
 type SortField = 'date' | 'invoiceNumber' | 'account' | 'dueDate' | 'amount' | 'status';
@@ -30,6 +31,7 @@ const InvoicesList: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [showInvoiceComposer, setShowInvoiceComposer] = useState(false);
 
   // Sort handler
   const handleSort = (field: SortField) => {
@@ -268,8 +270,8 @@ const InvoicesList: React.FC = () => {
             Export
           </button>
           <button
-            onClick={() => openModal('invoices')}
-            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
+            onClick={() => setShowInvoiceComposer(true)}
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-green-500/20 hover:shadow-xl hover:shadow-green-500/30 hover:-translate-y-0.5 transition-all"
           >
             <Plus size={16} />
             Add Invoice
@@ -721,6 +723,13 @@ const InvoicesList: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Invoice Composer Modal */}
+      <InvoiceComposer
+        isOpen={showInvoiceComposer}
+        onClose={() => setShowInvoiceComposer(false)}
+        mode="create"
+      />
     </div>
   );
 };
