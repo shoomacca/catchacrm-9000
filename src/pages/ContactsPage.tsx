@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
 import { exportContacts } from '../utils/csvExport';
+import { EmailComposer } from '../components/EmailComposer';
 
 type ViewMode = 'grid' | 'list';
 
@@ -21,6 +22,8 @@ const ContactsPage: React.FC = () => {
   const [activityFilter, setActivityFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'activity' | 'name' | 'date'>('activity');
+  const [showEmailComposer, setShowEmailComposer] = useState(false);
+  const [selectedContactForEmail, setSelectedContactForEmail] = useState<any>(null);
 
   // Get unique roles
   const roles = useMemo(() => {
@@ -501,7 +504,20 @@ const ContactsPage: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <ChevronRight size={16} className="text-slate-300" />
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedContactForEmail(contact);
+                            setShowEmailComposer(true);
+                          }}
+                          className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                          title="Send Email"
+                        >
+                          <Mail size={14} />
+                        </button>
+                        <ChevronRight size={16} className="text-slate-300" />
+                      </div>
                     </td>
                   </tr>
                 );
@@ -517,6 +533,21 @@ const ContactsPage: React.FC = () => {
             />
           )}
         </div>
+      )}
+
+      {/* Email Composer Modal */}
+      {showEmailComposer && selectedContactForEmail && (
+        <EmailComposer
+          isOpen={showEmailComposer}
+          onClose={() => {
+            setShowEmailComposer(false);
+            setSelectedContactForEmail(null);
+          }}
+          recipientType="contacts"
+          recipientId={selectedContactForEmail.id}
+          recipientName={selectedContactForEmail.name}
+          recipientEmail={selectedContactForEmail.email}
+        />
       )}
     </div>
   );

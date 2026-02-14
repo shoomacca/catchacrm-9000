@@ -73,6 +73,7 @@ import RecordModal from './components/RecordModal';
 import DuplicateWarningModal from './components/DuplicateWarningModal';
 import DebugPanel from './components/DebugPanel';
 import { ResetDemoButton, DataSourceIndicator } from './components/ResetDemoButton';
+import { EmailComposer } from './components/EmailComposer';
 import { CRMProvider, useCRM } from './context/CRMContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -557,6 +558,7 @@ const Header = ({ showDebug, setShowDebug }: { showDebug: boolean, setShowDebug:
 const AppContent: React.FC = () => {
   const [showDebug, setShowDebug] = useState(false);
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+  const [showGlobalEmailComposer, setShowGlobalEmailComposer] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
   const location = useLocation();
   const { settings, activeBlueprint, duplicateModal, handleCreateAnyway, handleViewDuplicate, closeDuplicateModal } = useCRM(); // Access settings for feature flag gates
@@ -918,6 +920,30 @@ const AppContent: React.FC = () => {
             {showDebug && <DebugPanel onClose={() => setShowDebug(false)} />}
           </section>
         </main>
+
+        {/* Global Email Compose FAB */}
+        <button
+          onClick={() => setShowGlobalEmailComposer(true)}
+          className="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full flex items-center justify-center shadow-2xl hover:shadow-purple-500/50 hover:scale-110 transition-all z-50 group"
+          title="Compose Email"
+        >
+          <Mail size={24} />
+          <span className="absolute -top-10 right-0 bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            Compose Email
+          </span>
+        </button>
+
+        {/* Global Email Composer Modal */}
+        {showGlobalEmailComposer && (
+          <EmailComposer
+            isOpen={showGlobalEmailComposer}
+            onClose={() => setShowGlobalEmailComposer(false)}
+            recipientType="contacts"
+            recipientId=""
+            recipientName=""
+            recipientEmail=""
+          />
+        )}
       </div>
     </>
     </NavContext.Provider>

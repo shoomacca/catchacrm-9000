@@ -11,6 +11,7 @@ import {
 import EmptyState from '../components/EmptyState';
 import { exportLeads, triggerCSVImport } from '../utils/csvExport';
 import BulkActionsBar from '../components/BulkActionsBar';
+import { EmailComposer } from '../components/EmailComposer';
 
 type ViewMode = 'cards' | 'list';
 type LeadTemp = 'hot' | 'warm' | 'cold' | 'all';
@@ -25,6 +26,8 @@ const LeadsPage: React.FC = () => {
   const [sourceFilter, setSourceFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'score' | 'date' | 'name' | 'value'>('score');
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
+  const [showEmailComposer, setShowEmailComposer] = useState(false);
+  const [selectedLeadForEmail, setSelectedLeadForEmail] = useState<any>(null);
 
   // Get unique sources from leads
   const sources = useMemo(() => {
@@ -680,7 +683,20 @@ const LeadsPage: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <ChevronRight size={16} className="text-slate-300" />
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedLeadForEmail(lead);
+                            setShowEmailComposer(true);
+                          }}
+                          className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                          title="Send Email"
+                        >
+                          <Mail size={14} />
+                        </button>
+                        <ChevronRight size={16} className="text-slate-300" />
+                      </div>
                     </td>
                   </tr>
                 );
@@ -696,6 +712,21 @@ const LeadsPage: React.FC = () => {
             />
           )}
         </div>
+      )}
+
+      {/* Email Composer Modal */}
+      {showEmailComposer && selectedLeadForEmail && (
+        <EmailComposer
+          isOpen={showEmailComposer}
+          onClose={() => {
+            setShowEmailComposer(false);
+            setSelectedLeadForEmail(null);
+          }}
+          recipientType="leads"
+          recipientId={selectedLeadForEmail.id}
+          recipientName={selectedLeadForEmail.name}
+          recipientEmail={selectedLeadForEmail.email}
+        />
       )}
 
       {/* Bulk Actions Bar */}

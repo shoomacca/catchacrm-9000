@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
 import { exportAccounts } from '../utils/csvExport';
+import { EmailComposer } from '../components/EmailComposer';
 
 type ViewMode = 'grid' | 'list';
 type EngagementLevel = 'champion' | 'engaged' | 'casual' | 'dormant';
@@ -23,6 +24,8 @@ const AccountsPage: React.FC = () => {
   const [engagementFilter, setEngagementFilter] = useState<EngagementLevel | 'all'>('all');
   const [industryFilter, setIndustryFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'revenue' | 'engagement' | 'name' | 'deals'>('revenue');
+  const [showEmailComposer, setShowEmailComposer] = useState(false);
+  const [selectedAccountForEmail, setSelectedAccountForEmail] = useState<any>(null);
 
   // Get unique industries
   const industries = useMemo(() => {
@@ -625,7 +628,20 @@ const AccountsPage: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <ChevronRight size={16} className="text-slate-300" />
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedAccountForEmail(account);
+                            setShowEmailComposer(true);
+                          }}
+                          className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                          title="Send Email"
+                        >
+                          <Mail size={14} />
+                        </button>
+                        <ChevronRight size={16} className="text-slate-300" />
+                      </div>
                     </td>
                   </tr>
                 );
@@ -641,6 +657,21 @@ const AccountsPage: React.FC = () => {
             />
           )}
         </div>
+      )}
+
+      {/* Email Composer Modal */}
+      {showEmailComposer && selectedAccountForEmail && (
+        <EmailComposer
+          isOpen={showEmailComposer}
+          onClose={() => {
+            setShowEmailComposer(false);
+            setSelectedAccountForEmail(null);
+          }}
+          recipientType="accounts"
+          recipientId={selectedAccountForEmail.id}
+          recipientName={selectedAccountForEmail.name}
+          recipientEmail={selectedAccountForEmail.email}
+        />
       )}
     </div>
   );
