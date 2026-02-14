@@ -3,7 +3,7 @@ import { useCRM } from '../../context/CRMContext';
 import {
   DollarSign, RefreshCcw, Clock, ArrowUpRight, FileText,
   TrendingUp, CreditCard, AlertCircle, Building2, Wallet,
-  Receipt, ArrowRightLeft, Plus, ChevronDown, Calendar, Mail, User
+  Receipt, ArrowRightLeft, Plus, ChevronDown, Calendar, Mail, User, Download
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -102,6 +102,33 @@ const FinancialHub: React.FC = () => {
     const totalExpenses = recentExpenses.reduce((sum, e) => sum + e.amount, 0);
     const pendingExpenses = expenses.filter(e => e.status === 'Pending').length;
 
+    // GST/BAS calculations
+    const now = new Date();
+    const currentQuarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+    const currentYearStart = new Date(now.getFullYear(), 0, 1);
+
+    // GST collected from paid invoices
+    const paidInvoicesThisQuarter = paidInvoices.filter(i => new Date(i.paidAt!) >= currentQuarterStart);
+    const paidInvoicesThisYear = paidInvoices.filter(i => new Date(i.paidAt!) >= currentYearStart);
+    const gstCollectedQuarter = paidInvoicesThisQuarter.reduce((sum, i) => sum + (i.taxTotal || 0), 0);
+    const gstCollectedYear = paidInvoicesThisYear.reduce((sum, i) => sum + (i.taxTotal || 0), 0);
+
+    // GST from outstanding invoices (Sent/Overdue)
+    const outstandingInvoices = invoices.filter(i => i.status === 'Sent' || i.status === 'Overdue');
+    const gstOutstanding = outstandingInvoices.reduce((sum, i) => sum + (i.taxTotal || 0), 0);
+    const totalOutstanding = outstandingInvoices.reduce((sum, i) => sum + i.total, 0);
+
+    // GST paid on expenses (this would need expense tax tracking)
+    // For now, assuming expenses include GST at 10%
+    const expensesThisQuarter = expenses.filter(e => new Date(e.date) >= currentQuarterStart);
+    const expensesThisYear = expenses.filter(e => new Date(e.date) >= currentYearStart);
+    const gstPaidQuarter = expensesThisQuarter.reduce((sum, e) => sum + (e.amount * 0.10), 0);
+    const gstPaidYear = expensesThisYear.reduce((sum, e) => sum + (e.amount * 0.10), 0);
+
+    // Net GST payable (collected - paid)
+    const netGstQuarter = gstCollectedQuarter - gstPaidQuarter;
+    const netGstYear = gstCollectedYear - gstPaidYear;
+
     return {
       invoices: {
         paid: paidInvoices.length,
@@ -132,6 +159,16 @@ const FinancialHub: React.FC = () => {
         count: recentExpenses.length,
         total: totalExpenses,
         pending: pendingExpenses
+      },
+      gst: {
+        collectedQuarter: gstCollectedQuarter,
+        collectedYear: gstCollectedYear,
+        paidQuarter: gstPaidQuarter,
+        paidYear: gstPaidYear,
+        netQuarter: netGstQuarter,
+        netYear: netGstYear,
+        outstanding: gstOutstanding,
+        outstandingTotal: totalOutstanding
       }
     };
   }, [invoices, quotes, subscriptions, bankTransactions, expenses]);
@@ -238,6 +275,152 @@ const FinancialHub: React.FC = () => {
           <p className="text-3xl font-black text-slate-900">${enhancedFinancialStats.expenses.total.toLocaleString()}</p>
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">
             {enhancedFinancialStats.expenses.count} Transactions • {enhancedFinancialStats.expenses.pending} Pending
+          </p>
+        </div>
+      </div>
+
+      {/* GST/BAS Summary */}
+      <div className="bg-white border border-slate-200 rounded-[35px] p-8 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center">
+              <Receipt size={24} className="text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-slate-900">GST/BAS Summary</h2>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+                Goods & Services Tax Reporting
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              // Export GST data to CSV
+              const now = new Date();
+              const quarter = Math.floor(now.getMonth() / 3) + 1;
+              const year = now.getFullYear();
+
+              const csvContent = [
+                ['GST/BAS Report', `Q${quarter} ${year}`, '', ''],
+                ['', '', '', ''],
+                ['Category', 'This Quarter', 'This Year', ''],
+                ['GST Collected on Sales', `$${enhancedFinancialStats.gst.collectedQuarter.toFixed(2)}`, `$${enhancedFinancialStats.gst.collectedYear.toFixed(2)}`, ''],
+                ['GST Paid on Purchases', `$${enhancedFinancialStats.gst.paidQuarter.toFixed(2)}`, `$${enhancedFinancialStats.gst.paidYear.toFixed(2)}`, ''],
+                ['Net GST Payable/Refundable', `$${enhancedFinancialStats.gst.netQuarter.toFixed(2)}`, `$${enhancedFinancialStats.gst.netYear.toFixed(2)}`, ''],
+                ['', '', '', ''],
+                ['Outstanding Invoices', '', '', ''],
+                ['Total Outstanding (incl. GST)', `$${enhancedFinancialStats.gst.outstandingTotal.toFixed(2)}`, '', ''],
+                ['GST in Outstanding', `$${enhancedFinancialStats.gst.outstanding.toFixed(2)}`, '', ''],
+              ].map(row => row.join(',')).join('\n');
+
+              const blob = new Blob([csvContent], { type: 'text/csv' });
+              const url = window.URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = `GST-BAS-Report-Q${quarter}-${year}.csv`;
+              link.click();
+              window.URL.revokeObjectURL(url);
+            }}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:from-emerald-700 hover:to-teal-700 transition-all"
+          >
+            <Download size={16} /> Export to CSV
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* This Quarter */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
+              This Quarter (Q{Math.floor(new Date().getMonth() / 3) + 1})
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">GST Collected:</span>
+                <span className="text-lg font-black text-emerald-600">
+                  +${enhancedFinancialStats.gst.collectedQuarter.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">GST Paid:</span>
+                <span className="text-lg font-black text-rose-600">
+                  -${enhancedFinancialStats.gst.paidQuarter.toLocaleString()}
+                </span>
+              </div>
+              <div className="pt-3 border-t border-blue-300 flex justify-between items-center">
+                <span className="text-sm font-bold text-slate-900">Net GST:</span>
+                <span className={`text-xl font-black ${enhancedFinancialStats.gst.netQuarter >= 0 ? 'text-blue-600' : 'text-amber-600'}`}>
+                  ${Math.abs(enhancedFinancialStats.gst.netQuarter).toLocaleString()}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-2">
+                {enhancedFinancialStats.gst.netQuarter >= 0 ? 'Payable to ATO' : 'Refund from ATO'}
+              </p>
+            </div>
+          </div>
+
+          {/* This Year */}
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-6">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
+              This Year ({new Date().getFullYear()})
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">GST Collected:</span>
+                <span className="text-lg font-black text-emerald-600">
+                  +${enhancedFinancialStats.gst.collectedYear.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">GST Paid:</span>
+                <span className="text-lg font-black text-rose-600">
+                  -${enhancedFinancialStats.gst.paidYear.toLocaleString()}
+                </span>
+              </div>
+              <div className="pt-3 border-t border-emerald-300 flex justify-between items-center">
+                <span className="text-sm font-bold text-slate-900">Net GST:</span>
+                <span className={`text-xl font-black ${enhancedFinancialStats.gst.netYear >= 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                  ${Math.abs(enhancedFinancialStats.gst.netYear).toLocaleString()}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-2">
+                Year-to-date GST position
+              </p>
+            </div>
+          </div>
+
+          {/* Outstanding GST */}
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
+              Outstanding Invoices
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">Total Outstanding:</span>
+                <span className="text-lg font-black text-slate-900">
+                  ${enhancedFinancialStats.gst.outstandingTotal.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">GST Portion:</span>
+                <span className="text-lg font-black text-amber-600">
+                  ${enhancedFinancialStats.gst.outstanding.toLocaleString()}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-4">
+                GST will be reported when invoices are paid
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* BAS Instructions */}
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-2xl p-6">
+          <h4 className="text-xs font-black text-blue-900 uppercase tracking-widest mb-2">
+            📊 BAS Lodgment Guide
+          </h4>
+          <p className="text-sm text-blue-800">
+            Export the CSV report and use the Net GST figures for your Business Activity Statement (BAS) lodgment with the ATO.
+            The quarterly figure should match <strong>Label G1</strong> (Total sales including GST) and <strong>Label 1B</strong> (Net GST) on your BAS form.
           </p>
         </div>
       </div>
