@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCRM } from '../../context/CRMContext';
 import { FileText, Building2, Calendar, ChevronLeft, Receipt, Edit3, Trash2, ExternalLink } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { getCurrentOrgId } from '../../services/supabaseData';
 
 const QuoteDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,31 +38,67 @@ const QuoteDetail: React.FC = () => {
     );
   }
 
-  const handleConvertToInvoice = () => {
-    const invoice: any = {
-      invoiceNumber: `INV-${Date.now()}`,
-      accountId: quote.accountId,
-      dealId: quote.dealId || '',
-      quoteId: quote.id,
-      status: 'Draft',
-      paymentStatus: 'unpaid',
-      issueDate: new Date().toISOString().split('T')[0],
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      lineItems: quote.lineItems,
-      subtotal: quote.subtotal,
-      taxTotal: quote.taxTotal,
-      total: quote.total,
-      notes: `Converted from quote ${quote.quoteNumber}. ${quote.notes || ''}`,
-      terms: quote.terms || 'Payment due within 30 days.'
-    };
+  const handleConvertToInvoice = async () => {
+    try {
+      // Get organization settings for auto-numbering
+      const orgId = await getCurrentOrgId();
+      const { data: org } = await supabase
+        .from('organizations')
+        .select('invoice_prefix, invoice_next_number, default_payment_terms')
+        .eq('id', orgId)
+        .single();
 
-    upsertRecord('invoices', invoice);
+      const prefix = org?.invoice_prefix || 'INV';
+      const nextNumber = org?.invoice_next_number || 1;
+      const paymentTerms = org?.default_payment_terms || 30;
 
-    // Update quote status
-    upsertRecord('quotes', { ...quote, status: 'Accepted' });
+      const invoiceNumber = `${prefix}-${String(nextNumber).padStart(4, '0')}`;
+      const issueDate = new Date().toISOString().split('T')[0];
+      const dueDate = new Date(Date.now() + paymentTerms * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-    setShowConvertModal(false);
-    navigate('/financials/ledger/income');
+      const invoice: any = {
+        invoiceNumber,
+        accountId: quote.accountId,
+        dealId: quote.dealId || '',
+        quoteId: quote.id,
+        status: 'Draft',
+        paymentStatus: 'unpaid',
+        issueDate,
+        invoiceDate: issueDate,
+        dueDate,
+        lineItems: quote.lineItems,
+        subtotal: quote.subtotal,
+        taxTotal: quote.taxTotal,
+        total: quote.total,
+        notes: quote.notes || '',
+        terms: quote.terms || `Payment due within ${paymentTerms} days.`
+      };
+
+      // Create invoice and get the created record
+      const { data: createdInvoice, error: createError } = await supabase
+        .from('invoices')
+        .insert(invoice)
+        .select()
+        .single();
+
+      if (createError || !createdInvoice) {
+        throw new Error('Failed to create invoice');
+      }
+
+      // Increment invoice number
+      await supabase
+        .from('organizations')
+        .update({ invoice_next_number: nextNumber + 1 })
+        .eq('id', orgId);
+
+      setShowConvertModal(false);
+
+      // Navigate to the created invoice detail page
+      navigate(`/financials/invoices/${createdInvoice.id}`);
+    } catch (error) {
+      console.error('Error converting quote to invoice:', error);
+      alert('Failed to convert quote to invoice. Please try again.');
+    }
   };
 
   const handleDelete = () => {
@@ -101,7 +139,7 @@ const QuoteDetail: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {quote.status !== 'Accepted' && (
+          {(quote.status === 'Accepted' || quote.status === 'Sent') && (
             <button
               onClick={() => setShowConvertModal(true)}
               className="px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-violet-500/20 hover:from-violet-700 hover:to-purple-700 transition-all flex items-center gap-2"
