@@ -18,7 +18,7 @@ const QuotesList: React.FC = () => {
     quotes,
     accounts,
     invoices,
-    openModal,
+    
     deleteRecord,
     updateRecord,
     addRecord,
@@ -34,6 +34,7 @@ const QuotesList: React.FC = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [showQuoteComposer, setShowQuoteComposer] = useState(false);
+  const [editingQuote, setEditingQuote] = useState<any>(null);
 
   // Sort handler
   const handleSort = (field: SortField) => {
@@ -600,7 +601,7 @@ const QuotesList: React.FC = () => {
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={e => { e.stopPropagation(); openModal('quotes', quote); }}
+                            onClick={e => { e.stopPropagation(); setEditingQuote(quote); setShowQuoteComposer(true); }}
                             className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-all"
                             title="Edit"
                           >
@@ -758,7 +759,7 @@ const QuotesList: React.FC = () => {
                                   </button>
                                 )}
                                 <button
-                                  onClick={() => openModal('quotes', quote)}
+                                  onClick={() => { setEditingQuote(quote); setShowQuoteComposer(true); }}
                                   className="flex items-center gap-2 px-5 py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
                                 >
                                   <Edit2 size={14} /> Edit
@@ -815,8 +816,12 @@ const QuotesList: React.FC = () => {
       {/* Quote Composer Modal */}
       <QuoteComposer
         isOpen={showQuoteComposer}
-        onClose={() => setShowQuoteComposer(false)}
-        mode="create"
+        onClose={() => {
+          setShowQuoteComposer(false);
+          setEditingQuote(null);
+        }}
+        initialData={editingQuote || undefined}
+        mode={editingQuote ? 'edit' : 'create'}
       />
     </div>
   );

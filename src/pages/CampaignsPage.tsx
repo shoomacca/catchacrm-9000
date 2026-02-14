@@ -16,13 +16,14 @@ type StatusFilter = 'all' | 'Planning' | 'Active' | 'Paused' | 'Completed' | 'Ca
 
 const CampaignsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { campaigns, leads, openModal, searchQuery, setSearchQuery } = useCRM();
+  const { campaigns, leads, searchQuery, setSearchQuery } = useCRM();
 
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sortBy, setSortBy] = useState<'roi' | 'budget' | 'date' | 'name'>('date');
   const [showCampaignComposer, setShowCampaignComposer] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<any>(null);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -417,8 +418,12 @@ const CampaignsPage: React.FC = () => {
       {/* Campaign Composer Modal */}
       <CampaignComposer
         isOpen={showCampaignComposer}
-        onClose={() => setShowCampaignComposer(false)}
-        mode="create"
+        onClose={() => {
+          setShowCampaignComposer(false);
+          setEditingCampaign(null);
+        }}
+        initialData={editingCampaign || undefined}
+        mode={editingCampaign ? 'edit' : 'create'}
       />
     </div>
   );

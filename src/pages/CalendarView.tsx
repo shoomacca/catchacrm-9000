@@ -17,7 +17,7 @@ type EventFilter = 'all' | 'meetings' | 'tasks' | 'personal' | 'followups' | 'ti
 
 const CalendarView: React.FC = () => {
   const navigate = useNavigate();
-  const { tasks, deals, tickets, calendarEvents, communications, leads, contacts, accounts, users, openModal, upsertRecord, deleteRecord, toggleTask, updateStatus } = useCRM();
+  const { tasks, deals, tickets, calendarEvents, communications, leads, contacts, accounts, users, upsertRecord, deleteRecord, toggleTask, updateStatus } = useCRM();
 
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
