@@ -176,6 +176,51 @@ const InvoiceDetail: React.FC = () => {
 
         {/* Content */}
         <div className="p-12 space-y-12">
+          {/* Company Header */}
+          {orgDetails && (
+            <div className="flex items-start justify-between pb-8 border-b border-slate-200">
+              <div className="flex items-start gap-6">
+                {orgDetails.logo_url && (
+                  <img
+                    src={orgDetails.logo_url}
+                    alt={orgDetails.name}
+                    className="w-20 h-20 object-contain rounded-xl border border-slate-200"
+                  />
+                )}
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 mb-2">{orgDetails.name}</h3>
+                  {orgDetails.abn && (
+                    <p className="text-xs font-bold text-slate-500 mb-3">
+                      ABN: {orgDetails.abn}
+                    </p>
+                  )}
+                  <div className="space-y-1 text-sm text-slate-600">
+                    {orgDetails.address_line1 && (
+                      <>
+                        <p>{orgDetails.address_line1}</p>
+                        {orgDetails.address_line2 && <p>{orgDetails.address_line2}</p>}
+                        <p>
+                          {[orgDetails.city, orgDetails.state, orgDetails.postcode].filter(Boolean).join(', ')}
+                          {orgDetails.country && `, ${orgDetails.country}`}
+                        </p>
+                      </>
+                    )}
+                    {orgDetails.phone && (
+                      <p className="flex items-center gap-2 mt-3">
+                        <Phone size={12} className="text-slate-400" /> {orgDetails.phone}
+                      </p>
+                    )}
+                    {orgDetails.email && (
+                      <p className="flex items-center gap-2">
+                        <Mail size={12} className="text-slate-400" /> {orgDetails.email}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Info Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Bill To */}
@@ -341,8 +386,43 @@ const InvoiceDetail: React.FC = () => {
             </div>
           </div>
 
+          {/* Bank Details */}
+          {orgDetails && (orgDetails.bank_name || orgDetails.bank_bsb || orgDetails.bank_account_number) && (
+            <div className="bg-slate-50 border border-slate-200 rounded-[30px] p-8">
+              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <Building2 size={14} className="text-blue-600" /> Bank Details for Payment
+              </h3>
+              <div className="grid grid-cols-2 gap-6">
+                {orgDetails.bank_name && (
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Bank Name</p>
+                    <p className="text-sm font-bold text-slate-900">{orgDetails.bank_name}</p>
+                  </div>
+                )}
+                {orgDetails.bank_bsb && (
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">BSB</p>
+                    <p className="text-sm font-bold text-slate-900">{orgDetails.bank_bsb}</p>
+                  </div>
+                )}
+                {orgDetails.bank_account_number && (
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Account Number</p>
+                    <p className="text-sm font-bold text-slate-900">{orgDetails.bank_account_number}</p>
+                  </div>
+                )}
+                {orgDetails.bank_account_name && (
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Account Name</p>
+                    <p className="text-sm font-bold text-slate-900">{orgDetails.bank_account_name}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Notes & Terms */}
-          {(invoice.notes || invoice.terms) && (
+          {(invoice.notes || invoice.terms || (orgDetails?.invoice_notes) || (orgDetails?.invoice_footer)) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {invoice.notes && (
                 <div className="bg-amber-50 border border-amber-200 rounded-[30px] p-8">
@@ -358,6 +438,22 @@ const InvoiceDetail: React.FC = () => {
                     Payment Terms
                   </h3>
                   <p className="text-sm text-blue-900 whitespace-pre-line">{invoice.terms}</p>
+                </div>
+              )}
+              {orgDetails?.invoice_notes && (
+                <div className="bg-indigo-50 border border-indigo-200 rounded-[30px] p-8">
+                  <h3 className="text-[11px] font-black text-indigo-800 uppercase tracking-widest mb-4">
+                    Invoice Notes
+                  </h3>
+                  <p className="text-sm text-indigo-900 whitespace-pre-line">{orgDetails.invoice_notes}</p>
+                </div>
+              )}
+              {orgDetails?.invoice_footer && (
+                <div className="bg-slate-50 border border-slate-200 rounded-[30px] p-8">
+                  <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">
+                    Footer
+                  </h3>
+                  <p className="text-sm text-slate-700 whitespace-pre-line">{orgDetails.invoice_footer}</p>
                 </div>
               )}
             </div>
