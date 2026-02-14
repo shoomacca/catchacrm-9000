@@ -7,6 +7,7 @@ import {
   Wrench, FileText
 } from 'lucide-react';
 import { useCRM } from '../context/CRMContext';
+import { JobComposer } from '../components/JobComposer';
 
 type SortField = 'date' | 'priority' | 'status' | 'value';
 type SortDirection = 'asc' | 'desc';
@@ -22,6 +23,7 @@ const JobsPage: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
+  const [showJobComposer, setShowJobComposer] = useState(false);
 
   // Calculate summary stats
   const stats = useMemo(() => {
@@ -210,8 +212,8 @@ const JobsPage: React.FC = () => {
             Export {selectedJobs.size > 0 ? `(${selectedJobs.size})` : ''}
           </button>
           <button
-            onClick={() => openModal('jobs')}
-            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
+            onClick={() => setShowJobComposer(true)}
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-teal-500/20 hover:shadow-xl hover:shadow-teal-500/30 hover:-translate-y-0.5 transition-all"
           >
             <Plus size={16} />
             New Job
@@ -507,6 +509,13 @@ const JobsPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Job Composer Modal */}
+      <JobComposer
+        isOpen={showJobComposer}
+        onClose={() => setShowJobComposer(false)}
+        mode="create"
+      />
     </div>
   );
 };
