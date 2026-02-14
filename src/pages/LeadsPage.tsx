@@ -12,6 +12,7 @@ import EmptyState from '../components/EmptyState';
 import { exportLeads, triggerCSVImport } from '../utils/csvExport';
 import BulkActionsBar from '../components/BulkActionsBar';
 import { EmailComposer } from '../components/EmailComposer';
+import { LeadComposer } from '../components/LeadComposer';
 
 type ViewMode = 'cards' | 'list';
 type LeadTemp = 'hot' | 'warm' | 'cold' | 'all';
@@ -28,6 +29,7 @@ const LeadsPage: React.FC = () => {
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const [showEmailComposer, setShowEmailComposer] = useState(false);
   const [selectedLeadForEmail, setSelectedLeadForEmail] = useState<any>(null);
+  const [showLeadComposer, setShowLeadComposer] = useState(false);
 
   // Get unique sources from leads
   const sources = useMemo(() => {
@@ -275,8 +277,8 @@ const LeadsPage: React.FC = () => {
             <Download size={14} /> Export
           </button>
           <button
-            onClick={() => openModal('leads')}
-            className="flex items-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+            onClick={() => setShowLeadComposer(true)}
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:from-orange-700 hover:to-amber-700 transition-all shadow-lg shadow-orange-500/20"
           >
             <Plus size={14} /> New Lead
           </button>
@@ -728,6 +730,13 @@ const LeadsPage: React.FC = () => {
           recipientEmail={selectedLeadForEmail.email}
         />
       )}
+
+      {/* Lead Composer Modal */}
+      <LeadComposer
+        isOpen={showLeadComposer}
+        onClose={() => setShowLeadComposer(false)}
+        mode="create"
+      />
 
       {/* Bulk Actions Bar */}
       <BulkActionsBar

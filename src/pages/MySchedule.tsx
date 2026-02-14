@@ -8,6 +8,7 @@ import {
   User, Heart, RefreshCcw, X, SlidersHorizontal, ExternalLink, StickyNote,
   Building2, Edit3
 } from 'lucide-react';
+import { TaskComposer } from '../components/TaskComposer';
 
 type ViewMode = 'today' | 'week' | 'all';
 type FilterType = 'all' | 'tasks' | 'callbacks' | 'followups' | 'meetings' | 'tickets' | 'personal';
@@ -41,6 +42,8 @@ const MySchedule: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [activeStatFilter, setActiveStatFilter] = useState<string | null>(null);
+  const [showTaskComposer, setShowTaskComposer] = useState(false);
+  const [taskComposerType, setTaskComposerType] = useState<'general' | 'call' | 'lead' | 'deal'>('general');
   const [selectedItem, setSelectedItem] = useState<ScheduleItem | null>(null);
   const [noteText, setNoteText] = useState('');
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -441,10 +444,12 @@ const MySchedule: React.FC = () => {
 
     switch (type) {
       case 'task':
-        openModal('tasks', relatedType ? { relatedToType: relatedType } : undefined);
+        setTaskComposerType('general');
+        setShowTaskComposer(true);
         break;
       case 'personal':
-        openModal('calendarEvents', { type: 'Personal' });
+        setTaskComposerType('general');
+        setShowTaskComposer(true);
         break;
       case 'meeting':
         openModal('calendarEvents', { type: 'Meeting' });
@@ -453,13 +458,15 @@ const MySchedule: React.FC = () => {
         openModal('calendarEvents', { type: 'Follow-up' });
         break;
       case 'callback':
-        openModal('tasks', { type: 'Callback', relatedToType: 'leads' });
+        setTaskComposerType('call');
+        setShowTaskComposer(true);
         break;
       case 'reminder':
         openModal('calendarEvents', { type: 'Reminder' });
         break;
       default:
-        openModal('tasks');
+        setTaskComposerType('general');
+        setShowTaskComposer(true);
     }
   };
 
@@ -1147,6 +1154,13 @@ const MySchedule: React.FC = () => {
         </div>
       </div>
 
+      {/* Task Composer Modal */}
+      <TaskComposer
+        isOpen={showTaskComposer}
+        onClose={() => setShowTaskComposer(false)}
+        taskType={taskComposerType}
+        mode="create"
+      />
     </div>
   );
 };

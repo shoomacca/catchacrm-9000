@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
 import { exportDeals } from '../utils/csvExport';
+import { DealComposer } from '../components/DealComposer';
 
 type ViewMode = 'pipeline' | 'cards' | 'list';
 
@@ -18,6 +19,7 @@ const DealsPage: React.FC = () => {
 
   const [viewMode, setViewMode] = useState<ViewMode>('pipeline');
   const [draggedDeal, setDraggedDeal] = useState<string | null>(null);
+  const [showDealComposer, setShowDealComposer] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'value' | 'date' | 'name'>('value');
@@ -204,8 +206,8 @@ const DealsPage: React.FC = () => {
             <Download size={14} /> Export
           </button>
           <button
-            onClick={() => openModal('deals')}
-            className="flex items-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+            onClick={() => setShowDealComposer(true)}
+            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg shadow-violet-500/20"
           >
             <Plus size={14} /> New Deal
           </button>
@@ -667,6 +669,13 @@ const DealsPage: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Deal Composer Modal */}
+      <DealComposer
+        isOpen={showDealComposer}
+        onClose={() => setShowDealComposer(false)}
+        mode="create"
+      />
     </div>
   );
 };
