@@ -1,6 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCRM } from '../context/CRMContext';
+import { AccountComposer } from '../components/AccountComposer';
+import { JobComposer } from '../components/JobComposer';
+import { ProductComposer } from '../components/ProductComposer';
+import { QuoteComposer } from '../components/QuoteComposer';
 import {
   Briefcase,
   Users,
@@ -62,11 +66,21 @@ interface PartItem {
 
 const JobMarketplacePage: React.FC = () => {
   const navigate = useNavigate();
-  const { accounts, jobs, products, inventoryItems, openModal } = useCRM();
+  const { accounts, jobs, products, inventoryItems } = useCRM();
 
   const [activeTab, setActiveTab] = useState<MarketplaceTab>('contractors');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  // Composer states
+  const [showAccountComposer, setShowAccountComposer] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<any>(null);
+  const [showJobComposer, setShowJobComposer] = useState(false);
+  const [editingJob, setEditingJob] = useState<any>(null);
+  const [showProductComposer, setShowProductComposer] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [showQuoteComposer, setShowQuoteComposer] = useState(false);
+  const [editingQuote, setEditingQuote] = useState<any>(null);
 
   // Real Contractors Data from Accounts
   const contractors: Contractor[] = useMemo(() => {
@@ -212,11 +226,14 @@ const JobMarketplacePage: React.FC = () => {
           <button
             onClick={() => {
               if (activeTab === 'contractors') {
-                openModal('accounts', { type: 'Vendor' });
+                setEditingAccount({ type: 'Vendor' });
+                setShowAccountComposer(true);
               } else if (activeTab === 'customer-jobs') {
-                openModal('jobs');
+                setEditingJob(null);
+                setShowJobComposer(true);
               } else {
-                openModal('products');
+                setEditingProduct(null);
+                setShowProductComposer(true);
               }
             }}
             className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
@@ -424,7 +441,10 @@ const JobMarketplacePage: React.FC = () => {
 
               <div className="flex gap-2 mt-4">
                 <button
-                  onClick={() => openModal('quotes', { jobId: job.id })}
+                  onClick={() => {
+                    setEditingQuote({ jobId: job.id });
+                    setShowQuoteComposer(true);
+                  }}
                   className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
                 >
                   Place Bid
@@ -523,6 +543,50 @@ const JobMarketplacePage: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Account Composer */}
+      <AccountComposer
+        isOpen={showAccountComposer}
+        onClose={() => {
+          setShowAccountComposer(false);
+          setEditingAccount(null);
+        }}
+        initialData={editingAccount || undefined}
+        mode={editingAccount ? 'edit' : 'create'}
+      />
+
+      {/* Job Composer */}
+      <JobComposer
+        isOpen={showJobComposer}
+        onClose={() => {
+          setShowJobComposer(false);
+          setEditingJob(null);
+        }}
+        initialData={editingJob || undefined}
+        mode={editingJob ? 'edit' : 'create'}
+      />
+
+      {/* Product Composer */}
+      <ProductComposer
+        isOpen={showProductComposer}
+        onClose={() => {
+          setShowProductComposer(false);
+          setEditingProduct(null);
+        }}
+        initialData={editingProduct || undefined}
+        mode={editingProduct ? 'edit' : 'create'}
+      />
+
+      {/* Quote Composer */}
+      <QuoteComposer
+        isOpen={showQuoteComposer}
+        onClose={() => {
+          setShowQuoteComposer(false);
+          setEditingQuote(null);
+        }}
+        initialData={editingQuote || undefined}
+        mode={editingQuote ? 'edit' : 'create'}
+      />
     </div>
   );
 };

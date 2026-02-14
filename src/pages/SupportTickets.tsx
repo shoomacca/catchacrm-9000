@@ -15,7 +15,7 @@ type QueueView = 'all' | 'new' | 'mine' | 'unassigned';
 
 const SupportTickets: React.FC = () => {
   const navigate = useNavigate();
-  const { tickets, contacts, users, upsertRecord, openModal, currentUserId: crmUserId } = useCRM();
+  const { tickets, contacts, users, upsertRecord, currentUserId: crmUserId } = useCRM();
 
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
