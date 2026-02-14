@@ -6,6 +6,8 @@ import {
   Receipt, ArrowRightLeft, Plus, ChevronDown, Calendar, Mail, User, Download
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import { QuoteComposer } from '../../components/QuoteComposer';
+import { InvoiceComposer } from '../../components/InvoiceComposer';
 
 const MetricCard = ({ label, value, icon: Icon, color, alert, onClick }: any) => (
   <div
@@ -37,12 +39,16 @@ const StatusRow = ({ label, value, color }: { label: string; value: string | num
 
 const FinancialHub: React.FC = () => {
   const {
-    invoices, quotes, subscriptions, accounts, openModal,
+    invoices, quotes, subscriptions, accounts,
     bankTransactions, expenses, financialStats, dataSource
   } = useCRM();
   const navigate = useNavigate();
   const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null);
   const expandedRef = useRef<HTMLDivElement>(null);
+  const [showQuoteComposer, setShowQuoteComposer] = useState(false);
+  const [editingQuote, setEditingQuote] = useState<any>(null);
+  const [showInvoiceComposer, setShowInvoiceComposer] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<any>(null);
 
   // Close expanded invoice when clicking outside
   useEffect(() => {
@@ -194,13 +200,13 @@ const FinancialHub: React.FC = () => {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => openModal('quotes')}
+            onClick={() => { setEditingQuote(null); setShowQuoteComposer(true); }}
             className="flex items-center gap-2 px-5 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-all hover:bg-slate-800"
           >
             <FileText size={14} /> New Quote
           </button>
           <button
-            onClick={() => openModal('invoices')}
+            onClick={() => { setEditingInvoice(null); setShowInvoiceComposer(true); }}
             className="flex items-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700"
           >
             <Plus size={14} /> Create Invoice
@@ -772,7 +778,7 @@ const FinancialHub: React.FC = () => {
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      openModal('invoices', inv);
+                                      { setEditingInvoice(inv); setShowInvoiceComposer(true); }
                                     }}
                                     className="px-5 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all"
                                   >
@@ -811,6 +817,26 @@ const FinancialHub: React.FC = () => {
           </table>
         </div>
       </div>
+
+      <QuoteComposer
+        isOpen={showQuoteComposer}
+        onClose={() => {
+          setShowQuoteComposer(false);
+          setEditingQuote(null);
+        }}
+        initialData={editingQuote || undefined}
+        mode={editingQuote ? 'edit' : 'create'}
+      />
+
+      <InvoiceComposer
+        isOpen={showInvoiceComposer}
+        onClose={() => {
+          setShowInvoiceComposer(false);
+          setEditingInvoice(null);
+        }}
+        initialData={editingInvoice || undefined}
+        mode={editingInvoice ? 'edit' : 'create'}
+      />
     </div>
   );
 };

@@ -18,7 +18,7 @@ const ListView: React.FC<{ module?: string }> = ({ module: propModule }) => {
     jobs, crews, zones, equipment, inventoryItems, purchaseOrders,
     bankTransactions, expenses, reviews, referralRewards, inboundForms,
     chatWidgets, calculators, automationWorkflows, webhooks, industryTemplates,
-    searchQuery, setSearchQuery, openModal, settings, upsertRecord
+    searchQuery, setSearchQuery, settings, upsertRecord
   } = useCRM();
   
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>(module === 'deals' ? 'kanban' : 'list');
@@ -105,7 +105,7 @@ const ListView: React.FC<{ module?: string }> = ({ module: propModule }) => {
               <button onClick={() => setViewMode('kanban')} className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest ${viewMode === 'kanban' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400'}`}>Pipeline</button>
             </div>
           )}
-          <button onClick={() => openModal(module)} className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center gap-2"><Plus size={16} /> Create {module.slice(0, -1)}</button>
+          <button onClick={() => navigate(`/${module}/new`)} className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center gap-2"><Plus size={16} /> Create {module.slice(0, -1)}</button>
         </div>
       </div>
 
